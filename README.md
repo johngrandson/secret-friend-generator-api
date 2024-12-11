@@ -1,46 +1,93 @@
-# Secret Friend Generator
+# Secret Friend Generator API
 
-Secret Friend Generator is a basic FastAPI application that allows users to manage and generate secret friend events.
+This project is a Secret Friend Generator API that allows users to create and manage secret friend events.
 
-## Features
+## Getting Started
 
-- Create and manage secret friend events
-- Add participants to events
-- Randomly generate secret friend assignments
+### Prerequisites
 
-## Installation
+Make sure you have the following installed on your machine:
 
-1. Clone the repository:
+- [Python](https://www.python.org/) (version 3.8 or higher)
+- [Poetry](https://python-poetry.org/) (version 1.1.0 or higher)
 
-   ```bash
-   git clone https://github.com/yourusername/secret-friend-generator.git
-   cd secret-friend-generator
-   ```
+### Project Setup
 
-2. Install dependencies using Poetry:
+Clone the repository:
 
-   ```bash
-   poetry install
-   ```
+```bash
+git clone https://github.com/johngrandson/secret-friend-generator-api.git
+```
 
-## Running the Application
+Navigate to the project directory:
 
-1. Start the FastAPI server:
+```bash
+cd secret-friend-generator-api
+```
 
-   ```bash
-   poetry run dev
-   ```
+Load the virtual environment:
 
-2. Access the application at `http://127.0.0.1:8000`.
+```bash
+poetry shell
+```
 
-## API Endpoints
+Install the dependencies:
 
-- `GET /events`: Retrieve a list of all secret friend events.
-- `POST /events`: Create a new secret friend event.
-- `GET /events/{event_id}`: Retrieve details of a specific event.
-- `POST /events/{event_id}/participants`: Add participants to an event.
-- `POST /events/{event_id}/generate`: Generate secret friend assignments for an event.
+```bash
+poetry install
+```
 
-## License
+### Running the Project
 
-This project is licensed under the MIT License.
+Navigate to the `docker` directory:
+
+```bash
+cd docker
+```
+
+Start the services using `docker-compose`:
+
+```bash
+docker-compose up -d
+```
+
+
+Start the development server:
+
+```bash
+poetry run start
+```
+
+The API will be running at `http://localhost:8000`.
+
+
+### Running Tests
+
+To run the tests, use the following command:
+
+```bash
+poetry run pytest
+```
+
+### API Documentation
+
+The API documentation is available at `http://localhost:8000/docs` once the server is running.
+
+### Contributing
+
+If you would like to contribute to this project, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Make your changes.
+4. Commit your changes (`git commit -m 'Add some feature'`).
+5. Push to the branch (`git push origin feature-branch`).
+6. Create a new Pull Request.
+
+### License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+### Contact
+
+If you have any questions or suggestions, feel free to open an issue or contact the project maintainers.
