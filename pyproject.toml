@@ -1,0 +1,39 @@
+[tool.ruff]
+exclude = ["env", "migrations"]
+line-length = 88
+select = ["F", "E", "W"]
+fixable = ["F", "E"]
+
+[tool.poetry]
+name = "app"
+version = "0.1.0"
+description = "FastAPI application"
+authors = ["João Netto <joaonettopb@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "0.100.0"
+uvicorn = "0.22.0"
+SQLAlchemy = "2.0.13"
+psycopg2-binary = "2.9.6"
+gunicorn = "22.0.0"
+python-dotenv = "1.0.0"
+alembic = "1.11.1"
+pydantic = "2.10.0"
+httpx = "0.24.1"
+schedule = "^1.2.2"
+slowapi = "^0.1.9"
+sentry-asgi = "^0.2.0"
+sqlalchemy-utils = "^0.41.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "7.4.0"
+ruff = "^0.0.290"
+
+[tool.poetry.scripts]
+start = "bin.run:start"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
