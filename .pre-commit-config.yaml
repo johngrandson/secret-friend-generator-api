@@ -31,7 +31,7 @@ repos:
     rev: v1.26.1
     hooks:
       - id: typos
-        exclude: ^(data/dispatch-sample-data.dump|src/dispatch/static/dispatch/src/|src/dispatch/database/revisions/)
+        exclude: ^(data/app-sample-data.dump|src/app/static/app/src/|src/app/database/revisions/)
 
   # Pytest
   - repo: local

@@ -1,14 +1,6 @@
 from pydantic.errors import PydanticErrorCodes
 
 
-class DispatchException(Exception):
-    pass
-
-
-class DispatchPluginException(DispatchException):
-    pass
-
-
 class NotFoundError(PydanticErrorCodes):
     code = "not_found"
     msg_template = "{msg}"
