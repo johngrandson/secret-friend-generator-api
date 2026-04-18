@@ -8,7 +8,7 @@ from src.domain.participant.participant_schemas import (
     ParticipantUpdate,
 )
 from src.domain.participant.participant_service import ParticipantService
-from src.domain.shared.database_session import get_db
+from src.api.api_dependencies import get_db
 from src.domain.shared.database_transaction import transaction
 from src.domain.shared.domain_exceptions import ConflictError, NotFoundError
 

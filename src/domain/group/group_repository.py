@@ -18,7 +18,6 @@ class GroupRepository:
             db_session.flush()
             db_session.refresh(new_group)
         except IntegrityError:
-            db_session.rollback()
             raise ConflictError("Group creation failed. Unique constraint violated.")
         return new_group
 

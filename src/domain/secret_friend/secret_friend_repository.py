@@ -22,7 +22,6 @@ class SecretFriendRepository:
                 db_session.flush()
                 db_session.refresh(existing)
             except IntegrityError:
-                db_session.rollback()
                 raise ConflictError("Secret friend link update failed.")
             return existing
 
@@ -32,6 +31,5 @@ class SecretFriendRepository:
             db_session.flush()
             db_session.refresh(new_sf)
         except IntegrityError:
-            db_session.rollback()
             raise ConflictError("Secret friend link failed. Unique constraint violated.")
         return new_sf

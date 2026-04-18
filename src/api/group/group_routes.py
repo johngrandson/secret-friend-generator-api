@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from src.domain.group.group_schemas import GroupCreate, GroupList, GroupRead
 from src.domain.group.group_service import GroupService
-from src.domain.shared.database_session import get_db
+from src.api.api_dependencies import get_db
 from src.domain.shared.database_transaction import transaction
 from src.domain.shared.domain_exceptions import ConflictError, NotFoundError
 

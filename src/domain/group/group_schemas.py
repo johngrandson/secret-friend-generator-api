@@ -25,14 +25,12 @@ class GroupRead(BaseModel):
     id: int
     name: str
     description: str
-    category: CategoryEnum = CategoryEnum.santa
+    category: CategoryEnum
     link_url: Optional[str] = None
     participants: list["ParticipantBase"] = []
 
 
 class GroupList(BaseModel):
-    model_config = {"from_attributes": True}
-
     groups: list[GroupRead] = Field(default_factory=list)
 
 

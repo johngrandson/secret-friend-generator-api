@@ -36,8 +36,6 @@ class ParticipantRead(BaseModel):
 
 
 class ParticipantList(BaseModel):
-    model_config = {"from_attributes": True}
-
     participants: list[ParticipantRead]
 
 
@@ -49,6 +47,6 @@ class ParticipantUpdate(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def at_least_one_field(cls, values: dict) -> dict:
-        if not values:
+        if not values or not any(v is not None for v in values.values()):
             raise ValueError("At least one field must be provided for update.")
         return values

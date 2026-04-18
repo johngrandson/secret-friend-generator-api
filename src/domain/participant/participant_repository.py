@@ -22,7 +22,6 @@ class ParticipantRepository:
             db_session.flush()
             db_session.refresh(new_participant)
         except IntegrityError:
-            db_session.rollback()
             raise ConflictError("Participant creation failed. Unique constraint violated.")
         return new_participant
 
@@ -66,6 +65,5 @@ class ParticipantRepository:
             db_session.flush()
             db_session.refresh(participant)
         except IntegrityError:
-            db_session.rollback()
             raise ConflictError("Participant update failed. Unique constraint violated.")
         return participant

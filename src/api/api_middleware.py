@@ -30,7 +30,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 class ExceptionMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
-    ) -> StreamingResponse:
+    ) -> Response:
         try:
             return await call_next(request)
         except ValidationError as e:
