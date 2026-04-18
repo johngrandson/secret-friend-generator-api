@@ -1,0 +1,162 @@
+Collecting google-genai>=0.1.0
+  Downloading google_genai-1.73.1-py3-none-any.whl.metadata (52 kB)
+Collecting anyio<5.0.0,>=4.8.0 (from google-genai>=0.1.0)
+  Using cached anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+Collecting google-auth<3.0.0,>=2.48.1 (from google-auth[requests]<3.0.0,>=2.48.1->google-genai>=0.1.0)
+  Using cached google_auth-2.49.2-py3-none-any.whl.metadata (6.2 kB)
+Collecting httpx<1.0.0,>=0.28.1 (from google-genai>=0.1.0)
+  Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting pydantic<3.0.0,>=2.9.0 (from google-genai>=0.1.0)
+  Downloading pydantic-2.13.2-py3-none-any.whl.metadata (108 kB)
+Collecting requests<3.0.0,>=2.28.1 (from google-genai>=0.1.0)
+  Using cached requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
+Collecting tenacity<9.2.0,>=8.2.3 (from google-genai>=0.1.0)
+  Using cached tenacity-9.1.4-py3-none-any.whl.metadata (1.2 kB)
+Collecting websockets<17.0,>=13.0.0 (from google-genai>=0.1.0)
+  Using cached websockets-16.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.8 kB)
+Collecting typing-extensions<5.0.0,>=4.14.0 (from google-genai>=0.1.0)
+  Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting distro<2,>=1.7.0 (from google-genai>=0.1.0)
+  Using cached distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+Collecting sniffio (from google-genai>=0.1.0)
+  Using cached sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Collecting idna>=2.8 (from anyio<5.0.0,>=4.8.0->google-genai>=0.1.0)
+  Using cached idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai>=0.1.0)
+  Using cached pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting cryptography>=38.0.3 (from google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai>=0.1.0)
+  Using cached cryptography-46.0.7-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+Collecting certifi (from httpx<1.0.0,>=0.28.1->google-genai>=0.1.0)
+  Using cached certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx<1.0.0,>=0.28.1->google-genai>=0.1.0)
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx<1.0.0,>=0.28.1->google-genai>=0.1.0)
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting annotated-types>=0.6.0 (from pydantic<3.0.0,>=2.9.0->google-genai>=0.1.0)
+  Using cached annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.46.2 (from pydantic<3.0.0,>=2.9.0->google-genai>=0.1.0)
+  Downloading pydantic_core-2.46.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting typing-inspection>=0.4.2 (from pydantic<3.0.0,>=2.9.0->google-genai>=0.1.0)
+  Using cached typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+Collecting charset_normalizer<4,>=2 (from requests<3.0.0,>=2.28.1->google-genai>=0.1.0)
+  Using cached charset_normalizer-3.4.7-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+Collecting urllib3<3,>=1.26 (from requests<3.0.0,>=2.28.1->google-genai>=0.1.0)
+  Using cached urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai>=0.1.0)
+  Using cached cffi-2.0.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=38.0.3->google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai>=0.1.0)
+  Using cached pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai>=0.1.0)
+  Using cached pyasn1-0.6.3-py3-none-any.whl.metadata (8.4 kB)
+Downloading google_genai-1.73.1-py3-none-any.whl (783 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 783.6/783.6 kB 28.9 MB/s  0:00:00
+Using cached anyio-4.13.0-py3-none-any.whl (114 kB)
+Using cached distro-1.9.0-py3-none-any.whl (20 kB)
+Using cached google_auth-2.49.2-py3-none-any.whl (240 kB)
+Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Downloading pydantic-2.13.2-py3-none-any.whl (471 kB)
+Downloading pydantic_core-2.46.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 62.6 MB/s  0:00:00
+Using cached requests-2.33.1-py3-none-any.whl (64 kB)
+Using cached charset_normalizer-3.4.7-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (216 kB)
+Using cached idna-3.11-py3-none-any.whl (71 kB)
+Using cached tenacity-9.1.4-py3-none-any.whl (28 kB)
+Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Using cached urllib3-2.6.3-py3-none-any.whl (131 kB)
+Using cached websockets-16.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (184 kB)
+Using cached annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Using cached certifi-2026.2.25-py3-none-any.whl (153 kB)
+Using cached cryptography-46.0.7-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+Using cached cffi-2.0.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (219 kB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Using cached pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Using cached pyasn1-0.6.3-py3-none-any.whl (83 kB)
+Using cached typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+Using cached pycparser-3.0-py3-none-any.whl (48 kB)
+Using cached sniffio-1.3.1-py3-none-any.whl (10 kB)
+Installing collected packages: websockets, urllib3, typing-extensions, tenacity, sniffio, pycparser, pyasn1, idna, h11, distro, charset_normalizer, certifi, annotated-types, typing-inspection, requests, pydantic-core, pyasn1-modules, httpcore, cffi, anyio, pydantic, httpx, cryptography, google-auth, google-genai
+
+Successfully installed annotated-types-0.7.0 anyio-4.13.0 certifi-2026.2.25 cffi-2.0.0 charset_normalizer-3.4.7 cryptography-46.0.7 distro-1.9.0 google-auth-2.49.2 google-genai-1.73.1 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 pyasn1-0.6.3 pyasn1-modules-0.4.2 pycparser-3.0 pydantic-2.13.2 pydantic-core-2.46.2 requests-2.33.1 sniffio-1.3.1 tenacity-9.1.4 typing-extensions-4.15.0 typing-inspection-0.4.2 urllib3-2.6.3 websockets-16.0
+Collecting pypdf>=4.0.0
+  Downloading pypdf-6.10.2-py3-none-any.whl.metadata (7.1 kB)
+Downloading pypdf-6.10.2-py3-none-any.whl (336 kB)
+Installing collected packages: pypdf
+Successfully installed pypdf-6.10.2
+Collecting python-docx>=1.0.0
+  Using cached python_docx-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+Collecting lxml>=3.1.0 (from python-docx>=1.0.0)
+  Downloading lxml-6.1.0-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (4.0 kB)
+Requirement already satisfied: typing_extensions>=4.9.0 in ./.venv/lib/python3.12/site-packages (from python-docx>=1.0.0) (4.15.0)
+Using cached python_docx-1.2.0-py3-none-any.whl (252 kB)
+Downloading lxml-6.1.0-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 41.1 MB/s  0:00:00
+Installing collected packages: lxml, python-docx
+
+Successfully installed lxml-6.1.0 python-docx-1.2.0
+Collecting docx2pdf>=0.1.8
+  Using cached docx2pdf-0.1.8-py3-none-any.whl.metadata (3.3 kB)
+Collecting tqdm>=4.41.0 (from docx2pdf>=0.1.8)
+  Using cached tqdm-4.67.3-py3-none-any.whl.metadata (57 kB)
+Using cached docx2pdf-0.1.8-py3-none-any.whl (6.7 kB)
+Using cached tqdm-4.67.3-py3-none-any.whl (78 kB)
+Installing collected packages: tqdm, docx2pdf
+
+Successfully installed docx2pdf-0.1.8 tqdm-4.67.3
+Collecting markdown>=3.5.0
+  Using cached markdown-3.10.2-py3-none-any.whl.metadata (5.1 kB)
+Using cached markdown-3.10.2-py3-none-any.whl (108 kB)
+Installing collected packages: markdown
+Successfully installed markdown-3.10.2
+Collecting Pillow>=10.0.0
+  Using cached pillow-12.2.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+Using cached pillow-12.2.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+Installing collected packages: Pillow
+Successfully installed Pillow-12.2.0
+Collecting python-dotenv>=1.0.0
+  Using cached python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+Using cached python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Installing collected packages: python-dotenv
+Successfully installed python-dotenv-1.2.2
+Collecting pytest>=8.0.0
+  Using cached pytest-9.0.3-py3-none-any.whl.metadata (7.6 kB)
+Collecting iniconfig>=1.0.1 (from pytest>=8.0.0)
+  Using cached iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting packaging>=22 (from pytest>=8.0.0)
+  Downloading packaging-26.1-py3-none-any.whl.metadata (3.5 kB)
+Collecting pluggy<2,>=1.5 (from pytest>=8.0.0)
+  Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting pygments>=2.7.2 (from pytest>=8.0.0)
+  Using cached pygments-2.20.0-py3-none-any.whl.metadata (2.5 kB)
+Using cached pytest-9.0.3-py3-none-any.whl (375 kB)
+Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+Using cached iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Downloading packaging-26.1-py3-none-any.whl (95 kB)
+Using cached pygments-2.20.0-py3-none-any.whl (1.2 MB)
+Installing collected packages: pygments, pluggy, packaging, iniconfig, pytest
+
+Successfully installed iniconfig-2.3.0 packaging-26.1 pluggy-1.6.0 pygments-2.20.0 pytest-9.0.3
+Collecting pytest-cov>=4.1.0
+  Using cached pytest_cov-7.1.0-py3-none-any.whl.metadata (32 kB)
+Collecting coverage>=7.10.6 (from coverage[toml]>=7.10.6->pytest-cov>=4.1.0)
+  Using cached coverage-7.13.5-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (8.5 kB)
+Requirement already satisfied: pluggy>=1.2 in ./.venv/lib/python3.12/site-packages (from pytest-cov>=4.1.0) (1.6.0)
+Requirement already satisfied: pytest>=7 in ./.venv/lib/python3.12/site-packages (from pytest-cov>=4.1.0) (9.0.3)
+Requirement already satisfied: iniconfig>=1.0.1 in ./.venv/lib/python3.12/site-packages (from pytest>=7->pytest-cov>=4.1.0) (2.3.0)
+Requirement already satisfied: packaging>=22 in ./.venv/lib/python3.12/site-packages (from pytest>=7->pytest-cov>=4.1.0) (26.1)
+Requirement already satisfied: pygments>=2.7.2 in ./.venv/lib/python3.12/site-packages (from pytest>=7->pytest-cov>=4.1.0) (2.20.0)
+Using cached pytest_cov-7.1.0-py3-none-any.whl (22 kB)
+Using cached coverage-7.13.5-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (254 kB)
+Installing collected packages: coverage, pytest-cov
+
+Successfully installed coverage-7.13.5 pytest-cov-7.1.0
+Collecting pytest-mock>=3.12.0
+  Using cached pytest_mock-3.15.1-py3-none-any.whl.metadata (3.9 kB)
+Requirement already satisfied: pytest>=6.2.5 in ./.venv/lib/python3.12/site-packages (from pytest-mock>=3.12.0) (9.0.3)
+Requirement already satisfied: iniconfig>=1.0.1 in ./.venv/lib/python3.12/site-packages (from pytest>=6.2.5->pytest-mock>=3.12.0) (2.3.0)
+Requirement already satisfied: packaging>=22 in ./.venv/lib/python3.12/site-packages (from pytest>=6.2.5->pytest-mock>=3.12.0) (26.1)
+Requirement already satisfied: pluggy<2,>=1.5 in ./.venv/lib/python3.12/site-packages (from pytest>=6.2.5->pytest-mock>=3.12.0) (1.6.0)
+Requirement already satisfied: pygments>=2.7.2 in ./.venv/lib/python3.12/site-packages (from pytest>=6.2.5->pytest-mock>=3.12.0) (2.20.0)
+Using cached pytest_mock-3.15.1-py3-none-any.whl (10 kB)
+Installing collected packages: pytest-mock
+Successfully installed pytest-mock-3.15.1
