@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
 from src.domain.shared.database_base import Base
@@ -20,7 +21,14 @@ TEST_DATABASE_URL = "sqlite:///:memory:"
 
 @pytest.fixture(scope="session")
 def engine():
-    _engine = create_engine(TEST_DATABASE_URL)
+    # StaticPool ensures all connections share the same in-memory SQLite
+    # database — required so that tables created here are visible to sessions
+    # opened inside the FastAPI request handlers during integration tests.
+    _engine = create_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(_engine)
     yield _engine
     Base.metadata.drop_all(_engine)
@@ -39,17 +47,29 @@ def db_session(engine) -> Session:
 
 
 @pytest.fixture
-def client(db_session: Session):
-    """FastAPI test client with overridden db dependency."""
-    from src.app_main import app
+def client(engine):
+    """FastAPI test client with a dedicated SQLite session per request.
+
+    The routes live on the `api` sub-application (mounted at /api/v1).
+    dependency_overrides must be applied on `api`, not on the outer `app`.
+    We use TestClient against `api` directly and set base_url so paths like
+    /api/v1/groups still work naturally in tests.
+    """
+    from src.app_main import api
+
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     def override_get_db():
-        yield db_session
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
 
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
+    api.dependency_overrides[get_db] = override_get_db
+    with TestClient(api, base_url="http://testserver/api/v1") as c:
         yield c
-    app.dependency_overrides.clear()
+    api.dependency_overrides.clear()
 
 
 @pytest.fixture
