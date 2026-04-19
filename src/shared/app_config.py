@@ -31,5 +31,11 @@ class Settings:
     SENTRY_ENABLED: str = os.getenv("SENTRY_ENABLED", "")
     SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
 
+    # LLM / MCP
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
+    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0"))
+    MCP_SERVERS_PATH: str | None = os.getenv("MCP_SERVERS_PATH")
+
 
 settings = Settings()
