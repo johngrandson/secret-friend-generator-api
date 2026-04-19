@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
 from src.api.api_error_schemas import ErrorResponse
+from src.api.agents.agents_routes import agents_router
 from src.api.group.group_routes import router as group_router
 from src.api.participant.participant_routes import router as participant_router
 from src.api.secret_friend.secret_friend_routes import router as secret_friend_router
@@ -22,6 +23,7 @@ api_router.include_router(participant_router, prefix="/participants", tags=["par
 api_router.include_router(
     secret_friend_router, prefix="/secret-friends", tags=["secret-friends"]
 )
+api_router.include_router(agents_router, prefix="/agents", tags=["agents"])
 
 
 @api_router.get("/healthcheck", include_in_schema=False)

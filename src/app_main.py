@@ -10,6 +10,7 @@ from starlette.requests import Request
 
 from src.api.api_middleware import ExceptionMiddleware, MetricsMiddleware
 from src.api.api_router import api_router
+from src.api.agents.agents_dependencies import init_agents_registry, shutdown_agents
 from src.domain.shared.database_base import Base
 from src.domain.shared.database_session import engine
 from src.shared.rate_limiter_config import limiter
@@ -56,6 +57,16 @@ api.include_router(api_router)
 
 # Mount API to main app
 app.mount("/api/v1", app=api)
+
+
+@api.on_event("startup")
+async def startup_agents():
+    await init_agents_registry()
+
+
+@api.on_event("shutdown")
+async def shutdown_agents_cleanup():
+    await shutdown_agents()
 
 
 def create_tables():
