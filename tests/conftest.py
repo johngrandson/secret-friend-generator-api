@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
-from src.domain.shared.database_base import Base
-from src.domain.shared.database_session import get_db
+from src.infrastructure.database import Base, get_db
 from src.domain.group.repository import GroupRepository
 from src.domain.group.schemas import GroupCreate
 from src.domain.participant.repository import ParticipantRepository

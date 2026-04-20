@@ -3,8 +3,8 @@ import logging
 from typing import Any
 
 from src.domain.group.signals import group_created
-from src.domain.shared.signals import isolated
-from src.domain.shared.task_backend import dispatch_task
+from src.shared.signals import isolated
+from src.shared.task_backend import dispatch_task
 
 log = logging.getLogger(__name__)
 

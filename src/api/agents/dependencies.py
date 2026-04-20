@@ -43,7 +43,7 @@ async def init_agents_registry() -> None:
     global _apps, _mcp_tools, _mcp_client
 
     from src.domain.agents.tools.mcp import load_mcp_tools
-    from src.shared.app_config import settings
+    from src.shared.config import settings
 
     mcp_result = await load_mcp_tools(settings.MCP_SERVERS_PATH or None)
     _mcp_tools = mcp_result["tools"]

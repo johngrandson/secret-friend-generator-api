@@ -8,7 +8,7 @@ from collections.abc import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.shared.app_config import settings
+from src.shared.config import settings
 
 engine = create_engine(
     settings.DATABASE_URL,

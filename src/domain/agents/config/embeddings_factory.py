@@ -1,7 +1,7 @@
 from langchain_openai import OpenAIEmbeddings
 from pydantic import SecretStr
 
-from src.shared.app_config import settings
+from src.shared.config import settings
 
 DEFAULT_EMBEDDING_MODEL: str = "text-embedding-3-small"
 

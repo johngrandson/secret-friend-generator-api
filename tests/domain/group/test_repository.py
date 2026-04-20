@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from src.domain.group.repository import GroupRepository
 from src.domain.group.schemas import GroupCreate
-from src.domain.shared.exceptions import NotFoundError
+from src.shared.exceptions import NotFoundError
 
 
 def test_create_group_returns_group_with_id(db_session: Session):

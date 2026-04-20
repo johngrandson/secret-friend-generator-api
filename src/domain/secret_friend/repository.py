@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from src.domain.secret_friend.model import SecretFriend
 from src.domain.secret_friend.schemas import SecretFriendLink
-from src.domain.shared.exceptions import ConflictError
+from src.shared.exceptions import ConflictError
 
 
 class SecretFriendRepository:

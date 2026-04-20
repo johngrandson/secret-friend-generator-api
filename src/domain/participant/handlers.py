@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 
 from src.domain.participant.signals import participant_created, participant_updated
 from src.domain.secret_friend.signals import secret_friend_assigned
-from src.domain.shared.signals import isolated
-from src.domain.shared.task_backend import dispatch_task
+from src.shared.signals import isolated
+from src.shared.task_backend import dispatch_task
 
 log = logging.getLogger(__name__)
 

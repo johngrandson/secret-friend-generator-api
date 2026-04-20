@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from src.domain.participant.repository import ParticipantRepository
 from src.domain.participant.schemas import ParticipantCreate, ParticipantUpdate, ParticipantStatus
-from src.domain.shared.exceptions import NotFoundError
+from src.shared.exceptions import NotFoundError
 
 
 def test_create_participant_returns_participant_with_id(db_session: Session, group_fixture):

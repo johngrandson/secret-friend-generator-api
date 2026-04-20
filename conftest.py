@@ -7,13 +7,15 @@ session entirely in SQLite (managed by tests/conftest.py fixtures).
 import sys
 from unittest.mock import patch
 
+import src.infrastructure.database.base  # ensure module is imported before patch resolves
+
 
 def _preload_app_main():
     """Import app_main exactly once with create_tables suppressed."""
     if "src.app_main" in sys.modules:
         return
     # Patch the method that would open a Postgres connection at module load time.
-    with patch("src.domain.shared.database_base.Base.metadata.create_all"):
+    with patch("src.infrastructure.database.base.Base.metadata.create_all"):
         import src.app_main  # noqa: F401
 
 

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from src.domain.secret_friend.service import SecretFriendService
 from src.domain.secret_friend.schemas import SecretFriendLink, SecretFriendRead
 from src.domain.participant.schemas import ParticipantRead, ParticipantStatus
-from src.domain.shared.exceptions import BusinessRuleError
+from src.shared.exceptions import BusinessRuleError
 from datetime import datetime
 
 

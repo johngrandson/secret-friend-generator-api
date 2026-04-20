@@ -6,7 +6,7 @@ from src.domain.group.model import Group
 from src.domain.participant.model import Participant
 from src.domain.participant.schemas import ParticipantCreate, ParticipantUpdate
 from src.domain.secret_friend.model import SecretFriend
-from src.domain.shared.exceptions import ConflictError, NotFoundError
+from src.shared.exceptions import ConflictError, NotFoundError
 
 
 class ParticipantRepository:

@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.domain.shared.database_base import Base
+from src.infrastructure.database import Base
 from src.domain.participant.schemas import ParticipantStatus
 
 

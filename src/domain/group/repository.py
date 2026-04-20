@@ -4,15 +4,15 @@ from sqlalchemy.orm import Session
 
 from src.domain.group.model import Group
 from src.domain.group.schemas import GroupCreate
-from src.domain.shared.exceptions import ConflictError, NotFoundError
-from src.shared.utils.hashing_utils import Hasher
+from src.shared.exceptions import ConflictError, NotFoundError
+from src.shared.hashing import generate_group_token
 
 
 class GroupRepository:
     @staticmethod
     def create(group: GroupCreate, db_session: Session) -> Group:
         new_group = Group(**group.model_dump(exclude_unset=True))
-        new_group.link_url = Hasher.generate_group_token()
+        new_group.link_url = generate_group_token()
         try:
             db_session.add(new_group)
             db_session.flush()

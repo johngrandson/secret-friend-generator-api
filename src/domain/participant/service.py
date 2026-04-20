@@ -8,7 +8,7 @@ from src.domain.participant.schemas import (
     ParticipantUpdate,
 )
 from src.domain.participant.signals import participant_created, participant_updated
-from src.domain.shared.database_transaction import transaction
+from src.infrastructure.database import transaction
 
 
 class ParticipantService:

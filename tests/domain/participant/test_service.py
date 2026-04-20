@@ -9,7 +9,7 @@ from src.domain.participant.schemas import (
     ParticipantUpdate,
     ParticipantStatus,
 )
-from src.domain.shared.exceptions import NotFoundError
+from src.shared.exceptions import NotFoundError
 
 
 def test_create_returns_participant_read_schema(db_session: Session, group_fixture):

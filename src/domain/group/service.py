@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from src.domain.group.repository import GroupRepository
 from src.domain.group.schemas import GroupCreate, GroupList, GroupRead
 from src.domain.group.signals import group_created
-from src.domain.shared.database_transaction import transaction
+from src.infrastructure.database import transaction
 
 
 class GroupService:

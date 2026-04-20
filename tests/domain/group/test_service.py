@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from src.domain.group.service import GroupService
 from src.domain.group.schemas import GroupCreate, GroupRead, GroupList
-from src.domain.shared.exceptions import NotFoundError
+from src.shared.exceptions import NotFoundError
 
 
 def test_create_returns_group_read_schema(db_session: Session):
