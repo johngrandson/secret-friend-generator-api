@@ -1,4 +1,6 @@
-"""Tests for Celery app config helpers: _queue_arguments, _build_queues, _parse_task_routes.
+"""Tests for Celery app config helpers.
+
+Covers _queue_arguments, _build_queues, _parse_task_routes.
 
 All tests are pure function tests — no fixtures or broker needed.
 """

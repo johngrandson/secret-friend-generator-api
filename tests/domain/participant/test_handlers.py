@@ -28,7 +28,9 @@ def test_on_participant_created_logs_event(
         register_side_effects,
     )
 
-    group = GroupService.create(GroupCreate(name="Log Group", description="d"), db_session)
+    group = GroupService.create(
+        GroupCreate(name="Log Group", description="d"), db_session,
+    )
     register_side_effects()
     try:
         with caplog.at_level(

@@ -24,8 +24,12 @@ def test_on_group_created_logs_event(
 
     register_side_effects()
     try:
-        with caplog.at_level(logging.INFO, logger="src.domain.group.handlers.side_effects"):
-            GroupService.create(GroupCreate(name="Log Test", description="d"), db_session)
+        logger = "src.domain.group.handlers.side_effects"
+        with caplog.at_level(logging.INFO, logger=logger):
+            GroupService.create(
+                GroupCreate(name="Log Test", description="d"),
+                db_session,
+            )
 
         assert any("group created" in r.message for r in caplog.records)
     finally:

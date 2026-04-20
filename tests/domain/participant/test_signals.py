@@ -19,7 +19,9 @@ def test_participant_created_signal_fires_on_create(db_session: Session) -> None
     def handler(sender: object, **kwargs: object) -> None:
         received.append(kwargs)
 
-    group = GroupService.create(GroupCreate(name="Test Group", description="d"), db_session)
+    group = GroupService.create(
+        GroupCreate(name="Test Group", description="d"), db_session,
+    )
 
     participant_created.connect(handler)
     try:
@@ -38,7 +40,9 @@ def test_participant_updated_signal_fires_on_update(db_session: Session) -> None
     def handler(sender: object, **kwargs: object) -> None:
         received.append(kwargs)
 
-    group = GroupService.create(GroupCreate(name="Test Group", description="d"), db_session)
+    group = GroupService.create(
+        GroupCreate(name="Test Group", description="d"), db_session,
+    )
     participant = ParticipantService.create(
         ParticipantCreate(name="Bob", group_id=group.id), db_session
     )
@@ -60,7 +64,9 @@ def test_participant_deleted_signal_fires_on_delete(db_session: Session) -> None
     def handler(sender: object, **kwargs: object) -> None:
         received.append(kwargs)
 
-    group = GroupService.create(GroupCreate(name="Test Group", description="d"), db_session)
+    group = GroupService.create(
+        GroupCreate(name="Test Group", description="d"), db_session,
+    )
     participant = ParticipantService.create(
         ParticipantCreate(name="Carol", group_id=group.id), db_session
     )
