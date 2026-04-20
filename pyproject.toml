@@ -45,9 +45,50 @@ celery = {version = ">=5.3", extras = ["rabbitmq"]}
 pytest = "7.4.0"
 ruff = "^0.0.290"
 pytest-asyncio = "^0.23"
+mypy = ">=1.10"
+celery-stubs = ">=0.1.3"
 
 [tool.poetry.scripts]
 start = "bin.run:start"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+# SQLAlchemy models use string forward references resolved at runtime.
+plugins = ["pydantic.mypy"]
+
+# Third-party libraries without stubs or py.typed marker.
+[[tool.mypy.overrides]]
+module = [
+    "sentry_asgi.*",
+    "slowapi.*",
+    "kombu.*",
+    "langgraph.*",
+    "langgraph_supervisor.*",
+    "langgraph_swarm.*",
+    "langchain_mcp_adapters.*",
+    "langchain_core.*",
+    "langchain_openai.*",
+    "langchain_text_splitters.*",
+    "langchain.*",
+]
+ignore_missing_imports = true
+
+# SQLAlchemy models use string forward references resolved at runtime by the ORM registry.
+[[tool.mypy.overrides]]
+module = "src.domain.*.model"
+disable_error_code = ["name-defined"]
+
+# Agents domain uses dynamic LangChain APIs with loose typing.
+[[tool.mypy.overrides]]
+module = [
+    "src.domain.agents.*",
+    "src.api.agents.*",
+]
+disallow_untyped_defs = false
+disable_error_code = ["list-item", "call-arg", "return-value", "no-any-return"]
 
 [build-system]
 requires = ["poetry-core"]

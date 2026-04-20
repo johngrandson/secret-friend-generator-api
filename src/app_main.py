@@ -44,9 +44,15 @@ async def _api_lifespan(application: FastAPI) -> AsyncIterator[None]:
 
 # ── Main app (outer shell) ───────────────────────────────────────────────────
 
-app = FastAPI(exception_handlers={404: _not_found_handler}, openapi_url="")
+app = FastAPI(
+    exception_handlers={404: _not_found_handler},  # type: ignore[dict-item]
+    openapi_url="",
+)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,  # type: ignore[arg-type]
+)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
