@@ -8,14 +8,15 @@ Domain-specific signals live in their respective entity modules:
 import functools
 import logging
 from collections.abc import Callable
-from typing import TypeVar
+from typing import ParamSpec, TypeVar
 
 log = logging.getLogger(__name__)
 
-F = TypeVar("F", bound=Callable)
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
-def isolated(fn: F) -> F:
+def isolated(fn: Callable[P, R]) -> Callable[P, R | None]:
     """Decorator for lifecycle handlers — isolates exceptions.
 
     Blinker's send() propagates handler exceptions by design.
@@ -25,10 +26,11 @@ def isolated(fn: F) -> F:
     """
 
     @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R | None:
         try:
             return fn(*args, **kwargs)
         except Exception:
             log.exception("lifecycle handler failed: %s", fn.__qualname__)
+            return None
 
-    return wrapper  # type: ignore[return-value]
+    return wrapper

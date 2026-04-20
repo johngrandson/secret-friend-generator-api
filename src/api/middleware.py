@@ -13,7 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.domain.shared.exceptions import (
+from src.shared.exceptions import (
     BusinessRuleError,
     ConflictError,
     NotFoundError,
@@ -31,10 +31,10 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             start = time.perf_counter()
             response = await call_next(request)
             elapsed_time = time.perf_counter() - start
-            log.debug(f"server.call.elapsed.{path_template}: {elapsed_time}")
-        except Exception as e:
-            log.error(f"server.call.exception.{path_template}: {e}")
-            raise e
+            log.debug("server.call.elapsed.%s: %s", path_template, elapsed_time)
+        except Exception:
+            log.error("server.call.exception.%s", path_template, exc_info=True)
+            raise
         return response
 
 
@@ -61,14 +61,14 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 content={"detail": [{"msg": str(e)}]},
             )
-        except ValidationError as e:
-            log.exception(e)
+        except ValidationError:
+            log.exception("Validation error")
             return JSONResponse(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                content={"detail": e.errors()},
+                content={"detail": [{"msg": "Validation error."}]},
             )
-        except Exception as e:
-            log.exception(e)
+        except Exception:
+            log.exception("Unexpected error")
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"detail": [{"msg": "Unexpected error."}]},
