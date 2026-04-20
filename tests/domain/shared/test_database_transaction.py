@@ -2,9 +2,9 @@ import pytest
 from sqlalchemy.orm import Session
 
 from src.domain.shared.database_transaction import transaction
-from src.domain.group.group_model import Group
-from src.domain.group.group_schemas import GroupCreate
-from src.domain.group.group_repository import GroupRepository
+from src.domain.group.model import Group
+from src.domain.group.schemas import GroupCreate
+from src.domain.group.repository import GroupRepository
 
 
 def test_transaction_commits_on_success(db_session: Session):

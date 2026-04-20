@@ -6,15 +6,15 @@ from fastapi.testclient import TestClient
 
 from src.domain.shared.database_base import Base
 from src.domain.shared.database_session import get_db
-from src.domain.group.group_repository import GroupRepository
-from src.domain.group.group_schemas import GroupCreate
-from src.domain.participant.participant_repository import ParticipantRepository
-from src.domain.participant.participant_schemas import ParticipantCreate
+from src.domain.group.repository import GroupRepository
+from src.domain.group.schemas import GroupCreate
+from src.domain.participant.repository import ParticipantRepository
+from src.domain.participant.schemas import ParticipantCreate
 
 # Import models so Base.metadata knows all tables
-from src.domain.group.group_model import Group  # noqa: F401
-from src.domain.participant.participant_model import Participant  # noqa: F401
-from src.domain.secret_friend.secret_friend_model import SecretFriend  # noqa: F401
+from src.domain.group.model import Group  # noqa: F401
+from src.domain.participant.model import Participant  # noqa: F401
+from src.domain.secret_friend.model import SecretFriend  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 

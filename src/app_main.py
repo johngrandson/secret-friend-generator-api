@@ -8,9 +8,9 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.requests import Request
 
-from src.api.api_middleware import ExceptionMiddleware, MetricsMiddleware
-from src.api.api_router import api_router
-from src.api.agents.agents_dependencies import init_agents_registry, shutdown_agents
+from src.api.middleware import ExceptionMiddleware, MetricsMiddleware
+from src.api.router import api_router
+from src.api.agents.dependencies import init_agents_registry, shutdown_agents
 from src.domain.shared.database_base import Base
 from src.domain.shared.database_session import engine
 from src.shared.rate_limiter_config import limiter
