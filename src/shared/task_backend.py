@@ -6,11 +6,11 @@ task queue is added, swap the backend implementation — callers
 don't change.
 
 Usage:
-    from src.domain.shared.task_backend import dispatch_task
+    from src.shared.task_backend import dispatch_task
     dispatch_task("notifications.send_welcome_email", group_id=group.id)
 
 To swap backend (when Celery is ready):
-    from src.domain.shared.task_backend import set_backend
+    from src.shared.task_backend import set_backend
     set_backend(CeleryBackend(celery_app))
 """
 import logging
