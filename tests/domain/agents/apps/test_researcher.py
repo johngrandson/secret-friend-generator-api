@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-import src.domain.agents.apps.researcher_app as mod
+import src.domain.agents.apps.researcher as mod
 from tests.domain.agents.apps.conftest import ToolCapableFakeLLM
 
 

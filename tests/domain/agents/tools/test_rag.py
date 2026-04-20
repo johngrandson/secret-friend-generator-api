@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from src.domain.agents.tools.rag_sample_docs import SAMPLE_DOCS
-from src.domain.agents.tools.rag_tools import (
+from src.domain.agents.tools.rag import (
     build_vector_store,
     create_retrieval_tool,
 )

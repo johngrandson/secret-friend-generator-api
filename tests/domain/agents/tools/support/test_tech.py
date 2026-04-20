@@ -2,7 +2,7 @@
 
 import pytest
 
-import src.domain.agents.tools.support.tech_tools as mod
+import src.domain.agents.tools.support.tech as mod
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-import src.domain.agents.tools.support.escalation_tools as mod
+import src.domain.agents.tools.support.escalation as mod
 
 
 def test_escalate_to_human_tool_name() -> None:
@@ -18,7 +18,7 @@ def test_escalate_to_human_has_invoke() -> None:
 @pytest.mark.asyncio
 async def test_escalate_to_human_calls_interrupt() -> None:
     with patch(
-        "src.domain.agents.tools.support.escalation_tools.interrupt",
+        "src.domain.agents.tools.support.escalation.interrupt",
         return_value="yes",
     ) as mock_int:
         result = await mod.escalate_to_human.ainvoke(

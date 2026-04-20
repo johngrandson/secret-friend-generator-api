@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-import src.domain.agents.tools.support.returns_tools as mod
+import src.domain.agents.tools.support.returns as mod
 
 
 @pytest.mark.asyncio
@@ -28,7 +28,7 @@ async def test_initiate_return_not_delivered() -> None:
 @pytest.mark.asyncio
 async def test_initiate_return_calls_interrupt() -> None:
     with patch(
-        "src.domain.agents.tools.support.returns_tools.interrupt",
+        "src.domain.agents.tools.support.returns.interrupt",
         return_value="yes",
     ) as mock_int:
         result = await mod.initiate_return.ainvoke(

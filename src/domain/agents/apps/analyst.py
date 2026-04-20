@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from src.domain.agents.config.llm_factory import create_llm
 from src.domain.agents.core.factory import make_agent
-from src.domain.agents.tools.local_tools import echo
+from src.domain.agents.tools.local import echo
 
 
 class SummarySchema(BaseModel):

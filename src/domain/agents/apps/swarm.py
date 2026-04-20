@@ -8,7 +8,7 @@ from src.domain.agents.config.llm_factory import create_llm
 from src.domain.agents.core.factory import make_agent
 from src.domain.agents.core.handoff import create_handoff_tool
 from src.domain.agents.core.swarm import make_swarm
-from src.domain.agents.tools.local_tools import add, echo, multiply
+from src.domain.agents.tools.local import add, echo, multiply
 
 
 def create_swarm_app(mcp_tools: list[Any] | None = None) -> CompiledStateGraph:

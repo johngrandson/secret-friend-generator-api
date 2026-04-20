@@ -37,20 +37,20 @@ async def init_agents_registry() -> None:
     """Load MCP tools and build all agent apps. Called at startup."""
     global _apps, _mcp_tools, _mcp_client
 
-    from src.domain.agents.tools.mcp_tools import load_mcp_tools
+    from src.domain.agents.tools.mcp import load_mcp_tools
     from src.shared.app_config import settings
 
     mcp_result = await load_mcp_tools(settings.MCP_SERVERS_PATH or None)
     _mcp_tools = mcp_result["tools"]
     _mcp_client = mcp_result["client"]
 
-    from src.domain.agents.apps.analyst_app import create_analyst_app
-    from src.domain.agents.apps.interrupt_app import create_interrupt_app
-    from src.domain.agents.apps.rag_app import create_rag_app, init_rag_store
-    from src.domain.agents.apps.researcher_app import create_researcher_app
-    from src.domain.agents.apps.supervisor_app import create_supervisor_app
-    from src.domain.agents.apps.support_app import create_support_app
-    from src.domain.agents.apps.swarm_app import create_swarm_app
+    from src.domain.agents.apps.analyst import create_analyst_app
+    from src.domain.agents.apps.interrupt import create_interrupt_app
+    from src.domain.agents.apps.rag import create_rag_app, init_rag_store
+    from src.domain.agents.apps.researcher import create_researcher_app
+    from src.domain.agents.apps.supervisor import create_supervisor_app
+    from src.domain.agents.apps.support import create_support_app
+    from src.domain.agents.apps.swarm import create_swarm_app
 
     rag_store = await init_rag_store()
     _apps.update(

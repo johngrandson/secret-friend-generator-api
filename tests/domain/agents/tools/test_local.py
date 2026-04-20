@@ -1,6 +1,6 @@
 import pytest
 
-import src.domain.agents.tools.local_tools as mod
+import src.domain.agents.tools.local as mod
 
 
 @pytest.mark.asyncio

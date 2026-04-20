@@ -5,8 +5,8 @@ from langgraph.graph.state import CompiledStateGraph
 from src.domain.agents.config.llm_factory import create_llm
 from src.domain.agents.core.factory import make_agent
 from src.domain.agents.core.supervisor import make_supervisor
-from src.domain.agents.tools.local_tools import echo
-from src.domain.agents.tools.web_tools import scrape_url, web_search
+from src.domain.agents.tools.local import echo
+from src.domain.agents.tools.web import scrape_url, web_search
 
 _RESEARCH_PROMPT = (
     "You coordinate research tasks. "

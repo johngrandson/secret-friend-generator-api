@@ -11,6 +11,7 @@ from starlette.requests import Request
 from src.api.middleware import ExceptionMiddleware, MetricsMiddleware
 from src.api.router import api_router
 from src.api.agents.dependencies import init_agents_registry, shutdown_agents
+import src.domain.shared.lifecycle_handlers  # noqa: F401 — register signal handlers
 from src.domain.shared.database_base import Base
 from src.domain.shared.database_session import engine
 from src.shared.rate_limiter_config import limiter

@@ -2,7 +2,7 @@
 
 import pytest
 
-import src.domain.agents.tools.mcp_tools as mod
+import src.domain.agents.tools.mcp as mod
 
 
 @pytest.fixture(autouse=True)

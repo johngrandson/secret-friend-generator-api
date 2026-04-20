@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import src.domain.agents.tools.web_tools as mod
+import src.domain.agents.tools.web as mod
 
 
 def _make_json_response(payload: dict) -> MagicMock:

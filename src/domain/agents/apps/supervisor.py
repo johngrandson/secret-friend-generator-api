@@ -7,7 +7,7 @@ from langgraph.graph.state import CompiledStateGraph
 from src.domain.agents.config.llm_factory import create_llm
 from src.domain.agents.core.factory import make_agent
 from src.domain.agents.core.supervisor import make_supervisor
-from src.domain.agents.tools.local_tools import add, echo, multiply
+from src.domain.agents.tools.local import add, echo, multiply
 
 
 def create_supervisor_app(mcp_tools: list[Any] | None = None) -> CompiledStateGraph:

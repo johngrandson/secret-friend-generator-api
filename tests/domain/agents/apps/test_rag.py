@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import src.domain.agents.apps.rag_app as mod
+import src.domain.agents.apps.rag as mod
 from tests.domain.agents.apps.conftest import ToolCapableFakeLLM
 
 
@@ -20,7 +20,7 @@ def _make_fake_embeddings(dim: int = 4) -> MagicMock:
 
 @pytest.fixture(autouse=True)
 def reset_rag_cache() -> None:
-    import src.domain.agents.apps.rag_app as rag_mod
+    import src.domain.agents.apps.rag as rag_mod
 
     yield
     rag_mod._vector_store = None

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-import src.domain.agents.tools.support.billing_tools as mod
+import src.domain.agents.tools.support.billing as mod
 
 
 @pytest.mark.asyncio
@@ -49,7 +49,7 @@ async def test_issue_refund_order_not_found() -> None:
 @pytest.mark.asyncio
 async def test_issue_refund_calls_interrupt() -> None:
     with patch(
-        "src.domain.agents.tools.support.billing_tools.interrupt",
+        "src.domain.agents.tools.support.billing.interrupt",
         return_value="yes",
     ) as mock_int:
         result = await mod.issue_refund.ainvoke(

@@ -7,13 +7,16 @@ from src.domain.participant.schemas import (
     ParticipantRead,
     ParticipantUpdate,
 )
+from src.domain.shared.signals import participant_created, participant_updated
 
 
 class ParticipantService:
     @staticmethod
     def create(participant: ParticipantCreate, db_session: Session) -> ParticipantRead:
         result = ParticipantRepository.create(participant=participant, db_session=db_session)
-        return ParticipantRead.model_validate(result)
+        validated = ParticipantRead.model_validate(result)
+        participant_created.send(None, participant=validated)
+        return validated
 
     @staticmethod
     def get_all(db_session: Session) -> ParticipantList:
@@ -42,4 +45,6 @@ class ParticipantService:
         result = ParticipantRepository.update(
             participant_id=participant_id, payload=payload, db_session=db_session
         )
-        return ParticipantRead.model_validate(result)
+        validated = ParticipantRead.model_validate(result)
+        participant_updated.send(None, participant=validated)
+        return validated

@@ -33,6 +33,7 @@ langgraph-swarm = ">=0.0.10"
 langchain-mcp-adapters = "^0.1"
 langchain-text-splitters = "^0.3"
 langchain = "^1.2.15"
+blinker = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "7.4.0"

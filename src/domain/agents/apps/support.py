@@ -5,16 +5,16 @@ from langgraph.graph.state import CompiledStateGraph
 from src.domain.agents.config.llm_factory import create_llm
 from src.domain.agents.core.factory import make_agent
 from src.domain.agents.core.supervisor import make_supervisor
-from src.domain.agents.tools.support.billing_tools import (
+from src.domain.agents.tools.support.billing import (
     check_balance,
     issue_refund,
     lookup_customer,
 )
-from src.domain.agents.tools.support.escalation_tools import (
+from src.domain.agents.tools.support.escalation import (
     escalate_to_human,
 )
-from src.domain.agents.tools.support.returns_tools import initiate_return
-from src.domain.agents.tools.support.tech_tools import (
+from src.domain.agents.tools.support.returns import initiate_return
+from src.domain.agents.tools.support.tech import (
     create_ticket,
     list_tickets,
     lookup_order,
