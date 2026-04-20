@@ -224,8 +224,9 @@ def ask(message: str, options: Iterable[str]) -> str:
         response = response.strip().lower()
         if response not in options:
             print(
-                "Your response ({!r}) was not one of the expected responses: "
-                "{}".format(response, ", ".join(options))
+                "Your response ({!r}) was not one of the expected responses: {}".format(
+                    response, ", ".join(options)
+                )
             )
         else:
             return response

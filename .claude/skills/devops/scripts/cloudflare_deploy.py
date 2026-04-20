@@ -20,14 +20,20 @@ from typing import Dict, List, Optional, Tuple
 
 class CloudflareDeployError(Exception):
     """Custom exception for Cloudflare deployment errors."""
+
     pass
 
 
 class CloudflareDeploy:
     """Handle Cloudflare Worker deployments with wrangler CLI."""
 
-    def __init__(self, project_dir: Path, env: Optional[str] = None,
-                 dry_run: bool = False, verbose: bool = False):
+    def __init__(
+        self,
+        project_dir: Path,
+        env: Optional[str] = None,
+        dry_run: bool = False,
+        verbose: bool = False,
+    ):
         """
         Initialize CloudflareDeploy.
 
@@ -74,10 +80,7 @@ class CloudflareDeploy:
         """
         try:
             result = subprocess.run(
-                ["wrangler", "--version"],
-                capture_output=True,
-                text=True,
-                check=True
+                ["wrangler", "--version"], capture_output=True, text=True, check=True
             )
             if self.verbose:
                 print(f"Wrangler version: {result.stdout.strip()}")
@@ -104,11 +107,7 @@ class CloudflareDeploy:
 
         try:
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=self.project_dir,
-                check=check
+                cmd, capture_output=True, text=True, cwd=self.project_dir, check=check
             )
             return result.returncode, result.stdout, result.stderr
         except subprocess.CalledProcessError as e:
@@ -129,11 +128,11 @@ class CloudflareDeploy:
             CloudflareDeployError: If name cannot be extracted
         """
         try:
-            with open(self.wrangler_toml, 'r') as f:
+            with open(self.wrangler_toml, "r") as f:
                 for line in f:
-                    if line.strip().startswith('name'):
+                    if line.strip().startswith("name"):
                         # Parse: name = "worker-name"
-                        return line.split('=')[1].strip().strip('"\'')
+                        return line.split("=")[1].strip().strip("\"'")
         except Exception as e:
             raise CloudflareDeployError(f"Failed to read worker name: {e}")
 
@@ -211,34 +210,31 @@ Examples:
   python cloudflare-deploy.py --project ./my-worker --env staging
   python cloudflare-deploy.py --dry-run
   python cloudflare-deploy.py --env prod --verbose
-        """
+        """,
     )
 
     parser.add_argument(
         "--project",
         type=str,
         default=".",
-        help="Path to Worker project directory (default: current directory)"
+        help="Path to Worker project directory (default: current directory)",
     )
 
     parser.add_argument(
         "--env",
         type=str,
         choices=["production", "staging", "dev"],
-        help="Environment to deploy to (production, staging, dev)"
+        help="Environment to deploy to (production, staging, dev)",
     )
 
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Preview deployment without actually deploying"
+        help="Preview deployment without actually deploying",
     )
 
     parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Enable verbose output"
+        "--verbose", "-v", action="store_true", help="Enable verbose output"
     )
 
     args = parser.parse_args()
@@ -248,7 +244,7 @@ Examples:
             project_dir=args.project,
             env=args.env,
             dry_run=args.dry_run,
-            verbose=args.verbose
+            verbose=args.verbose,
         )
 
         success = deployer.deploy()

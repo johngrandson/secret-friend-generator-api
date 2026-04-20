@@ -50,7 +50,7 @@ class BackupManager:
         uri: str,
         database: Optional[str] = None,
         compress: bool = True,
-        verify: bool = True
+        verify: bool = True,
     ) -> Optional[BackupInfo]:
         """
         Create database backup.
@@ -81,7 +81,7 @@ class BackupManager:
         database: Optional[str],
         date_str: str,
         compress: bool,
-        verify: bool
+        verify: bool,
     ) -> Optional[BackupInfo]:
         """Create MongoDB backup using mongodump."""
         db_name = database or "all"
@@ -118,7 +118,7 @@ class BackupManager:
                 database_name=db_name,
                 timestamp=datetime.now(),
                 size_bytes=size_bytes,
-                compressed=compress
+                compressed=compress,
             )
 
             if verify:
@@ -134,12 +134,7 @@ class BackupManager:
             return None
 
     def _backup_postgres(
-        self,
-        uri: str,
-        database: str,
-        date_str: str,
-        compress: bool,
-        verify: bool
+        self, uri: str, database: str, date_str: str, compress: bool, verify: bool
     ) -> Optional[BackupInfo]:
         """Create PostgreSQL backup using pg_dump."""
         if not database:
@@ -158,9 +153,7 @@ class BackupManager:
                 with open(backup_path, "wb") as f:
                     dump_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
                     gzip_proc = subprocess.Popen(
-                        ["gzip"],
-                        stdin=dump_proc.stdout,
-                        stdout=f
+                        ["gzip"], stdin=dump_proc.stdout, stdout=f
                     )
                     dump_proc.stdout.close()
                     gzip_proc.communicate()
@@ -170,7 +163,9 @@ class BackupManager:
                         return None
             else:
                 with open(backup_path, "w") as f:
-                    result = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, text=True)
+                    result = subprocess.run(
+                        cmd, stdout=f, stderr=subprocess.PIPE, text=True
+                    )
 
                     if result.returncode != 0:
                         print(f"Error: {result.stderr}")
@@ -184,7 +179,7 @@ class BackupManager:
                 database_name=database,
                 timestamp=datetime.now(),
                 size_bytes=size_bytes,
-                compressed=compress
+                compressed=compress,
             )
 
             if verify:
@@ -282,19 +277,13 @@ class BackupManager:
                 with gzip.open(backup_path, "rb") as f:
                     cmd = ["psql", uri]
                     result = subprocess.run(
-                        cmd,
-                        stdin=f,
-                        capture_output=True,
-                        text=False
+                        cmd, stdin=f, capture_output=True, text=False
                     )
             else:
                 with open(backup_path) as f:
                     cmd = ["psql", uri]
                     result = subprocess.run(
-                        cmd,
-                        stdin=f,
-                        capture_output=True,
-                        text=True
+                        cmd, stdin=f, capture_output=True, text=True
                     )
 
             if result.returncode != 0:
@@ -329,7 +318,7 @@ class BackupManager:
                     timestamp=datetime.fromisoformat(data["timestamp"]),
                     size_bytes=data["size_bytes"],
                     compressed=data["compressed"],
-                    verified=data.get("verified", False)
+                    verified=data.get("verified", False),
                 )
                 backups.append(backup_info)
             except Exception as e:
@@ -422,7 +411,7 @@ class BackupManager:
             "timestamp": backup_info.timestamp.isoformat(),
             "size_bytes": backup_info.size_bytes,
             "compressed": backup_info.compressed,
-            "verified": backup_info.verified
+            "verified": backup_info.verified,
         }
 
         with open(metadata_path, "w") as f:
@@ -432,38 +421,50 @@ class BackupManager:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Database backup tool")
-    parser.add_argument("--db", required=True, choices=["mongodb", "postgres"],
-                       help="Database type")
-    parser.add_argument("--backup-dir", default="./backups",
-                       help="Backup directory")
+    parser.add_argument(
+        "--db", required=True, choices=["mongodb", "postgres"], help="Database type"
+    )
+    parser.add_argument("--backup-dir", default="./backups", help="Backup directory")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Backup command
     backup_parser = subparsers.add_parser("backup", help="Create backup")
-    backup_parser.add_argument("--uri", required=True, help="Database connection string")
+    backup_parser.add_argument(
+        "--uri", required=True, help="Database connection string"
+    )
     backup_parser.add_argument("--database", help="Database name")
-    backup_parser.add_argument("--no-compress", action="store_true",
-                              help="Disable compression")
-    backup_parser.add_argument("--no-verify", action="store_true",
-                              help="Skip verification")
+    backup_parser.add_argument(
+        "--no-compress", action="store_true", help="Disable compression"
+    )
+    backup_parser.add_argument(
+        "--no-verify", action="store_true", help="Skip verification"
+    )
 
     # Restore command
     restore_parser = subparsers.add_parser("restore", help="Restore backup")
     restore_parser.add_argument("filename", help="Backup filename")
-    restore_parser.add_argument("--uri", required=True, help="Database connection string")
-    restore_parser.add_argument("--dry-run", action="store_true",
-                               help="Show what would be done")
+    restore_parser.add_argument(
+        "--uri", required=True, help="Database connection string"
+    )
+    restore_parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would be done"
+    )
 
     # List command
     subparsers.add_parser("list", help="List backups")
 
     # Cleanup command
     cleanup_parser = subparsers.add_parser("cleanup", help="Remove old backups")
-    cleanup_parser.add_argument("--retention-days", type=int, default=7,
-                               help="Days to retain backups (default: 7)")
-    cleanup_parser.add_argument("--dry-run", action="store_true",
-                               help="Show what would be removed")
+    cleanup_parser.add_argument(
+        "--retention-days",
+        type=int,
+        default=7,
+        help="Days to retain backups (default: 7)",
+    )
+    cleanup_parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would be removed"
+    )
 
     args = parser.parse_args()
 
@@ -474,7 +475,7 @@ def main():
             args.uri,
             args.database,
             compress=not args.no_compress,
-            verify=not args.no_verify
+            verify=not args.no_verify,
         )
         sys.exit(0 if backup_info else 1)
 

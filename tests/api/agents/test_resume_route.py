@@ -21,9 +21,7 @@ def asgi_app():
 
 async def test_resume_returns_200_with_mocked_app(asgi_app):
     mock_app = AsyncMock()
-    mock_app.ainvoke.return_value = {
-        "messages": [{"role": "ai", "content": "resumed"}]
-    }
+    mock_app.ainvoke.return_value = {"messages": [{"role": "ai", "content": "resumed"}]}
     with patch("src.api.agents.resume_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
             transport=ASGITransport(app=asgi_app), base_url="http://testserver"
@@ -37,9 +35,7 @@ async def test_resume_returns_200_with_mocked_app(asgi_app):
 
 async def test_resume_response_contains_messages(asgi_app):
     mock_app = AsyncMock()
-    mock_app.ainvoke.return_value = {
-        "messages": [{"role": "ai", "content": "done"}]
-    }
+    mock_app.ainvoke.return_value = {"messages": [{"role": "ai", "content": "done"}]}
     with patch("src.api.agents.resume_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
             transport=ASGITransport(app=asgi_app), base_url="http://testserver"
@@ -53,9 +49,7 @@ async def test_resume_response_contains_messages(asgi_app):
 
 async def test_resume_last_message_extracted(asgi_app):
     mock_app = AsyncMock()
-    mock_app.ainvoke.return_value = {
-        "messages": [{"role": "ai", "content": "final"}]
-    }
+    mock_app.ainvoke.return_value = {"messages": [{"role": "ai", "content": "final"}]}
     with patch("src.api.agents.resume_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
             transport=ASGITransport(app=asgi_app), base_url="http://testserver"
@@ -143,7 +137,8 @@ async def test_resume_500_on_app_error():
     mock_app.ainvoke.side_effect = Exception("internal failure")
     with patch("src.api.agents.resume_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
-            transport=ASGITransport(app=app_with_middleware), base_url="http://testserver"
+            transport=ASGITransport(app=app_with_middleware),
+            base_url="http://testserver",
         ) as client:
             response = await client.post(
                 "/interrupt/resume",

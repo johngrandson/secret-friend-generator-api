@@ -15,16 +15,24 @@ class Participant(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     gift_hint: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[ParticipantStatus] = mapped_column(
-        SQLAlchemyEnum(ParticipantStatus), nullable=False, default=ParticipantStatus.PENDING
+        SQLAlchemyEnum(ParticipantStatus),
+        nullable=False,
+        default=ParticipantStatus.PENDING,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
     )
     updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True),
+        nullable=True,
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=False, index=True)
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey("groups.id"), nullable=False, index=True
+    )
     group: Mapped["Group"] = relationship(back_populates="participants")
 
     gift_giver: Mapped["SecretFriend | None"] = relationship(

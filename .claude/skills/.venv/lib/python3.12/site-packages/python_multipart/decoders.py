@@ -73,7 +73,9 @@ class Base64Decoder:
             try:
                 decoded = base64.b64decode(val)
             except binascii.Error:
-                raise DecodeError("There was an error raised while decoding base64-encoded data.")
+                raise DecodeError(
+                    "There was an error raised while decoding base64-encoded data."
+                )
 
             self.underlying.write(decoded)
 
@@ -105,7 +107,8 @@ class Base64Decoder:
         """
         if len(self.cache) > 0:
             raise DecodeError(
-                "There are %d bytes remaining in the Base64Decoder cache when finalize() is called" % len(self.cache)
+                "There are %d bytes remaining in the Base64Decoder cache when finalize() is called"
+                % len(self.cache)
             )
 
         if hasattr(self.underlying, "finalize"):

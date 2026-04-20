@@ -9,7 +9,9 @@ from src.domain.agents.core.supervisor import make_supervisor
 from src.domain.agents.tools.local import add, echo, multiply
 
 
-def create_supervisor_app(mcp_tools: list[BaseTool] | None = None) -> CompiledStateGraph:
+def create_supervisor_app(
+    mcp_tools: list[BaseTool] | None = None,
+) -> CompiledStateGraph:
     """Build a supervisor graph with math_expert and writer agents.
 
     Args:
@@ -41,8 +43,5 @@ def create_supervisor_app(mcp_tools: list[BaseTool] | None = None) -> CompiledSt
         agents=[math_expert, writer],
         llm=llm,
         supervisor_name="supervisor",
-        prompt=(
-            "Route math questions to math_expert "
-            "and writing tasks to writer."
-        ),
+        prompt=("Route math questions to math_expert and writing tasks to writer."),
     )

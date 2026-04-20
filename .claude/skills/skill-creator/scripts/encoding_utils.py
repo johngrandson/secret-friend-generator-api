@@ -18,19 +18,19 @@ def configure_utf8_console():
     This function switches to UTF-8 with 'replace' error handling to
     prevent crashes on truly incompatible terminals.
     """
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         try:
-            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-            sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
         except AttributeError:
             pass  # Python < 3.7
 
 
 def read_text_utf8(path: Path) -> str:
     """Read file with explicit UTF-8 encoding."""
-    return path.read_text(encoding='utf-8')
+    return path.read_text(encoding="utf-8")
 
 
 def write_text_utf8(path: Path, content: str) -> None:
     """Write file with explicit UTF-8 encoding."""
-    path.write_text(content, encoding='utf-8')
+    path.write_text(content, encoding="utf-8")

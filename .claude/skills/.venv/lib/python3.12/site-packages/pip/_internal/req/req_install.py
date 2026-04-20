@@ -677,9 +677,9 @@ class InstallRequirement:
 
     def _get_archive_name(self, path: str, parentdir: str, rootdir: str) -> str:
         def _clean_zip_name(name: str, prefix: str) -> str:
-            assert name.startswith(
-                prefix + os.path.sep
-            ), f"name {name!r} doesn't start with prefix {prefix!r}"
+            assert name.startswith(prefix + os.path.sep), (
+                f"name {name!r} doesn't start with prefix {prefix!r}"
+            )
             name = name[len(prefix) + 1 :]
             name = name.replace(os.path.sep, "/")
             return name

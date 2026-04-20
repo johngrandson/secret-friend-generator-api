@@ -84,6 +84,7 @@ def group_fixture(db_session: Session):
         return GroupRepository.create(
             GroupCreate(**{**defaults, **overrides}), db_session
         )
+
     return _create
 
 
@@ -95,4 +96,5 @@ def participant_fixture(db_session: Session, group_fixture):
         return ParticipantRepository.create(
             ParticipantCreate(**{**defaults, **overrides}), db_session
         )
+
     return _create

@@ -6,6 +6,7 @@ from src.domain.group.schemas import CategoryEnum, GroupCreate, GroupRead, Group
 
 # ── CategoryEnum ──────────────────────────────────────────────────────────────
 
+
 def test_category_enum_has_expected_values():
     values = {e.value for e in CategoryEnum}
     assert values == {"santa", "chocolate", "frenemy", "book", "wine", "easter"}
@@ -16,6 +17,7 @@ def test_category_enum_is_string_subclass():
 
 
 # ── GroupCreate ───────────────────────────────────────────────────────────────
+
 
 def test_group_create_valid_data_parses():
     schema = GroupCreate(name="Book Club", description="Monthly reads")
@@ -29,7 +31,9 @@ def test_group_create_defaults_category_to_santa():
 
 
 def test_group_create_accepts_explicit_category():
-    schema = GroupCreate(name="Wine Night", description="desc", category=CategoryEnum.wine)
+    schema = GroupCreate(
+        name="Wine Night", description="desc", category=CategoryEnum.wine
+    )
     assert schema.category == CategoryEnum.wine
 
 
@@ -55,23 +59,27 @@ def test_group_create_invalid_category_raises():
 
 # ── GroupRead ─────────────────────────────────────────────────────────────────
 
+
 def test_group_read_participants_defaults_to_empty_list():
     schema = GroupRead(
-        id=1, name="Test", description="desc",
-        category=CategoryEnum.santa, link_url=None
+        id=1,
+        name="Test",
+        description="desc",
+        category=CategoryEnum.santa,
+        link_url=None,
     )
     assert schema.participants == []
 
 
 def test_group_read_link_url_optional():
     schema = GroupRead(
-        id=1, name="Test", description="desc",
-        category=CategoryEnum.santa
+        id=1, name="Test", description="desc", category=CategoryEnum.santa
     )
     assert schema.link_url is None
 
 
 # ── GroupList ─────────────────────────────────────────────────────────────────
+
 
 def test_group_list_defaults_to_empty():
     schema = GroupList()
@@ -80,8 +88,11 @@ def test_group_list_defaults_to_empty():
 
 def test_group_list_accepts_group_read_items():
     item = GroupRead(
-        id=1, name="Test", description="desc",
-        category=CategoryEnum.santa, link_url="abc"
+        id=1,
+        name="Test",
+        description="desc",
+        category=CategoryEnum.santa,
+        link_url="abc",
     )
     schema = GroupList(groups=[item])
     assert len(schema.groups) == 1

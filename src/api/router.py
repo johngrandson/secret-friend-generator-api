@@ -19,7 +19,9 @@ api_router = APIRouter(
 )
 
 api_router.include_router(group_router, prefix="/groups", tags=["groups"])
-api_router.include_router(participant_router, prefix="/participants", tags=["participants"])
+api_router.include_router(
+    participant_router, prefix="/participants", tags=["participants"]
+)
 api_router.include_router(
     secret_friend_router, prefix="/secret-friends", tags=["secret-friends"]
 )

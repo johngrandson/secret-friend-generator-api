@@ -19,9 +19,7 @@ async def resume(app_name: str, body: ResumeBody) -> InvokeResponse:
         config={"configurable": {"thread_id": body.thread_id}},
     )
     result_messages = result.get("messages", []) if isinstance(result, dict) else []
-    structured = (
-        result.get("structured_response") if isinstance(result, dict) else None
-    )
+    structured = result.get("structured_response") if isinstance(result, dict) else None
     return InvokeResponse(
         messages=[serialise_message(m) for m in result_messages],
         structured_response=structured,

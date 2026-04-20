@@ -4,7 +4,9 @@ import asyncio
 from collections.abc import Callable
 
 
-def auto_loop_factory(use_subprocess: bool = False) -> Callable[[], asyncio.AbstractEventLoop]:
+def auto_loop_factory(
+    use_subprocess: bool = False,
+) -> Callable[[], asyncio.AbstractEventLoop]:
     try:
         import uvloop  # noqa
     except ImportError:  # pragma: no cover

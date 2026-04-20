@@ -29,7 +29,8 @@ async def load_mcp_tools(config_path: str | None = None) -> McpLoadResult:
             does not exist, an empty result is returned immediately.
 
     Returns:
-        Dict with keys ``tools`` (list[BaseTool]) and ``client`` (MultiServerMCPClient or None).
+        Dict with keys ``tools`` (list[BaseTool]) and
+        ``client`` (MultiServerMCPClient or None).
 
     Raises:
         RuntimeError: If the config file exists but cannot be parsed.

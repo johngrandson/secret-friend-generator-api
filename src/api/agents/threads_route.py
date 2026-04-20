@@ -25,14 +25,10 @@ def _serialise_state(state: StateSnapshot | None) -> ThreadStateResponse:
 
 
 @router.get("/{app_name}/threads/{thread_id}", response_model=ThreadStateResponse)
-async def get_thread_state(
-    app_name: str, thread_id: str
-) -> ThreadStateResponse:
+async def get_thread_state(app_name: str, thread_id: str) -> ThreadStateResponse:
     """Return the current state snapshot for *thread_id*."""
     app = get_app(app_name)
-    state = await app.aget_state(
-        config={"configurable": {"thread_id": thread_id}}
-    )
+    state = await app.aget_state(config={"configurable": {"thread_id": thread_id}})
     return _serialise_state(state)
 
 

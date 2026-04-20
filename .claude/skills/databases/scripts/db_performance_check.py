@@ -14,18 +14,21 @@ from typing import Dict, List, Optional
 
 # Windows UTF-8 compatibility (works for both local and global installs)
 CLAUDE_ROOT = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(CLAUDE_ROOT / 'scripts'))
+sys.path.insert(0, str(CLAUDE_ROOT / "scripts"))
 try:
     from win_compat import ensure_utf8_stdout
+
     ensure_utf8_stdout()
 except ImportError:
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         import io
-        if hasattr(sys.stdout, 'buffer'):
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+        if hasattr(sys.stdout, "buffer"):
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 try:
     from pymongo import MongoClient
+
     MONGO_AVAILABLE = True
 except ImportError:
     MONGO_AVAILABLE = False
@@ -33,6 +36,7 @@ except ImportError:
 try:
     import psycopg2
     from psycopg2.extras import RealDictCursor
+
     POSTGRES_AVAILABLE = True
 except ImportError:
     POSTGRES_AVAILABLE = False
@@ -159,19 +163,21 @@ class PerformanceAnalyzer:
 
         # Get slow queries from system.profile
         for doc in self.db.system.profile.find(
-            {"millis": {"$gte": self.threshold_ms}},
-            limit=50
+            {"millis": {"$gte": self.threshold_ms}}, limit=50
         ).sort("millis", -1):
-
             query_str = json.dumps(doc.get("command", {}), default=str)
 
-            slow_queries.append(SlowQuery(
-                query=query_str,
-                execution_time_ms=doc.get("millis", 0),
-                count=1,
-                collection_or_table=doc.get("ns", "").split(".")[-1] if "ns" in doc else None,
-                index_used=doc.get("planSummary")
-            ))
+            slow_queries.append(
+                SlowQuery(
+                    query=query_str,
+                    execution_time_ms=doc.get("millis", 0),
+                    count=1,
+                    collection_or_table=doc.get("ns", "").split(".")[-1]
+                    if "ns" in doc
+                    else None,
+                    index_used=doc.get("planSummary"),
+                )
+            )
 
         # Analyze collections for index recommendations
         for coll_name in self.db.list_collection_names():
@@ -181,9 +187,7 @@ class PerformanceAnalyzer:
             coll = self.db[coll_name]
 
             # Check for collections scans
-            stats = coll.aggregate([
-                {"$collStats": {"storageStats": {}}}
-            ]).next()
+            stats = coll.aggregate([{"$collStats": {"storageStats": {}}}]).next()
 
             # Check if collection has indexes
             indexes = list(coll.list_indexes())
@@ -204,12 +208,14 @@ class PerformanceAnalyzer:
                     # Recommend index on most common field
                     if field_freq:
                         top_field = max(field_freq.items(), key=lambda x: x[1])[0]
-                        index_recommendations.append(IndexRecommendation(
-                            collection_or_table=coll_name,
-                            fields=[top_field],
-                            reason="Frequently queried field without index",
-                            estimated_benefit="High"
-                        ))
+                        index_recommendations.append(
+                            IndexRecommendation(
+                                collection_or_table=coll_name,
+                                fields=[top_field],
+                                reason="Frequently queried field without index",
+                                estimated_benefit="High",
+                            )
+                        )
 
         # Get database metrics
         server_status = self.client.admin.command("serverStatus")
@@ -220,7 +226,7 @@ class PerformanceAnalyzer:
             "operations_per_sec": server_status.get("opcounters", {}).get("query", 0),
             "database_size_mb": db_stats.get("dataSize", 0) / (1024 * 1024),
             "index_size_mb": db_stats.get("indexSize", 0) / (1024 * 1024),
-            "collections": db_stats.get("collections", 0)
+            "collections": db_stats.get("collections", 0),
         }
 
         return PerformanceReport(
@@ -229,7 +235,7 @@ class PerformanceAnalyzer:
             timestamp=datetime.now(),
             slow_queries=slow_queries[:10],  # Top 10
             index_recommendations=index_recommendations,
-            database_metrics=metrics
+            database_metrics=metrics,
         )
 
     def _analyze_postgres(self) -> PerformanceReport:
@@ -248,7 +254,8 @@ class PerformanceAnalyzer:
 
             if has_pg_stat_statements:
                 # Get slow queries from pg_stat_statements
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT
                         query,
                         mean_exec_time,
@@ -258,14 +265,18 @@ class PerformanceAnalyzer:
                     WHERE mean_exec_time >= %s
                     ORDER BY mean_exec_time DESC
                     LIMIT 10
-                """, (self.threshold_ms,))
+                """,
+                    (self.threshold_ms,),
+                )
 
                 for row in cur.fetchall():
-                    slow_queries.append(SlowQuery(
-                        query=row["query"],
-                        execution_time_ms=row["mean_exec_time"],
-                        count=row["calls"]
-                    ))
+                    slow_queries.append(
+                        SlowQuery(
+                            query=row["query"],
+                            execution_time_ms=row["mean_exec_time"],
+                            count=row["calls"],
+                        )
+                    )
 
             # Find tables with sequential scans (potential index candidates)
             cur.execute("""
@@ -283,12 +294,16 @@ class PerformanceAnalyzer:
             """)
 
             for row in cur.fetchall():
-                index_recommendations.append(IndexRecommendation(
-                    collection_or_table=f"{row['schemaname']}.{row['tablename']}",
-                    fields=["<analyze query patterns>"],
-                    reason=f"High sequential scans ({row['seq_scan']}) vs index scans ({row['idx_scan'] or 0})",
-                    estimated_benefit="High" if row["seq_tup_read"] > 100000 else "Medium"
-                ))
+                index_recommendations.append(
+                    IndexRecommendation(
+                        collection_or_table=f"{row['schemaname']}.{row['tablename']}",
+                        fields=["<analyze query patterns>"],
+                        reason=f"High sequential scans ({row['seq_scan']}) vs index scans ({row['idx_scan'] or 0})",
+                        estimated_benefit="High"
+                        if row["seq_tup_read"] > 100000
+                        else "Medium",
+                    )
+                )
 
             # Find unused indexes
             cur.execute("""
@@ -338,7 +353,7 @@ class PerformanceAnalyzer:
                 "rollbacks": stats["rollbacks"],
                 "database_size_mb": db_size / (1024 * 1024),
                 "cache_hit_ratio": float(cache_ratio),
-                "unused_indexes": unused_indexes
+                "unused_indexes": unused_indexes,
             }
 
         return PerformanceReport(
@@ -347,7 +362,7 @@ class PerformanceAnalyzer:
             timestamp=datetime.now(),
             slow_queries=slow_queries,
             index_recommendations=index_recommendations,
-            database_metrics=metrics
+            database_metrics=metrics,
         )
 
     def print_report(self, report: PerformanceReport):
@@ -370,7 +385,9 @@ class PerformanceAnalyzer:
         print("-" * 80)
         if report.slow_queries:
             for i, query in enumerate(report.slow_queries, 1):
-                print(f"\n{i}. Execution Time: {query.execution_time_ms:.2f}ms | Count: {query.count}")
+                print(
+                    f"\n{i}. Execution Time: {query.execution_time_ms:.2f}ms | Count: {query.count}"
+                )
                 if query.collection_or_table:
                     print(f"   Collection/Table: {query.collection_or_table}")
                 if query.index_used:
@@ -390,10 +407,14 @@ class PerformanceAnalyzer:
 
                 if report.database_type == "mongodb":
                     index_spec = {field: 1 for field in rec.fields}
-                    print(f"   Command: db.{rec.collection_or_table}.createIndex({json.dumps(index_spec)})")
+                    print(
+                        f"   Command: db.{rec.collection_or_table}.createIndex({json.dumps(index_spec)})"
+                    )
                 elif report.database_type == "postgres":
                     fields_str = ", ".join(rec.fields)
-                    print(f"   Command: CREATE INDEX idx_{rec.collection_or_table.replace('.', '_')}_{rec.fields[0]} ON {rec.collection_or_table}({fields_str});")
+                    print(
+                        f"   Command: CREATE INDEX idx_{rec.collection_or_table.replace('.', '_')}_{rec.fields[0]} ON {rec.collection_or_table}({fields_str});"
+                    )
         else:
             print("No index recommendations")
 
@@ -408,7 +429,7 @@ class PerformanceAnalyzer:
             "timestamp": report.timestamp.isoformat(),
             "slow_queries": [asdict(q) for q in report.slow_queries],
             "index_recommendations": [asdict(r) for r in report.index_recommendations],
-            "database_metrics": report.database_metrics
+            "database_metrics": report.database_metrics,
         }
 
         with open(filename, "w") as f:
@@ -420,11 +441,16 @@ class PerformanceAnalyzer:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Database performance analysis tool")
-    parser.add_argument("--db", required=True, choices=["mongodb", "postgres"],
-                       help="Database type")
+    parser.add_argument(
+        "--db", required=True, choices=["mongodb", "postgres"], help="Database type"
+    )
     parser.add_argument("--uri", required=True, help="Database connection string")
-    parser.add_argument("--threshold", type=int, default=100,
-                       help="Slow query threshold in milliseconds (default: 100)")
+    parser.add_argument(
+        "--threshold",
+        type=int,
+        default=100,
+        help="Slow query threshold in milliseconds (default: 100)",
+    )
     parser.add_argument("--output", help="Save report to JSON file")
 
     args = parser.parse_args()

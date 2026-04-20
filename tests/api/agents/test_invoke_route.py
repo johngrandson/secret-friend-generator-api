@@ -46,9 +46,7 @@ def test_last_message_content_dict_without_content_key():
 @pytest.mark.asyncio
 async def test_invoke_returns_200_with_mocked_app(asgi_app):
     mock_app = AsyncMock()
-    mock_app.ainvoke.return_value = {
-        "messages": [{"role": "ai", "content": "done"}]
-    }
+    mock_app.ainvoke.return_value = {"messages": [{"role": "ai", "content": "done"}]}
     payload = {"messages": [{"role": "user", "content": "hi"}], "thread_id": "t1"}
     with patch("src.api.agents.invoke_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
@@ -61,9 +59,7 @@ async def test_invoke_returns_200_with_mocked_app(asgi_app):
 @pytest.mark.asyncio
 async def test_invoke_response_contains_messages(asgi_app):
     mock_app = AsyncMock()
-    mock_app.ainvoke.return_value = {
-        "messages": [{"role": "ai", "content": "result"}]
-    }
+    mock_app.ainvoke.return_value = {"messages": [{"role": "ai", "content": "result"}]}
     with patch("src.api.agents.invoke_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
             transport=ASGITransport(app=asgi_app), base_url="http://testserver"
@@ -171,7 +167,8 @@ async def test_invoke_500_on_app_error():
     mock_app.ainvoke.side_effect = Exception("unexpected failure")
     with patch("src.api.agents.invoke_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
-            transport=ASGITransport(app=app_with_middleware), base_url="http://testserver"
+            transport=ASGITransport(app=app_with_middleware),
+            base_url="http://testserver",
         ) as client:
             response = await client.post(
                 "/supervisor/invoke",

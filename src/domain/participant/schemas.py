@@ -11,6 +11,7 @@ class ParticipantStatus(str, Enum):
 
 class ParticipantBase(BaseModel):
     """Minimal schema used by GroupRead to avoid circular imports."""
+
     model_config = {"from_attributes": True}
 
     id: int

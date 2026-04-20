@@ -17,12 +17,14 @@ def create_llm(
     Returns:
         Configured ChatOpenAI instance.
     """
-    
+
     if not settings.OPENAI_API_KEY:
         raise ValueError("OPENAI_API_KEY is not set")
-    
+
     return ChatOpenAI(
         model=model or settings.LLM_MODEL,
-        temperature=temperature if temperature is not None else settings.LLM_TEMPERATURE,
+        temperature=temperature
+        if temperature is not None
+        else settings.LLM_TEMPERATURE,
         api_key=SecretStr(settings.OPENAI_API_KEY),
     )

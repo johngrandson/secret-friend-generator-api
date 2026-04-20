@@ -111,9 +111,7 @@ def test_thread_state_response_allows_none_values():
 
 
 def test_thread_state_response_stores_data():
-    resp = ThreadStateResponse(
-        values={"k": "v"}, next=["node_a"], tasks=[{"id": "1"}]
-    )
+    resp = ThreadStateResponse(values={"k": "v"}, next=["node_a"], tasks=[{"id": "1"}])
     assert resp.values == {"k": "v"}
     assert resp.next == ["node_a"]
     assert resp.tasks == [{"id": "1"}]

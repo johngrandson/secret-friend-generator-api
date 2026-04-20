@@ -29,8 +29,12 @@ def get_group_by_link(link_url: str, db_session: Session = Depends(get_db)):
 
 
 @router.patch("/{group_id}", response_model=GroupRead)
-def update_group(group_id: int, payload: GroupUpdate, db_session: Session = Depends(get_db)):
-    return GroupService.update(group_id=group_id, payload=payload, db_session=db_session)
+def update_group(
+    group_id: int, payload: GroupUpdate, db_session: Session = Depends(get_db)
+):
+    return GroupService.update(
+        group_id=group_id, payload=payload, db_session=db_session
+    )
 
 
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)

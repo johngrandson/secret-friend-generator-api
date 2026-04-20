@@ -30,7 +30,7 @@ def _parse_events(lines: list[str]) -> list[dict]:
     events = []
     for line in lines:
         if line.startswith("data: "):
-            events.append(json.loads(line[len("data: "):]))
+            events.append(json.loads(line[len("data: ") :]))
     return events
 
 

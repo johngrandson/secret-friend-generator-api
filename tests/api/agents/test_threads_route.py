@@ -231,7 +231,8 @@ async def test_get_thread_500_on_error():
     mock_app.aget_state.side_effect = Exception("state fetch failed")
     with patch("src.api.agents.threads_route.get_app", return_value=mock_app):
         async with httpx.AsyncClient(
-            transport=ASGITransport(app=app_with_middleware), base_url="http://testserver"
+            transport=ASGITransport(app=app_with_middleware),
+            base_url="http://testserver",
         ) as client:
             response = await client.get("/supervisor/threads/t1")
     assert response.status_code == 500

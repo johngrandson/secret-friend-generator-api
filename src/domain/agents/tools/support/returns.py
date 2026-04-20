@@ -22,10 +22,7 @@ async def initiate_return(order_id: str, reason: str) -> str:
         return f"Order {order_id} not found."
     if order["status"] != "delivered":
         status = order["status"]
-        return (
-            f"Order {order_id} cannot be returned "
-            f"— current status is '{status}'."
-        )
+        return f"Order {order_id} cannot be returned — current status is '{status}'."
     interrupt(
         {
             "action": "initiate_return",

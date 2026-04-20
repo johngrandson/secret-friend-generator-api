@@ -37,7 +37,7 @@ E = ElementMaker(makeelement=html_parser.makeelement)
 # elements
 A = E.a  #: anchor
 ABBR = E.abbr  #: abbreviated form (e.g., WWW, HTTP, etc.)
-ACRONYM = E.acronym  #: 
+ACRONYM = E.acronym  #:
 ADDRESS = E.address  #: information on author
 APPLET = E.applet  #: Java applet (DEPRECATED)
 AREA = E.area  #: client-side image map area
@@ -64,7 +64,7 @@ COLGROUP = E.colgroup  #: table column group
 DATA = E.data  #: machine-readable translation
 DATALIST = E.datalist  #: list of options for an input
 DD = E.dd  #: definition description
-DEL = getattr(E, 'del')  #: deleted text
+DEL = getattr(E, "del")  #: deleted text
 DETAILS = E.details  #: expandable section
 DFN = E.dfn  #: instance definition
 DIALOG = E.dialog  #: dialog box
@@ -148,7 +148,7 @@ STYLE = E.style  #: style info
 SUB = E.sub  #: subscript
 SUMMARY = E.summary  #: summary for <details>
 SUP = E.sup  #: superscript
-TABLE = E.table  #: 
+TABLE = E.table  #:
 TBODY = E.tbody  #: table body
 TD = E.td  #: table data cell
 TEMPLATE = E.template  #: fragment for JS use
@@ -169,5 +169,11 @@ WBR = E.wbr  #: word break
 
 # attributes (only reserved words are included here)
 ATTR = dict
-def CLASS(v): return {'class': v}
-def FOR(v): return {'for': v}
+
+
+def CLASS(v):
+    return {"class": v}
+
+
+def FOR(v):
+    return {"for": v}

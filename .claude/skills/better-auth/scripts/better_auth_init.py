@@ -20,6 +20,7 @@ from dataclasses import dataclass
 @dataclass
 class EnvConfig:
     """Environment configuration holder."""
+
     secret: str
     url: str
     database_url: Optional[str] = None
@@ -175,7 +176,7 @@ class BetterAuthInit:
             return {
                 "type": "sqlite",
                 "import": "import Database from 'better-sqlite3';",
-                "config": f'database: new Database("{db_path}")'
+                "config": f'database: new Database("{db_path}")',
             }
         elif db_type == "2":
             db_url = input("MySQL connection string: ").strip()
@@ -183,7 +184,7 @@ class BetterAuthInit:
                 "type": "mysql",
                 "import": "import { createPool } from 'mysql2/promise';",
                 "config": f"database: createPool({{ connectionString: process.env.DATABASE_URL }})",
-                "env_var": ("DATABASE_URL", db_url)
+                "env_var": ("DATABASE_URL", db_url),
             }
         else:
             db_url = input("PostgreSQL connection string: ").strip()
@@ -191,7 +192,7 @@ class BetterAuthInit:
                 "type": "postgresql",
                 "import": "import { Pool } from 'pg';",
                 "config": "database: new Pool({ connectionString: process.env.DATABASE_URL })",
-                "env_var": ("DATABASE_URL", db_url)
+                "env_var": ("DATABASE_URL", db_url),
             }
 
     def _prompt_drizzle(self) -> Dict[str, Any]:
@@ -209,7 +210,7 @@ class BetterAuthInit:
             "type": "drizzle",
             "provider": provider_name,
             "import": "import { drizzleAdapter } from 'better-auth/adapters/drizzle';\nimport { db } from '@/db';",
-            "config": f"database: drizzleAdapter(db, {{ provider: '{provider_name}' }})"
+            "config": f"database: drizzleAdapter(db, {{ provider: '{provider_name}' }})",
         }
 
     def _prompt_prisma(self) -> Dict[str, Any]:
@@ -227,7 +228,7 @@ class BetterAuthInit:
             "type": "prisma",
             "provider": provider_name,
             "import": "import { prismaAdapter } from 'better-auth/adapters/prisma';\nimport { PrismaClient } from '@prisma/client';\n\nconst prisma = new PrismaClient();",
-            "config": f"database: prismaAdapter(prisma, {{ provider: '{provider_name}' }})"
+            "config": f"database: prismaAdapter(prisma, {{ provider: '{provider_name}' }})",
         }
 
     def _prompt_kysely(self) -> Dict[str, Any]:
@@ -235,7 +236,7 @@ class BetterAuthInit:
         return {
             "type": "kysely",
             "import": "import { kyselyAdapter } from 'better-auth/adapters/kysely';\nimport { db } from '@/db';",
-            "config": "database: kyselyAdapter(db, { provider: 'pg' })"
+            "config": "database: kyselyAdapter(db, { provider: 'pg' })",
         }
 
     def _prompt_mongodb(self) -> Dict[str, Any]:
@@ -247,7 +248,7 @@ class BetterAuthInit:
             "type": "mongodb",
             "import": "import { mongodbAdapter } from 'better-auth/adapters/mongodb';\nimport { client } from '@/db';",
             "config": f"database: mongodbAdapter(client, {{ databaseName: '{db_name}' }})",
-            "env_var": ("MONGODB_URI", mongo_uri)
+            "env_var": ("MONGODB_URI", mongo_uri),
         }
 
     def prompt_auth_methods(self) -> List[str]:
@@ -324,7 +325,9 @@ class BetterAuthInit:
     }""")
 
         if social_providers:
-            config_parts.append(f"  socialProviders: {{\n{',\\n'.join(social_providers)}\n  }}")
+            config_parts.append(
+                f"  socialProviders: {{\n{',\\n'.join(social_providers)}\n  }}"
+            )
 
         # Plugins
         if "5" in auth_methods:
@@ -368,9 +371,7 @@ export const auth = betterAuth({{
 """
 
     def generate_env_file(
-        self,
-        db_config: Dict[str, Any],
-        auth_methods: List[str]
+        self, db_config: Dict[str, Any], auth_methods: List[str]
     ) -> str:
         """
         Generate .env file content.
@@ -394,22 +395,28 @@ export const auth = betterAuth({{
 
         # OAuth credentials
         if "2" in auth_methods:
-            env_vars.extend([
-                "GITHUB_CLIENT_ID=your_github_client_id",
-                "GITHUB_CLIENT_SECRET=your_github_client_secret",
-            ])
+            env_vars.extend(
+                [
+                    "GITHUB_CLIENT_ID=your_github_client_id",
+                    "GITHUB_CLIENT_SECRET=your_github_client_secret",
+                ]
+            )
 
         if "3" in auth_methods:
-            env_vars.extend([
-                "GOOGLE_CLIENT_ID=your_google_client_id",
-                "GOOGLE_CLIENT_SECRET=your_google_client_secret",
-            ])
+            env_vars.extend(
+                [
+                    "GOOGLE_CLIENT_ID=your_google_client_id",
+                    "GOOGLE_CLIENT_SECRET=your_google_client_secret",
+                ]
+            )
 
         if "4" in auth_methods:
-            env_vars.extend([
-                "DISCORD_CLIENT_ID=your_discord_client_id",
-                "DISCORD_CLIENT_SECRET=your_discord_client_secret",
-            ])
+            env_vars.extend(
+                [
+                    "DISCORD_CLIENT_ID=your_discord_client_id",
+                    "DISCORD_CLIENT_SECRET=your_discord_client_secret",
+                ]
+            )
 
         return "\n".join(env_vars) + "\n"
 

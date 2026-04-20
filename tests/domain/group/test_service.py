@@ -66,9 +66,7 @@ def test_get_by_link_url_returns_correct_group(db_session: Session):
 
 def test_get_by_link_url_nonexistent_raises_not_found(db_session: Session):
     with pytest.raises(NotFoundError):
-        GroupService.get_by_link_url(
-            link_url="does-not-exist", db_session=db_session
-        )
+        GroupService.get_by_link_url(link_url="does-not-exist", db_session=db_session)
 
 
 def test_update_group_returns_updated_data(db_session: Session):
@@ -76,7 +74,9 @@ def test_update_group_returns_updated_data(db_session: Session):
         GroupCreate(name="Update Service", description="desc"), db_session
     )
     updated = GroupService.update(
-        group_id=created.id, payload=GroupUpdate(name="Updated Name"), db_session=db_session
+        group_id=created.id,
+        payload=GroupUpdate(name="Updated Name"),
+        db_session=db_session,
     )
     assert isinstance(updated, GroupRead)
     assert updated.name == "Updated Name"

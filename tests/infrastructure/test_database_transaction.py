@@ -37,6 +37,7 @@ def test_transaction_rollbacks_on_exception(db_session: Session):
 
 def test_transaction_reraises_original_exception(db_session: Session):
     """The original exception type is preserved after rollback."""
+
     class CustomError(Exception):
         pass
 

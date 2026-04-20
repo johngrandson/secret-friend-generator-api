@@ -22,14 +22,15 @@ class ParticipantRepository:
             db_session.flush()
             db_session.refresh(new_participant)
         except IntegrityError:
-            raise ConflictError("Participant creation failed. Unique constraint violated.")
+            raise ConflictError(
+                "Participant creation failed. Unique constraint violated."
+            )
         return new_participant
 
     @staticmethod
     def get_all(db_session: Session) -> list[Participant]:
-        stmt = (
-            select(Participant)
-            .options(joinedload(Participant.gift_giver).joinedload(SecretFriend.receiver))
+        stmt = select(Participant).options(
+            joinedload(Participant.gift_giver).joinedload(SecretFriend.receiver)
         )
         return list(db_session.execute(stmt).scalars().unique().all())
 
@@ -38,7 +39,9 @@ class ParticipantRepository:
         stmt = (
             select(Participant)
             .where(Participant.group_id == group_id)
-            .options(joinedload(Participant.gift_giver).joinedload(SecretFriend.receiver))
+            .options(
+                joinedload(Participant.gift_giver).joinedload(SecretFriend.receiver)
+            )
         )
         return list(db_session.execute(stmt).scalars().unique().all())
 
@@ -46,7 +49,9 @@ class ParticipantRepository:
     def get_by_id(participant_id: int, db_session: Session) -> Participant:
         stmt = (
             select(Participant)
-            .options(joinedload(Participant.gift_giver).joinedload(SecretFriend.receiver))
+            .options(
+                joinedload(Participant.gift_giver).joinedload(SecretFriend.receiver)
+            )
             .where(Participant.id == participant_id)
         )
         participant = db_session.execute(stmt).scalars().unique().one_or_none()
@@ -77,5 +82,7 @@ class ParticipantRepository:
             db_session.flush()
             db_session.refresh(participant)
         except IntegrityError:
-            raise ConflictError("Participant update failed. Unique constraint violated.")
+            raise ConflictError(
+                "Participant update failed. Unique constraint violated."
+            )
         return participant

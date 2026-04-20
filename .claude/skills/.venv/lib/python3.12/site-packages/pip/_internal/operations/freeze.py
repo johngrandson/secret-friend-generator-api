@@ -109,8 +109,7 @@ def freeze(
                             line.strip(),
                         )
                         logger.info(
-                            "  (add #egg=PackageName to the URL to avoid"
-                            " this warning)"
+                            "  (add #egg=PackageName to the URL to avoid this warning)"
                         )
                     else:
                         line_req_canonical_name = canonicalize_name(line_req.name)

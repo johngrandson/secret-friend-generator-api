@@ -1,4 +1,5 @@
 """Group task relays — bridge lifecycle events to the background task queue."""
+
 from src.domain.group.schemas import GroupRead
 from src.domain.group.signals import group_created, group_deleted, group_updated
 from src.shared.signals import isolated
@@ -7,12 +8,16 @@ from src.shared.task_backend import dispatch_task
 
 @isolated
 def _relay_group_created(sender: type, *, group: GroupRead, **kwargs: object) -> None:
-    dispatch_task("notifications.group_created", group_id=group.id, group_name=group.name)
+    dispatch_task(
+        "notifications.group_created", group_id=group.id, group_name=group.name
+    )
 
 
 @isolated
 def _relay_group_updated(sender: type, *, group: GroupRead, **kwargs: object) -> None:
-    dispatch_task("notifications.group_updated", group_id=group.id, group_name=group.name)
+    dispatch_task(
+        "notifications.group_updated", group_id=group.id, group_name=group.name
+    )
 
 
 @isolated

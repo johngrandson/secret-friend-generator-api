@@ -13,6 +13,7 @@ To swap backend (when Celery is ready):
     from src.shared.task_backend import set_backend
     set_backend(CeleryBackend(celery_app))
 """
+
 import logging
 from typing import Protocol
 

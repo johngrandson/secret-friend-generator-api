@@ -1,7 +1,5 @@
 def _create_group(client, name: str = "SF Group") -> dict:
-    return client.post(
-        "/groups", json={"name": name, "description": "desc"}
-    ).json()
+    return client.post("/groups", json={"name": name, "description": "desc"}).json()
 
 
 def _create_participant(client, group_id: int, name: str = "Person") -> dict:

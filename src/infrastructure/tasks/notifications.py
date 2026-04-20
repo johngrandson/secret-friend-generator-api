@@ -3,6 +3,7 @@
 Task names match the strings used in domain handler task_relays.
 The FastAPI process dispatches these via send_task() and never imports this module.
 """
+
 import logging
 
 from celery import shared_task
@@ -11,6 +12,7 @@ log = logging.getLogger(__name__)
 
 
 # ── Group notifications ──────────────────────────────────────────────────────
+
 
 @shared_task(name="notifications.group_created")
 def group_created(*, group_id: int, group_name: str) -> None:
@@ -29,9 +31,12 @@ def group_deleted(*, group_id: int) -> None:
 
 # ── Participant notifications ────────────────────────────────────────────────
 
+
 @shared_task(name="notifications.participant_joined")
 def participant_joined(*, participant_id: int, group_id: int) -> None:
-    log.info("notification: participant joined — id=%s group_id=%s", participant_id, group_id)
+    log.info(
+        "notification: participant joined — id=%s group_id=%s", participant_id, group_id
+    )
 
 
 @shared_task(name="notifications.participant_deleted")
@@ -41,9 +46,14 @@ def participant_deleted(*, participant_id: int) -> None:
 
 # ── Secret friend notifications ──────────────────────────────────────────────
 
+
 @shared_task(name="notifications.secret_friend_assigned")
 def secret_friend_assigned(*, assignment_id: int, group_id: int) -> None:
-    log.info("notification: secret friend assigned — id=%s group_id=%s", assignment_id, group_id)
+    log.info(
+        "notification: secret friend assigned — id=%s group_id=%s",
+        assignment_id,
+        group_id,
+    )
 
 
 @shared_task(name="notifications.secret_friend_deleted")

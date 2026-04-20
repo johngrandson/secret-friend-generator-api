@@ -27,25 +27,28 @@ sys.path.insert(0, str(Path(__file__).parent))
 from core import search
 
 # Gemini API setup
-CLAUDE_ROOT = Path.home() / '.claude'
-sys.path.insert(0, str(CLAUDE_ROOT / 'scripts'))
+CLAUDE_ROOT = Path.home() / ".claude"
+sys.path.insert(0, str(CLAUDE_ROOT / "scripts"))
 PROJECT_CLAUDE = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(PROJECT_CLAUDE / 'scripts'))
+sys.path.insert(0, str(PROJECT_CLAUDE / "scripts"))
 try:
     from resolve_env import resolve_env
+
     CENTRALIZED_RESOLVER = True
 except ImportError:
     CENTRALIZED_RESOLVER = False
     try:
         from dotenv import load_dotenv
-        load_dotenv(Path.home() / '.claude' / '.env')
-        load_dotenv(Path.home() / '.claude' / 'skills' / '.env')
+
+        load_dotenv(Path.home() / ".claude" / ".env")
+        load_dotenv(Path.home() / ".claude" / "skills" / ".env")
     except ImportError:
         pass
 
 try:
     from google import genai
     from google.genai import types
+
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
@@ -58,14 +61,25 @@ NANO_BANANA_MODELS = {
     "pro": "gemini-3-pro-image-preview",
 }
 DEFAULT_MODEL = "flash2"
-ASPECT_RATIOS = ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]
+ASPECT_RATIOS = [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9",
+]
 
 
 def get_api_key() -> str:
     """Get Gemini API key from environment."""
     if CENTRALIZED_RESOLVER:
-        return resolve_env('GEMINI_API_KEY', skill='ai-multimodal')
-    return os.getenv('GEMINI_API_KEY')
+        return resolve_env("GEMINI_API_KEY", skill="ai-multimodal")
+    return os.getenv("GEMINI_API_KEY")
 
 
 def adapt_prompt(template_prompt: str, concept: str, **kwargs) -> str:
@@ -80,17 +94,17 @@ def adapt_prompt(template_prompt: str, concept: str, **kwargs) -> str:
     replacements = {
         # Raycast-style arguments
         r'\{argument name="[^"]*" default="[^"]*"\}': concept,
-        r'\{argument name=[^}]+\}': concept,
+        r"\{argument name=[^}]+\}": concept,
         # Bracket variables
-        r'\[insert [^\]]+\]': concept,
-        r'\[subject\]': concept,
-        r'\[concept\]': concept,
-        r'\[topic\]': concept,
-        r'\[product\]': concept,
-        r'\[scene\]': concept,
-        r'\[description\]': concept,
+        r"\[insert [^\]]+\]": concept,
+        r"\[subject\]": concept,
+        r"\[concept\]": concept,
+        r"\[topic\]": concept,
+        r"\[product\]": concept,
+        r"\[scene\]": concept,
+        r"\[description\]": concept,
         # Generic placeholders
-        r'\{[^}]+\}': lambda m: kwargs.get(m.group(0)[1:-1], concept),
+        r"\{[^}]+\}": lambda m: kwargs.get(m.group(0)[1:-1], concept),
     }
 
     for pattern, replacement in replacements.items():
@@ -154,14 +168,14 @@ def mode_creative(concept: str, verbose: bool = False) -> tuple[str, dict]:
     # Extract style from second match
     if len(matches) > 1:
         m2 = matches[1]["prompt"]
-        style_match = re.search(r'(style[^.]+\.)', m2, re.IGNORECASE)
+        style_match = re.search(r"(style[^.]+\.)", m2, re.IGNORECASE)
         if style_match:
             style_hints.append(style_match.group(1))
 
     # Extract lighting/mood from third match
     if len(matches) > 2:
         m3 = matches[2]["prompt"]
-        light_match = re.search(r'(lighting[^.]+\.)', m3, re.IGNORECASE)
+        light_match = re.search(r"(lighting[^.]+\.)", m3, re.IGNORECASE)
         if light_match:
             style_hints.append(light_match.group(1))
 
@@ -201,7 +215,10 @@ def mode_wild(concept: str, verbose: bool = False) -> tuple[str, dict]:
         prompt = f"{concept}, {transform}. "
 
         # Extract any technical camera/quality settings from matched prompt
-        tech_match = re.search(r'(\d+mm lens|f/[\d.]+|Canon|Nikon|professional photography)', base["prompt"])
+        tech_match = re.search(
+            r"(\d+mm lens|f/[\d.]+|Canon|Nikon|professional photography)",
+            base["prompt"],
+        )
         if tech_match:
             prompt += f"Shot with {tech_match.group(1)}. "
 
@@ -222,12 +239,15 @@ def generate_image(
     model: str = DEFAULT_MODEL,
     aspect_ratio: str = "1:1",
     size: str = "2K",
-    verbose: bool = False
+    verbose: bool = False,
 ) -> dict:
     """Generate image using Nano Banana (Gemini image models)."""
 
     if not GENAI_AVAILABLE:
-        return {"status": "error", "error": "google-genai not installed. Run: pip install google-genai"}
+        return {
+            "status": "error",
+            "error": "google-genai not installed. Run: pip install google-genai",
+        }
 
     api_key = get_api_key()
     if not api_key:
@@ -245,34 +265,36 @@ def generate_image(
         client = genai.Client(api_key=api_key)
 
         # Build config
-        image_config_args = {'aspect_ratio': aspect_ratio}
-        if 'pro' in model_id.lower() and size:
-            image_config_args['image_size'] = size
+        image_config_args = {"aspect_ratio": aspect_ratio}
+        if "pro" in model_id.lower() and size:
+            image_config_args["image_size"] = size
 
         config = types.GenerateContentConfig(
-            response_modalities=['IMAGE'],
-            image_config=types.ImageConfig(**image_config_args)
+            response_modalities=["IMAGE"],
+            image_config=types.ImageConfig(**image_config_args),
         )
 
         response = client.models.generate_content(
-            model=model_id,
-            contents=[prompt],
-            config=config
+            model=model_id, contents=[prompt], config=config
         )
 
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        if hasattr(response, 'candidates') and response.candidates:
+        if hasattr(response, "candidates") and response.candidates:
             for part in response.candidates[0].content.parts:
                 if part.inline_data:
-                    with open(output_file, 'wb') as f:
+                    with open(output_file, "wb") as f:
                         f.write(part.inline_data.data)
 
                     if verbose:
                         print(f"  Generated: {output_file}")
 
-                    return {"status": "success", "output": str(output_file), "model": model_id}
+                    return {
+                        "status": "success",
+                        "output": str(output_file),
+                        "model": model_id,
+                    }
 
         return {"status": "error", "error": "No image in response"}
 
@@ -303,20 +325,33 @@ Examples:
 
   # Generate all 3 variations
   python generate.py "futuristic city" -o city.png --mode all
-"""
+""",
     )
 
     parser.add_argument("concept", help="Core concept/subject to generate")
     parser.add_argument("--output", "-o", required=True, help="Output image path")
-    parser.add_argument("--mode", "-m", choices=["search", "creative", "wild", "all"],
-                       default="search", help="Generation mode")
-    parser.add_argument("--model", choices=list(NANO_BANANA_MODELS.keys()),
-                       default=DEFAULT_MODEL, help="Model: flash2 (default, Nano Banana 2), flash, or pro")
+    parser.add_argument(
+        "--mode",
+        "-m",
+        choices=["search", "creative", "wild", "all"],
+        default="search",
+        help="Generation mode",
+    )
+    parser.add_argument(
+        "--model",
+        choices=list(NANO_BANANA_MODELS.keys()),
+        default=DEFAULT_MODEL,
+        help="Model: flash2 (default, Nano Banana 2), flash, or pro",
+    )
     parser.add_argument("--aspect-ratio", "-ar", choices=ASPECT_RATIOS, default="1:1")
     parser.add_argument("--size", choices=["1K", "2K", "4K"], default="2K")
     parser.add_argument("--verbose", "-v", action="store_true")
-    parser.add_argument("--show-prompt", action="store_true", help="Print generated prompt")
-    parser.add_argument("--dry-run", action="store_true", help="Build prompt without generating")
+    parser.add_argument(
+        "--show-prompt", action="store_true", help="Print generated prompt"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Build prompt without generating"
+    )
 
     args = parser.parse_args()
 
@@ -328,7 +363,7 @@ Examples:
 
     for mode in modes:
         if args.verbose or len(modes) > 1:
-            print(f"\n{'='*50}")
+            print(f"\n{'=' * 50}")
             print(f"[Mode: {mode.upper()}]")
 
         # Build prompt based on mode
@@ -358,7 +393,7 @@ Examples:
             model=args.model,
             aspect_ratio=args.aspect_ratio,
             size=args.size,
-            verbose=args.verbose
+            verbose=args.verbose,
         )
 
         if result["status"] == "success":

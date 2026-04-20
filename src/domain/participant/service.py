@@ -7,7 +7,11 @@ from src.domain.participant.schemas import (
     ParticipantRead,
     ParticipantUpdate,
 )
-from src.domain.participant.signals import participant_created, participant_deleted, participant_updated
+from src.domain.participant.signals import (
+    participant_created,
+    participant_deleted,
+    participant_updated,
+)
 from src.infrastructure.persistence import transaction
 
 
@@ -15,7 +19,9 @@ class ParticipantService:
     @staticmethod
     def create(participant: ParticipantCreate, db_session: Session) -> ParticipantRead:
         with transaction(db_session):
-            result = ParticipantRepository.create(participant=participant, db_session=db_session)
+            result = ParticipantRepository.create(
+                participant=participant, db_session=db_session
+            )
             validated = ParticipantRead.model_validate(result)
             participant_created.send(ParticipantService, participant=validated)
             return validated
@@ -43,7 +49,9 @@ class ParticipantService:
     @staticmethod
     def delete(participant_id: int, db_session: Session) -> None:
         with transaction(db_session):
-            ParticipantRepository.delete(participant_id=participant_id, db_session=db_session)
+            ParticipantRepository.delete(
+                participant_id=participant_id, db_session=db_session
+            )
             participant_deleted.send(ParticipantService, participant_id=participant_id)
 
     @staticmethod

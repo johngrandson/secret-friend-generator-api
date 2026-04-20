@@ -44,5 +44,7 @@ class GroupService:
 
     @staticmethod
     def get_by_link_url(link_url: str, db_session: Session) -> GroupRead:
-        result = GroupRepository.get_by_link_url(link_url=link_url, db_session=db_session)
+        result = GroupRepository.get_by_link_url(
+            link_url=link_url, db_session=db_session
+        )
         return GroupRead.model_validate(result)

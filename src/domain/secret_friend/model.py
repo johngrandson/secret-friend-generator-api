@@ -16,16 +16,22 @@ class SecretFriend(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
     )
 
-    gift_giver_id: Mapped[int] = mapped_column(ForeignKey("participants.id"), nullable=False, index=True)
+    gift_giver_id: Mapped[int] = mapped_column(
+        ForeignKey("participants.id"), nullable=False, index=True
+    )
     giver: Mapped["Participant | None"] = relationship(
         foreign_keys=[gift_giver_id],
         back_populates="gift_giver",
     )
 
-    gift_receiver_id: Mapped[int] = mapped_column(ForeignKey("participants.id"), nullable=False, index=True)
+    gift_receiver_id: Mapped[int] = mapped_column(
+        ForeignKey("participants.id"), nullable=False, index=True
+    )
     receiver: Mapped["Participant | None"] = relationship(
         foreign_keys=[gift_receiver_id],
         back_populates="gift_receiver",

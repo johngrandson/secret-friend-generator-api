@@ -4,6 +4,7 @@ Reads from environment variables and .env file. Provides typed,
 validated configuration with sensible defaults. Equivalent to
 Phoenix's config/runtime.exs pattern.
 """
+
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

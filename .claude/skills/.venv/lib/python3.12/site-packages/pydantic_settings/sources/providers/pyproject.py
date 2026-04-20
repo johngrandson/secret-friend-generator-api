@@ -24,10 +24,10 @@ class PyprojectTomlConfigSettingsSource(TomlConfigSettingsSource):
         toml_file: Path | None = None,
     ) -> None:
         self.toml_file_path = self._pick_pyproject_toml_file(
-            toml_file, settings_cls.model_config.get('pyproject_toml_depth', 0)
+            toml_file, settings_cls.model_config.get("pyproject_toml_depth", 0)
         )
         self.toml_table_header: tuple[str, ...] = settings_cls.model_config.get(
-            'pyproject_toml_table_header', ('tool', 'pydantic-settings')
+            "pyproject_toml_table_header", ("tool", "pydantic-settings")
         )
         self.toml_data = self._read_files(self.toml_file_path)
         for key in self.toml_table_header:
@@ -45,18 +45,18 @@ class PyprojectTomlConfigSettingsSource(TomlConfigSettingsSource):
         """
         if provided:
             return provided.resolve()
-        rv = Path.cwd() / 'pyproject.toml'
+        rv = Path.cwd() / "pyproject.toml"
         count = 0
         if not rv.is_file():
-            child = rv.parent.parent / 'pyproject.toml'
+            child = rv.parent.parent / "pyproject.toml"
             while count < depth:
                 if child.is_file():
                     return child
                 if str(child.parent) == rv.root:
                     break  # end discovery after checking system root once
-                child = child.parent.parent / 'pyproject.toml'
+                child = child.parent.parent / "pyproject.toml"
                 count += 1
         return rv
 
 
-__all__ = ['PyprojectTomlConfigSettingsSource']
+__all__ = ["PyprojectTomlConfigSettingsSource"]

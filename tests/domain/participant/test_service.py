@@ -43,16 +43,24 @@ def test_get_all_returns_participant_list_schema(db_session: Session):
 def test_get_all_includes_created_participants(db_session: Session, group_fixture):
     before = len(ParticipantService.get_all(db_session).participants)
     group = group_fixture()
-    ParticipantService.create(ParticipantCreate(name="P1", group_id=group.id), db_session)
-    ParticipantService.create(ParticipantCreate(name="P2", group_id=group.id), db_session)
+    ParticipantService.create(
+        ParticipantCreate(name="P1", group_id=group.id), db_session
+    )
+    ParticipantService.create(
+        ParticipantCreate(name="P2", group_id=group.id), db_session
+    )
     result = ParticipantService.get_all(db_session)
     assert len(result.participants) == before + 2
 
 
 def test_get_by_group_id_returns_list_for_group(db_session: Session, group_fixture):
     group = group_fixture()
-    ParticipantService.create(ParticipantCreate(name="PA", group_id=group.id), db_session)
-    result = ParticipantService.get_by_group_id(group_id=group.id, db_session=db_session)
+    ParticipantService.create(
+        ParticipantCreate(name="PA", group_id=group.id), db_session
+    )
+    result = ParticipantService.get_by_group_id(
+        group_id=group.id, db_session=db_session
+    )
     assert len(result) == 1
     assert isinstance(result[0], ParticipantRead)
 

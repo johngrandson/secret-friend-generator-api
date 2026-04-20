@@ -3,6 +3,7 @@
 Production-ready engine configuration with connection pool health checks.
 Session lifecycle follows FastAPI dependency injection pattern.
 """
+
 from collections.abc import Generator
 
 from sqlalchemy import create_engine

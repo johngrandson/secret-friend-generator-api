@@ -24,44 +24,60 @@ import time
 from pathlib import Path
 
 from minimax_api_client import (
-    find_minimax_api_key, api_post, poll_async_task,
-    download_file, get_output_dir
+    find_minimax_api_key,
+    api_post,
+    poll_async_task,
+    download_file,
+    get_output_dir,
 )
 
 # Model registries
-MINIMAX_IMAGE_MODELS = {'image-01', 'image-01-live'}
+MINIMAX_IMAGE_MODELS = {"image-01", "image-01-live"}
 MINIMAX_VIDEO_MODELS = {
-    'MiniMax-Hailuo-2.3', 'MiniMax-Hailuo-2.3-Fast',
-    'MiniMax-Hailuo-02', 'S2V-01'
+    "MiniMax-Hailuo-2.3",
+    "MiniMax-Hailuo-2.3-Fast",
+    "MiniMax-Hailuo-02",
+    "S2V-01",
 }
 MINIMAX_SPEECH_MODELS = {
-    'speech-2.8-hd', 'speech-2.8-turbo',
-    'speech-2.6-hd', 'speech-2.6-turbo',
-    'speech-02-hd', 'speech-02-turbo'
+    "speech-2.8-hd",
+    "speech-2.8-turbo",
+    "speech-2.6-hd",
+    "speech-2.6-turbo",
+    "speech-02-hd",
+    "speech-02-turbo",
 }
-MINIMAX_MUSIC_MODELS = {'music-2.5', 'music-2.0'}
+MINIMAX_MUSIC_MODELS = {"music-2.5", "music-2.0"}
 
 ALL_MINIMAX_MODELS = (
-    MINIMAX_IMAGE_MODELS | MINIMAX_VIDEO_MODELS |
-    MINIMAX_SPEECH_MODELS | MINIMAX_MUSIC_MODELS
+    MINIMAX_IMAGE_MODELS
+    | MINIMAX_VIDEO_MODELS
+    | MINIMAX_SPEECH_MODELS
+    | MINIMAX_MUSIC_MODELS
 )
 
 
 def is_minimax_model(model: str) -> bool:
     """Check if model is a MiniMax model."""
     return (
-        model in ALL_MINIMAX_MODELS or
-        model.startswith('MiniMax-') or
-        model.startswith('image-01') or
-        model.startswith('speech-') or
-        model.startswith('music-') or
-        model.startswith('S2V-')
+        model in ALL_MINIMAX_MODELS
+        or model.startswith("MiniMax-")
+        or model.startswith("image-01")
+        or model.startswith("speech-")
+        or model.startswith("music-")
+        or model.startswith("S2V-")
     )
 
 
-def generate_image(api_key: str, prompt: str, model: str = 'image-01',
-                   aspect_ratio: str = '1:1', num_images: int = 1,
-                   output: str = None, verbose: bool = False) -> dict:
+def generate_image(
+    api_key: str,
+    prompt: str,
+    model: str = "image-01",
+    aspect_ratio: str = "1:1",
+    num_images: int = 1,
+    output: str = None,
+    verbose: bool = False,
+) -> dict:
     """Generate image using MiniMax image-01 model."""
     payload = {
         "model": model,
@@ -69,7 +85,7 @@ def generate_image(api_key: str, prompt: str, model: str = 'image-01',
         "aspect_ratio": aspect_ratio,
         "n": min(num_images, 9),
         "response_format": "url",
-        "prompt_optimizer": True
+        "prompt_optimizer": True,
     }
 
     if verbose:
@@ -93,7 +109,7 @@ def generate_image(api_key: str, prompt: str, model: str = 'image-01',
 
         resp = req.get(url, timeout=60)
         resp.raise_for_status()
-        with open(fpath, 'wb') as f:
+        with open(fpath, "wb") as f:
             f.write(resp.content)
         saved_files.append(str(fpath))
 
@@ -108,16 +124,22 @@ def generate_image(api_key: str, prompt: str, model: str = 'image-01',
     return {"status": "success", "generated_images": saved_files, "model": model}
 
 
-def generate_video(api_key: str, prompt: str, model: str = 'MiniMax-Hailuo-2.3',
-                   duration: int = 6, resolution: str = '1080P',
-                   first_frame: str = None, output: str = None,
-                   verbose: bool = False) -> dict:
+def generate_video(
+    api_key: str,
+    prompt: str,
+    model: str = "MiniMax-Hailuo-2.3",
+    duration: int = 6,
+    resolution: str = "1080P",
+    first_frame: str = None,
+    output: str = None,
+    verbose: bool = False,
+) -> dict:
     """Generate video using MiniMax Hailuo models (async)."""
     payload = {
         "prompt": prompt,
         "model": model,
         "duration": duration,
-        "resolution": resolution
+        "resolution": resolution,
     }
     if first_frame:
         payload["first_frame_image"] = first_frame
@@ -134,8 +156,9 @@ def generate_video(api_key: str, prompt: str, model: str = 'MiniMax-Hailuo-2.3',
         print(f"  Task ID: {task_id}, polling...")
 
     start = time.time()
-    poll_result = poll_async_task(task_id, "video_generation", api_key,
-                                  poll_interval=10, verbose=verbose)
+    poll_result = poll_async_task(
+        task_id, "video_generation", api_key, poll_interval=10, verbose=verbose
+    )
 
     file_id = poll_result.get("file_id")
     if not file_id:
@@ -157,16 +180,25 @@ def generate_video(api_key: str, prompt: str, model: str = 'MiniMax-Hailuo-2.3',
         print(f"  Generated in {elapsed:.1f}s, size: {file_size:.2f} MB")
 
     return {
-        "status": "success", "generated_video": output_path,
-        "generation_time": elapsed, "file_size_mb": file_size, "model": model
+        "status": "success",
+        "generated_video": output_path,
+        "generation_time": elapsed,
+        "file_size_mb": file_size,
+        "model": model,
     }
 
 
-def generate_speech(api_key: str, text: str, model: str = 'speech-2.8-hd',
-                    voice: str = 'English_expressive_narrator',
-                    emotion: str = 'neutral', output_format: str = 'mp3',
-                    rate: float = 1.0, output: str = None,
-                    verbose: bool = False) -> dict:
+def generate_speech(
+    api_key: str,
+    text: str,
+    model: str = "speech-2.8-hd",
+    voice: str = "English_expressive_narrator",
+    emotion: str = "neutral",
+    output_format: str = "mp3",
+    rate: float = 1.0,
+    output: str = None,
+    verbose: bool = False,
+) -> dict:
     """Generate speech using MiniMax TTS v2 API."""
     payload = {
         "model": model,
@@ -174,18 +206,13 @@ def generate_speech(api_key: str, text: str, model: str = 'speech-2.8-hd',
         "stream": False,
         "language_boost": "auto",
         "output_format": "hex",
-        "voice_setting": {
-            "voice_id": voice,
-            "speed": rate,
-            "vol": 1.0,
-            "pitch": 0
-        },
+        "voice_setting": {"voice_id": voice, "speed": rate, "vol": 1.0, "pitch": 0},
         "audio_setting": {
             "sample_rate": 32000,
             "bitrate": 128000,
             "format": output_format,
-            "channel": 1
-        }
+            "channel": 1,
+        },
     }
 
     if verbose:
@@ -199,12 +226,12 @@ def generate_speech(api_key: str, text: str, model: str = 'speech-2.8-hd',
 
     output_dir = get_output_dir()
     ts = int(time.time())
-    ext = output_format if output_format in ('mp3', 'wav', 'flac') else 'mp3'
+    ext = output_format if output_format in ("mp3", "wav", "flac") else "mp3"
     output_path = str(output_dir / f"minimax_speech_{ts}.{ext}")
 
     # Audio returned as hex-encoded string from t2a_v2
     audio_bytes = bytes.fromhex(audio_data)
-    with open(output_path, 'wb') as f:
+    with open(output_path, "wb") as f:
         f.write(audio_bytes)
 
     if output:
@@ -218,9 +245,15 @@ def generate_speech(api_key: str, text: str, model: str = 'speech-2.8-hd',
     return {"status": "success", "generated_audio": output_path, "model": model}
 
 
-def generate_music(api_key: str, lyrics: str = '', prompt: str = '',
-                   model: str = 'music-2.5', output_format: str = 'mp3',
-                   output: str = None, verbose: bool = False) -> dict:
+def generate_music(
+    api_key: str,
+    lyrics: str = "",
+    prompt: str = "",
+    model: str = "music-2.5",
+    output_format: str = "mp3",
+    output: str = None,
+    verbose: bool = False,
+) -> dict:
     """Generate music using MiniMax music models."""
     payload = {
         "model": model,
@@ -228,8 +261,8 @@ def generate_music(api_key: str, lyrics: str = '', prompt: str = '',
         "audio_setting": {
             "sample_rate": 44100,
             "bitrate": 128000,
-            "format": output_format
-        }
+            "format": output_format,
+        },
     }
     if lyrics:
         payload["lyrics"] = lyrics[:3500]
@@ -255,13 +288,14 @@ def generate_music(api_key: str, lyrics: str = '', prompt: str = '',
     # Download from URL or decode hex
     if audio_data.startswith("http"):
         import requests as req
+
         resp = req.get(audio_data, timeout=120)
         resp.raise_for_status()
-        with open(output_path, 'wb') as f:
+        with open(output_path, "wb") as f:
             f.write(resp.content)
     else:
         audio_bytes = bytes.fromhex(audio_data)
-        with open(output_path, 'wb') as f:
+        with open(output_path, "wb") as f:
             f.write(audio_bytes)
 
     if output:
@@ -273,6 +307,8 @@ def generate_music(api_key: str, lyrics: str = '', prompt: str = '',
         print(f"  Saved: {output_path} ({dur_s:.1f}s)")
 
     return {
-        "status": "success", "generated_audio": output_path,
-        "duration_ms": duration_ms, "model": model
+        "status": "success",
+        "generated_audio": output_path,
+        "duration_ms": duration_ms,
+        "model": model,
     }

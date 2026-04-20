@@ -31,7 +31,9 @@ class SecretFriendRepository:
             db_session.flush()
             db_session.refresh(new_sf)
         except IntegrityError:
-            raise ConflictError("Secret friend link failed. Unique constraint violated.")
+            raise ConflictError(
+                "Secret friend link failed. Unique constraint violated."
+            )
         return new_sf
 
     @staticmethod

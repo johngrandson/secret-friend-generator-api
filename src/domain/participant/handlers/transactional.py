@@ -4,6 +4,7 @@ These handlers have NO @isolated decorator. If they fail, the entire
 transaction rolls back. Use for cross-domain state changes that
 MUST succeed or the whole operation fails.
 """
+
 from sqlalchemy.orm import Session
 
 from src.domain.secret_friend.signals import secret_friend_assigned

@@ -20,6 +20,7 @@ def _make_participant_read(id: int, group_id: int = 1) -> ParticipantRead:
 
 # ── sort_secret_friends ───────────────────────────────────────────────────────
 
+
 def test_sort_secret_friends_raises_with_fewer_than_two_participants():
     participant = _make_participant_read(1)
     with pytest.raises(BusinessRuleError, match="At least 2 participants"):
@@ -77,7 +78,10 @@ def test_sort_secret_friends_with_two_participants_links_to_the_other():
 
 # ── link ──────────────────────────────────────────────────────────────────────
 
-def test_link_returns_secret_friend_read_schema(db_session: Session, participant_fixture):
+
+def test_link_returns_secret_friend_read_schema(
+    db_session: Session, participant_fixture
+):
     giver = participant_fixture()
     receiver = participant_fixture()
 
@@ -90,7 +94,9 @@ def test_link_returns_secret_friend_read_schema(db_session: Session, participant
     assert isinstance(result, SecretFriendRead)
 
 
-def test_link_returns_correct_giver_and_receiver_ids(db_session: Session, participant_fixture):
+def test_link_returns_correct_giver_and_receiver_ids(
+    db_session: Session, participant_fixture
+):
     giver = participant_fixture()
     receiver = participant_fixture()
 

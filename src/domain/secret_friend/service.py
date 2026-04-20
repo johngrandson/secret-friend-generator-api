@@ -6,7 +6,10 @@ from src.domain.participant.schemas import ParticipantRead
 from src.domain.participant.service import ParticipantService
 from src.domain.secret_friend.repository import SecretFriendRepository
 from src.domain.secret_friend.schemas import SecretFriendLink, SecretFriendRead
-from src.domain.secret_friend.signals import secret_friend_assigned, secret_friend_deleted
+from src.domain.secret_friend.signals import (
+    secret_friend_assigned,
+    secret_friend_deleted,
+)
 from src.infrastructure.persistence import transaction
 from src.shared.exceptions import BusinessRuleError
 
@@ -31,7 +34,9 @@ class SecretFriendService:
                 group_id=group_id, db_session=db_session
             )
 
-            link = SecretFriendService.sort_secret_friends(participant, all_participants)
+            link = SecretFriendService.sort_secret_friends(
+                participant, all_participants
+            )
 
             result = SecretFriendRepository.link(
                 secret_friend=SecretFriendLink(
@@ -56,7 +61,9 @@ class SecretFriendService:
     ) -> SecretFriendLink:
         """Shuffles participants and assigns a secret friend avoiding self-linking."""
         if len(participants) < 2:
-            raise BusinessRuleError("At least 2 participants are required to assign secret friends.")
+            raise BusinessRuleError(
+                "At least 2 participants are required to assign secret friends."
+            )
         random.shuffle(participants)
 
         for receiver in participants[1:] + [participants[0]]:
@@ -69,14 +76,20 @@ class SecretFriendService:
 
     @staticmethod
     def get_by_id(secret_friend_id: int, db_session: Session) -> SecretFriendRead:
-        result = SecretFriendRepository.get_by_id(secret_friend_id=secret_friend_id, db_session=db_session)
+        result = SecretFriendRepository.get_by_id(
+            secret_friend_id=secret_friend_id, db_session=db_session
+        )
         return SecretFriendRead.model_validate(result)
 
     @staticmethod
     def delete(secret_friend_id: int, db_session: Session) -> None:
         with transaction(db_session):
-            SecretFriendRepository.delete(secret_friend_id=secret_friend_id, db_session=db_session)
-            secret_friend_deleted.send(SecretFriendService, secret_friend_id=secret_friend_id)
+            SecretFriendRepository.delete(
+                secret_friend_id=secret_friend_id, db_session=db_session
+            )
+            secret_friend_deleted.send(
+                SecretFriendService, secret_friend_id=secret_friend_id
+            )
 
     @staticmethod
     def link(secret_friend: SecretFriendLink, db_session: Session) -> SecretFriendRead:

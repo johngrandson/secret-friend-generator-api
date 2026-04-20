@@ -3,6 +3,7 @@
 Single entry point to register all entity-level lifecycle handlers.
 Call register_all_handlers() at app startup.
 """
+
 from src.domain.group.handlers import register as register_group
 from src.domain.participant.handlers import register as register_participant
 from src.domain.secret_friend.handlers import register as register_secret_friend

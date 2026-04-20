@@ -1,4 +1,7 @@
-"""Secret friend transactional handlers — errors propagate, rolling back the transaction."""
+"""Secret friend transactional handlers.
+
+Errors propagate, rolling back the transaction.
+"""
 
 
 def register_transactional() -> None:

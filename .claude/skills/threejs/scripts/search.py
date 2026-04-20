@@ -13,8 +13,12 @@ Domains: examples, categories, use-cases, api
 import argparse
 import json
 from core import (
-    CSV_CONFIG, MAX_RESULTS, search,
-    search_by_complexity, search_by_category, get_recommended_examples
+    CSV_CONFIG,
+    MAX_RESULTS,
+    search,
+    search_by_complexity,
+    search_by_category,
+    get_recommended_examples,
 )
 
 
@@ -25,10 +29,12 @@ def format_output(result):
 
     output = []
     output.append(f"## Three.js Search Results")
-    output.append(f"**Domain:** {result['domain']} | **Query:** {result.get('query', result.get('category', result.get('complexity', 'N/A')))}")
+    output.append(
+        f"**Domain:** {result['domain']} | **Query:** {result.get('query', result.get('category', result.get('complexity', 'N/A')))}"
+    )
     output.append(f"**Found:** {result['count']} results\n")
 
-    for i, row in enumerate(result['results'], 1):
+    for i, row in enumerate(result["results"], 1):
         output.append(f"### Result {i}")
         for key, value in row.items():
             value_str = str(value)
@@ -43,14 +49,32 @@ def format_output(result):
 def main():
     parser = argparse.ArgumentParser(description="Three.js Skill Search")
     parser.add_argument("query", nargs="?", help="Search query")
-    parser.add_argument("--domain", "-d", choices=list(CSV_CONFIG.keys()), help="Search domain")
-    parser.add_argument("--max-results", "-n", type=int, default=MAX_RESULTS, help="Max results (default: 5)")
+    parser.add_argument(
+        "--domain", "-d", choices=list(CSV_CONFIG.keys()), help="Search domain"
+    )
+    parser.add_argument(
+        "--max-results",
+        "-n",
+        type=int,
+        default=MAX_RESULTS,
+        help="Max results (default: 5)",
+    )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
 
     # Special search modes
-    parser.add_argument("--use-case", "-u", action="store_true", help="Get recommended examples for use case")
+    parser.add_argument(
+        "--use-case",
+        "-u",
+        action="store_true",
+        help="Get recommended examples for use case",
+    )
     parser.add_argument("--category", "-c", type=str, help="Filter by category")
-    parser.add_argument("--complexity", "-x", choices=["low", "medium", "high"], help="Filter by complexity")
+    parser.add_argument(
+        "--complexity",
+        "-x",
+        choices=["low", "medium", "high"],
+        help="Filter by complexity",
+    )
 
     args = parser.parse_args()
 

@@ -12,21 +12,28 @@ def start():
         command = [
             "uvicorn",
             "src.app_main:app",
-            "--host", host,
-            "--port", port,
+            "--host",
+            host,
+            "--port",
+            port,
             "--reload",
         ]
     else:
         command = [
             "gunicorn",
-            "-w", workers,
-            "-k", "uvicorn.workers.UvicornWorker",
-            "-b", f"{host}:{port}",
+            "-w",
+            workers,
+            "-k",
+            "uvicorn.workers.UvicornWorker",
+            "-b",
+            f"{host}:{port}",
             "src.app_main:app",
         ]
 
     try:
-        print(f"Starting server on {host}:{port} ({'Development' if environment.lower() == 'development' else 'Production'})...")
+        print(
+            f"Starting server on {host}:{port} ({'Development' if environment.lower() == 'development' else 'Production'})..."
+        )
         run(command, check=True)
     except Exception as e:
         print(f"Failed to start the server: {e}")

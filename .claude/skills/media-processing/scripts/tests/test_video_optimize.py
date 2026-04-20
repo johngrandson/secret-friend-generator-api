@@ -43,24 +43,15 @@ class TestVideoOptimizer:
                     "codec_name": "h264",
                     "width": 1920,
                     "height": 1080,
-                    "r_frame_rate": "30/1"
+                    "r_frame_rate": "30/1",
                 },
-                {
-                    "codec_type": "audio",
-                    "codec_name": "aac",
-                    "bit_rate": "128000"
-                }
+                {"codec_type": "audio", "codec_name": "aac", "bit_rate": "128000"},
             ],
-            "format": {
-                "duration": "120.5",
-                "bit_rate": "5000000",
-                "size": "75000000"
-            }
+            "format": {"duration": "120.5", "bit_rate": "5000000", "size": "75000000"},
         }
 
         mock_run.return_value = MagicMock(
-            stdout=json.dumps(mock_data).encode(),
-            returncode=0
+            stdout=json.dumps(mock_data).encode(), returncode=0
         )
 
         info = self.optimizer.get_video_info(Path("test.mp4"))
@@ -115,16 +106,17 @@ class TestVideoOptimizer:
     def test_calculate_target_resolution_even_dimensions(self):
         """Test that dimensions are always even."""
         width, height = self.optimizer.calculate_target_resolution(
-            1920, 1080, 1279, None  # Odd width
+            1920,
+            1080,
+            1279,
+            None,  # Odd width
         )
         assert width % 2 == 0
         assert height % 2 == 0
 
     def test_calculate_target_resolution_no_upscale(self):
         """Test that small videos are not upscaled."""
-        width, height = self.optimizer.calculate_target_resolution(
-            640, 480, 1920, 1080
-        )
+        width, height = self.optimizer.calculate_target_resolution(640, 480, 1920, 1080)
         assert width == 640
         assert height == 480
 
@@ -142,15 +134,13 @@ class TestVideoOptimizer:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
         mock_get_info.return_value = mock_info
 
         optimizer = VideoOptimizer(dry_run=True)
         result = optimizer.optimize_video(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            max_width=1280
+            Path("input.mp4"), Path("output.mp4"), max_width=1280
         )
 
         assert result is True
@@ -170,16 +160,13 @@ class TestVideoOptimizer:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
         mock_get_info.return_value = mock_info
         mock_run.return_value = MagicMock(returncode=0)
 
         result = self.optimizer.optimize_video(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            max_width=1280,
-            max_height=720
+            Path("input.mp4"), Path("output.mp4"), max_width=1280, max_height=720
         )
 
         assert result is True
@@ -205,15 +192,13 @@ class TestVideoOptimizer:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
         mock_get_info.return_value = mock_info
         mock_run.return_value = MagicMock(returncode=0)
 
         result = self.optimizer.optimize_video(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            target_fps=30.0
+            Path("input.mp4"), Path("output.mp4"), target_fps=30.0
         )
 
         assert result is True
@@ -238,15 +223,13 @@ class TestVideoOptimizer:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
         mock_get_info.return_value = mock_info
         mock_run.return_value = MagicMock(returncode=0)
 
         result = self.optimizer.optimize_video(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            two_pass=True
+            Path("input.mp4"), Path("output.mp4"), two_pass=True
         )
 
         assert result is True
@@ -277,16 +260,13 @@ class TestVideoOptimizer:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
         mock_get_info.return_value = mock_info
         mock_run.return_value = MagicMock(returncode=0)
 
         result = self.optimizer.optimize_video(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            crf=23,
-            two_pass=False
+            Path("input.mp4"), Path("output.mp4"), crf=23, two_pass=False
         )
 
         assert result is True
@@ -312,15 +292,12 @@ class TestVideoOptimizer:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
         mock_get_info.return_value = mock_info
         mock_run.side_effect = Exception("FFmpeg failed")
 
-        result = self.optimizer.optimize_video(
-            Path("input.mp4"),
-            Path("output.mp4")
-        )
+        result = self.optimizer.optimize_video(Path("input.mp4"), Path("output.mp4"))
 
         assert result is False
 
@@ -340,7 +317,7 @@ class TestVideoInfo:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
 
         assert info.width == 1920
@@ -365,7 +342,7 @@ class TestCompareVideos:
             size=75000000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
 
         opt_info = VideoInfo(
@@ -378,7 +355,7 @@ class TestCompareVideos:
             size=37500000,
             codec="h264",
             audio_codec="aac",
-            audio_bitrate=128000
+            audio_bitrate=128000,
         )
 
         mock_get_info.side_effect = [orig_info, opt_info]

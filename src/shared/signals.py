@@ -5,6 +5,7 @@ Domain-specific signals live in their respective entity modules:
 - domain/participant/signals.py
 - domain/secret_friend/signals.py
 """
+
 import functools
 import logging
 from collections.abc import Callable

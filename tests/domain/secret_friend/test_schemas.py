@@ -6,6 +6,7 @@ from src.domain.secret_friend.schemas import SecretFriendLink, SecretFriendRead
 
 # ── SecretFriendLink ──────────────────────────────────────────────────────────
 
+
 def test_secret_friend_link_valid_distinct_ids_parses():
     schema = SecretFriendLink(gift_giver_id=1, gift_receiver_id=2)
     assert schema.gift_giver_id == 1
@@ -43,6 +44,7 @@ def test_secret_friend_link_missing_receiver_raises():
 
 
 # ── SecretFriendRead ──────────────────────────────────────────────────────────
+
 
 def test_secret_friend_read_parses_all_fields():
     schema = SecretFriendRead(id=10, gift_giver_id=1, gift_receiver_id=2)

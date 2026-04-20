@@ -17,8 +17,8 @@ import io
 from pathlib import Path
 
 # Fix Windows console encoding for Unicode characters
-if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 
 # Output type markers for LLM presentation guidance
@@ -95,24 +95,20 @@ SYNONYMS = {
     # Notifications
     "alerts": "notifications",
     "alert": "notification",
-
     # Git/GitHub
     "ci": "github actions",
     "ci/cd": "github actions",
     "pipeline": "github actions",
     "actions": "github actions",
-
     # Common abbreviations
     "auth": "authentication",
     "authn": "authentication",
     "db": "database",
     "repo": "repository",
     "deps": "dependencies",
-
     # Commands
     "pr": "pull request",
     "mr": "pull request",  # GitLab users
-
     # Testing
     "specs": "tests",
     "e2e": "integration test",
@@ -128,7 +124,7 @@ def expand_synonyms(text: str) -> str:
 
     for synonym, canonical in sorted_synonyms:
         # Word boundary aware replacement
-        pattern = r'\b' + re.escape(synonym) + r'\b'
+        pattern = r"\b" + re.escape(synonym) + r"\b"
         result = re.sub(pattern, canonical, result, flags=re.IGNORECASE)
 
     return result
@@ -136,23 +132,161 @@ def expand_synonyms(text: str) -> str:
 
 # Task keyword mappings for intent detection
 TASK_MAPPINGS = {
-    "plan": ["plan", "design", "architect", "research", "think", "analyze", "strategy", "how to", "approach"],
-    "cook": ["implement", "build", "create", "add", "feature", "code", "develop", "make", "write"],
-    "bootstrap": ["start", "new", "init", "setup", "project", "scaffold", "generate", "begin"],
-    "fix": ["fix", "bug", "error", "broken", "crash", "fail", "issue", "wrong", "debug", "troubleshoot"],
-    "test": ["test", "check", "verify", "validate", "spec", "unit", "integration", "coverage", "e2e"],
+    "plan": [
+        "plan",
+        "design",
+        "architect",
+        "research",
+        "think",
+        "analyze",
+        "strategy",
+        "how to",
+        "approach",
+    ],
+    "cook": [
+        "implement",
+        "build",
+        "create",
+        "add",
+        "feature",
+        "code",
+        "develop",
+        "make",
+        "write",
+    ],
+    "bootstrap": [
+        "start",
+        "new",
+        "init",
+        "setup",
+        "project",
+        "scaffold",
+        "generate",
+        "begin",
+    ],
+    "fix": [
+        "fix",
+        "bug",
+        "error",
+        "broken",
+        "crash",
+        "fail",
+        "issue",
+        "wrong",
+        "debug",
+        "troubleshoot",
+    ],
+    "test": [
+        "test",
+        "check",
+        "verify",
+        "validate",
+        "spec",
+        "unit",
+        "integration",
+        "coverage",
+        "e2e",
+    ],
     "docs": ["document", "readme", "docs", "explain", "comment", "documentation"],
-    "git": ["git", "commit", "push", "pull request", "merge", "branch", "stage", "diff", "stash"],
+    "git": [
+        "git",
+        "commit",
+        "push",
+        "pull request",
+        "merge",
+        "branch",
+        "stage",
+        "diff",
+        "stash",
+    ],
     "review": ["review", "audit", "inspect", "quality", "refactor", "clean"],
-    "config": ["config", "configure", "settings", "ck.json", ".ck.json", "setup", "locale", "language", "paths"],
-    "coding-level": ["coding", "level", "eli5", "junior", "senior", "lead", "god", "beginner", "expert", "teach", "learn", "explain"],
+    "config": [
+        "config",
+        "configure",
+        "settings",
+        "ck.json",
+        ".ck.json",
+        "setup",
+        "locale",
+        "language",
+        "paths",
+    ],
+    "coding-level": [
+        "coding",
+        "level",
+        "eli5",
+        "junior",
+        "senior",
+        "lead",
+        "god",
+        "beginner",
+        "expert",
+        "teach",
+        "learn",
+        "explain",
+    ],
     # New categories
-    "worktree": ["worktree", "parallel", "isolate", "isolation", "concurrent", "multiple branches"],
-    "kanban": ["kanban", "board", "dashboard", "progress", "track", "orchestration", "visualize"],
-    "preview": ["preview", "view", "render", "markdown", "reader", "novel", "explain", "slides", "diagram", "ascii", "visualize", "visual"],
+    "worktree": [
+        "worktree",
+        "parallel",
+        "isolate",
+        "isolation",
+        "concurrent",
+        "multiple branches",
+    ],
+    "kanban": [
+        "kanban",
+        "board",
+        "dashboard",
+        "progress",
+        "track",
+        "orchestration",
+        "visualize",
+    ],
+    "preview": [
+        "preview",
+        "view",
+        "render",
+        "markdown",
+        "reader",
+        "novel",
+        "explain",
+        "slides",
+        "diagram",
+        "ascii",
+        "visualize",
+        "visual",
+    ],
     "journal": ["journal", "diary", "log", "entry", "reflect", "failure", "lesson"],
-    "watzup": ["watzup", "status", "summary", "wrap up", "what's up", "recent", "changes"],
-    "notifications": ["notification", "notifications", "notify", "discord", "telegram", "slack", "alert", "webhook", "stop hook", "session end", "setup notification", "setup notifications", "configure discord", "configure telegram", "configure slack", "discord webhook", "telegram bot", "slack webhook"],
+    "watzup": [
+        "watzup",
+        "status",
+        "summary",
+        "wrap up",
+        "what's up",
+        "recent",
+        "changes",
+    ],
+    "notifications": [
+        "notification",
+        "notifications",
+        "notify",
+        "discord",
+        "telegram",
+        "slack",
+        "alert",
+        "webhook",
+        "stop hook",
+        "session end",
+        "setup notification",
+        "setup notifications",
+        "configure discord",
+        "configure telegram",
+        "configure slack",
+        "discord webhook",
+        "telegram bot",
+        "slack webhook",
+    ],
 }
 
 # Known subcommands and aliases.
@@ -263,9 +397,9 @@ CATEGORY_GUIDES = {
     "plan": {
         "title": "Planning",
         "workflow": [
-            ("Quick plan", "`/ck:plan --fast` \"your task\""),
-            ("Deep research", "`/ck:plan --hard` \"complex task\""),
-            ("Multi-agent", "`/ck:plan --parallel` \"complex task\""),
+            ("Quick plan", '`/ck:plan --fast` "your task"'),
+            ("Deep research", '`/ck:plan --hard` "complex task"'),
+            ("Multi-agent", '`/ck:plan --parallel` "complex task"'),
             ("Validate", "`/ck:plan validate` (interview to confirm decisions)"),
             ("Execute plan", "`/ck:cook` (runs the plan)"),
         ],
@@ -274,8 +408,8 @@ CATEGORY_GUIDES = {
     "cook": {
         "title": "Implementation",
         "workflow": [
-            ("Quick impl", "`/ck:cook` \"your feature\""),
-            ("Auto mode", "`/ck:cook --auto` \"trust me bro\""),
+            ("Quick impl", '`/ck:cook` "your feature"'),
+            ("Auto mode", '`/ck:cook --auto` "trust me bro"'),
             ("Test", "`/ck:test`"),
         ],
         "tip": "Cook is standalone - it plans internally. Use /ck:plan -> /ck:cook for explicit planning",
@@ -283,8 +417,8 @@ CATEGORY_GUIDES = {
     "bootstrap": {
         "title": "Project Setup",
         "workflow": [
-            ("Quick start", "`/ck:bootstrap --fast` \"requirements\""),
-            ("Full setup", "`/ck:bootstrap` \"detailed requirements\""),
+            ("Quick start", '`/ck:bootstrap --fast` "requirements"'),
+            ("Full setup", '`/ck:bootstrap` "detailed requirements"'),
             ("Auto mode", "`/ck:bootstrap --auto` (default)"),
         ],
         "tip": "Include tech stack preferences in description",
@@ -337,7 +471,7 @@ CATEGORY_GUIDES = {
     "worktree": {
         "title": "Git Worktrees (Parallel Development)",
         "workflow": [
-            ("Create worktree", "`/ck:worktree` \"feature description\""),
+            ("Create worktree", '`/ck:worktree` "feature description"'),
             ("Work in isolation", "cd to worktree, implement, test"),
             ("Review & merge", "Create PR from worktree → merge → cleanup"),
             ("List worktrees", "`/ck:worktree list`"),
@@ -358,8 +492,8 @@ CATEGORY_GUIDES = {
     "brainstorm": {
         "title": "Brainstorming & Ideation",
         "workflow": [
-            ("Brainstorm", "`/ck:brainstorm` \"your topic\""),
-            ("With context", "`/ck:brainstorm` \"topic\" (respects codingLevel)"),
+            ("Brainstorm", '`/ck:brainstorm` "your topic"'),
+            ("With context", '`/ck:brainstorm` "topic" (respects codingLevel)'),
             ("Trade-offs", "Analyze solutions with brutal honesty"),
         ],
         "tip": "Use before planning to explore approaches and validate feasibility",
@@ -367,7 +501,7 @@ CATEGORY_GUIDES = {
     "fix": {
         "title": "Fixing Issues & Debugging",
         "workflow": [
-            ("Auto fix", "`/ck:fix` \"describe the issue\""),
+            ("Auto fix", '`/ck:fix` "describe the issue"'),
             ("Parallel", "`/ck:fix --parallel` (multi-agent debug)"),
             ("Debug only", "`/ck:debug` (root cause analysis)"),
         ],
@@ -417,9 +551,15 @@ CATEGORY_GUIDES = {
     "notifications": {
         "title": "Session Notifications (Discord/Telegram/Slack)",
         "workflow": [
-            ("1. Set env vars", "Add `DISCORD_WEBHOOK_URL` or `TELEGRAM_BOT_TOKEN`+`TELEGRAM_CHAT_ID` to `~/.claude/.env`"),
+            (
+                "1. Set env vars",
+                "Add `DISCORD_WEBHOOK_URL` or `TELEGRAM_BOT_TOKEN`+`TELEGRAM_CHAT_ID` to `~/.claude/.env`",
+            ),
             ("2. Add hook", "Add Stop hook to `.claude/settings.json` (see below)"),
-            ("3. Test", "`echo '{\"hook_event_name\":\"Stop\"}' | node .claude/hooks/notifications/notify.cjs`"),
+            (
+                "3. Test",
+                '`echo \'{"hook_event_name":"Stop"}\' | node .claude/hooks/notifications/notify.cjs`',
+            ),
         ],
         "tip": """Add to settings.json:
 ```json
@@ -433,25 +573,25 @@ Docs: `.claude/hooks/notifications/docs/`""",
 def parse_frontmatter(file_path: Path) -> dict:
     """Parse YAML frontmatter from a markdown file."""
     try:
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
     except Exception:
         return {}
 
     # Check for frontmatter
-    if not content.startswith('---'):
+    if not content.startswith("---"):
         return {}
 
     # Find closing ---
-    end_idx = content.find('---', 3)
+    end_idx = content.find("---", 3)
     if end_idx == -1:
         return {}
 
     frontmatter = content[3:end_idx].strip()
     result = {}
 
-    for line in frontmatter.split('\n'):
-        if ':' in line:
-            key, value = line.split(':', 1)
+    for line in frontmatter.split("\n"):
+        if ":" in line:
+            key, value = line.split(":", 1)
             # Strip quotes from values
             val = value.strip().strip('"').strip("'")
             result[key.strip()] = val
@@ -531,16 +671,16 @@ def discover_skills(skills_dir: Path) -> dict:
         skill_name = skill_dir.name
 
         # Handle nested skills (e.g., document-skills/docx)
-        if skill_dir.parent.name != 'skills':
+        if skill_dir.parent.name != "skills":
             skill_name = f"{skill_dir.parent.name}/{skill_name}"
 
         # Skip template and ck-help itself
-        if skill_name in ('template-skill', 'ck-help'):
+        if skill_name in ("template-skill", "ck-help"):
             continue
 
         # Parse frontmatter
         fm = parse_frontmatter(skill_md)
-        description = fm.get('description', '')
+        description = fm.get("description", "")
 
         # Fallback if description is missing from frontmatter
         if not description:
@@ -549,8 +689,8 @@ def discover_skills(skills_dir: Path) -> dict:
             description = "No description provided."
 
         # Clean description (remove [CK] prefix, emoji indicators)
-        clean_desc = re.sub(r'^\[CK\]\s*', '', description).strip()
-        clean_desc = re.sub(r'^[^\w\s\[]+\s*', '', clean_desc).strip()
+        clean_desc = re.sub(r"^\[CK\]\s*", "", description).strip()
+        clean_desc = re.sub(r"^[^\w\s\[]+\s*", "", clean_desc).strip()
 
         # Determine category from skill name
         category = SKILL_CATEGORY_MAP.get(skill_name, skill_name)
@@ -568,7 +708,7 @@ def discover_skills(skills_dir: Path) -> dict:
         }
 
         # Include argument-hint for discoverability
-        arg_hint = fm.get('argument-hint', '')
+        arg_hint = fm.get("argument-hint", "")
         if arg_hint:
             entry["argument_hint"] = str(arg_hint)
 
@@ -597,7 +737,7 @@ def detect_intent(input_str: str, categories: list) -> str:
     # e.g., "test my login" should be task, not category "test"
     if len(words) >= 2:
         # Exception: if it looks like a command (has colon), treat as command
-        if ':' in input_str:
+        if ":" in input_str:
             return "command"
         if resolve_subcommand(input_str):
             return "command"
@@ -612,7 +752,9 @@ def detect_intent(input_str: str, categories: list) -> str:
         return "category"
 
     # Single word typo tolerance: fuzzy match against categories
-    all_categories = set(c.lower() for c in categories) | set(c.lower() for c in CATEGORY_GUIDES.keys())
+    all_categories = set(c.lower() for c in categories) | set(
+        c.lower() for c in CATEGORY_GUIDES.keys()
+    )
     for cat in all_categories:
         if fuzzy_match(input_lower, cat):
             return "category"
@@ -620,11 +762,11 @@ def detect_intent(input_str: str, categories: list) -> str:
     # Single word typo tolerance: fuzzy match against task keywords
     for cat, keywords in TASK_MAPPINGS.items():
         for kw in keywords:
-            if ' ' not in kw and fuzzy_match(input_lower, kw):
+            if " " not in kw and fuzzy_match(input_lower, kw):
                 return "task"
 
     # Check if it looks like a command (has colon)
-    if ':' in input_str:
+    if ":" in input_str:
         return "command"
 
     # Single-token alias that maps to known subcommand (e.g., review:codebase)
@@ -675,7 +817,9 @@ def show_overview(data: dict, prefix: str) -> None:
     print("- Unclear about approach? -> `/ck:brainstorm` first")
     print("- Agent generated report? -> `/ck:preview` to view")
     print("- Add `ultrathink` for deep analysis (more tokens)")
-    print("- `--parallel` flag (e.g., `/ck:plan --parallel`) = multi-agent, faster but more tokens")
+    print(
+        "- `--parallel` flag (e.g., `/ck:plan --parallel`) = multi-agent, faster but more tokens"
+    )
 
 
 def show_category_guide(data: dict, category: str, prefix: str) -> None:
@@ -733,7 +877,7 @@ def show_category_guide(data: dict, category: str, prefix: str) -> None:
     if cmds:
         print("**Skills:**")
         for cmd in cmds:
-            hint = cmd.get('argument_hint', '')
+            hint = cmd.get("argument_hint", "")
             hint_suffix = f" `{hint}`" if hint else ""
             print(f"- `{cmd['name']}`{hint_suffix} - {cmd['description']}")
 
@@ -760,13 +904,20 @@ def show_command(data: dict, command: str, prefix: str) -> None:
         return
 
     # Normalize search term
-    search = normalize_command_query(command).replace(":", "").replace("-", "").replace(" ", "")
+    search = (
+        normalize_command_query(command)
+        .replace(":", "")
+        .replace("-", "")
+        .replace(" ", "")
+    )
 
     found = None
     for cmds in commands.values():
         for cmd in cmds:
             # Normalize skill name for comparison
-            name = normalize_command_query(cmd["name"]).replace("-", "").replace(" ", "")
+            name = (
+                normalize_command_query(cmd["name"]).replace("-", "").replace(" ", "")
+            )
             if name == search:
                 found = cmd
                 break
@@ -785,12 +936,12 @@ def show_command(data: dict, command: str, prefix: str) -> None:
     emit_output_type("command-details")
     print(f"# `{found['name']}`")
     print()
-    print(found['description'])
+    print(found["description"])
     print()
     print(f"**Category:** {found['category']}")
 
     # Show argument hint if available
-    arg_hint = found.get('argument_hint', '')
+    arg_hint = found.get("argument_hint", "")
     if arg_hint:
         print()
         print(f"**Usage:** `{found['name']} {arg_hint}`")
@@ -799,9 +950,9 @@ def show_command(data: dict, command: str, prefix: str) -> None:
         print(f"**Usage:** `{found['name']} <your-input>`")
 
     # Show related skills (same category)
-    cat = found['category']
+    cat = found["category"]
     if cat in commands:
-        related = [c for c in commands[cat] if c['name'] != found['name']][:3]
+        related = [c for c in commands[cat] if c["name"] != found["name"]][:3]
         if related:
             related_names = ", ".join(f"`{r['name']}`" for r in related)
             print()
@@ -819,20 +970,26 @@ def do_search(data: dict, term: str, prefix: str, emit_marker: bool = True) -> N
 
     for cmds in commands.values():
         for cmd in cmds:
-            if term_lower in cmd["name"].lower() or term_lower in cmd["description"].lower():
+            if (
+                term_lower in cmd["name"].lower()
+                or term_lower in cmd["description"].lower()
+            ):
                 matches.append(cmd)
 
     if not matches:
         print(f"No skills found for '{term}'.")
         print()
-        print("Try browsing categories: " + ", ".join(f"`{c}`" for c in sorted(data["categories"].keys())))
+        print(
+            "Try browsing categories: "
+            + ", ".join(f"`{c}`" for c in sorted(data["categories"].keys()))
+        )
         return
 
     print(f"# Search: {term}")
     print()
     print(f"Found {len(matches)} matches:")
     for cmd in matches[:8]:
-        hint = cmd.get('argument_hint', '')
+        hint = cmd.get("argument_hint", "")
         hint_suffix = f" `{hint}`" if hint else ""
         print(f"- `{cmd['name']}`{hint_suffix} - {cmd['description']}")
 
@@ -872,11 +1029,39 @@ def recommend_task(data: dict, task: str, prefix: str) -> None:
     # These get BONUS weight when they appear first (imperative sentences)
     # NOTE: Excluded contextual words like "setup", "add" that often precede subjects
     ACTION_VERBS = {
-        "fix", "debug", "test", "commit", "push", "merge", "pull", "create",
-        "build", "implement", "write", "make", "deploy", "run",
-        "configure", "install", "update", "upgrade", "delete", "remove",
-        "review", "check", "verify", "validate", "find", "search", "locate",
-        "plan", "design", "refactor", "optimize", "document", "explain",
+        "fix",
+        "debug",
+        "test",
+        "commit",
+        "push",
+        "merge",
+        "pull",
+        "create",
+        "build",
+        "implement",
+        "write",
+        "make",
+        "deploy",
+        "run",
+        "configure",
+        "install",
+        "update",
+        "upgrade",
+        "delete",
+        "remove",
+        "review",
+        "check",
+        "verify",
+        "validate",
+        "find",
+        "search",
+        "locate",
+        "plan",
+        "design",
+        "refactor",
+        "optimize",
+        "document",
+        "explain",
     }
 
     # Check if first word is an action verb
@@ -888,7 +1073,7 @@ def recommend_task(data: dict, task: str, prefix: str) -> None:
         score = 0.0
         for kw in keywords:
             # Multi-word keywords: exact substring match, high weight
-            if ' ' in kw:
+            if " " in kw:
                 if kw in task_lower:
                     score += 3.0
             # Single-word keywords: exact match first, then fuzzy fallback
@@ -897,7 +1082,7 @@ def recommend_task(data: dict, task: str, prefix: str) -> None:
                 is_fuzzy = False
 
                 # Try exact match first
-                match = re.search(r'\b' + re.escape(kw) + r'\b', task_lower)
+                match = re.search(r"\b" + re.escape(kw) + r"\b", task_lower)
                 if match:
                     # Find word position from character position
                     char_count = 0
@@ -937,7 +1122,10 @@ def recommend_task(data: dict, task: str, prefix: str) -> None:
     if not scores:
         print(f"Not sure about: {task}")
         print()
-        print("Try being more specific, or browse categories: " + ", ".join(f"`{c}`" for c in sorted(data["categories"].keys())))
+        print(
+            "Try being more specific, or browse categories: "
+            + ", ".join(f"`{c}`" for c in sorted(data["categories"].keys()))
+        )
         return
 
     sorted_cats = sorted(scores.items(), key=lambda x: -x[1])
@@ -970,7 +1158,7 @@ def recommend_task(data: dict, task: str, prefix: str) -> None:
     if top_cat in commands and commands[top_cat]:
         print("**Skills:**")
         for cmd in commands[top_cat][:4]:
-            hint = cmd.get('argument_hint', '')
+            hint = cmd.get("argument_hint", "")
             hint_suffix = f" `{hint}`" if hint else ""
             print(f"- `{cmd['name']}`{hint_suffix} - {cmd['description']}")
 
@@ -1002,21 +1190,21 @@ def show_config_guide() -> None:
     print()
     print("**Global config** (`~/.claude/.ck.json`) - your preferences:")
     print("```json")
-    print('{')
+    print("{")
     print('  "locale": {')
     print('    "thinkingLanguage": "en",')
     print('    "responseLanguage": "vi"')
-    print('  },')
+    print("  },")
     print('  "plan": { "issuePrefix": "GH-" }')
-    print('}')
+    print("}")
     print("```")
     print()
     print("**Local override** (`./.claude/.ck.json`) - project-specific:")
     print("```json")
-    print('{')
+    print("{")
     print('  "plan": { "issuePrefix": "JIRA-" },')
     print('  "paths": { "docs": "documentation" }')
-    print('}')
+    print("}")
     print("```")
     print()
     print("---")
@@ -1024,7 +1212,7 @@ def show_config_guide() -> None:
     print("## Full Schema")
     print()
     print("```json")
-    print('{')
+    print("{")
     print('  "plan": {')
     print('    "namingFormat": "{date}-{issue}-{slug}",  // Plan folder naming')
     print('    "dateFormat": "YYMMDD-HHmm",              // Date format in names')
@@ -1033,33 +1221,33 @@ def show_config_guide() -> None:
     print('    "resolution": {')
     print('      "order": ["session", "branch"],  // Resolution chain')
     print('      "branchPattern": "(?:feat|fix|...)/.+"  // Branch slug regex')
-    print('    },')
+    print("    },")
     print('    "validation": {')
     print('      "mode": "prompt",       // "auto" | "prompt" | "off"')
     print('      "minQuestions": 3,      // Min questions to ask')
     print('      "maxQuestions": 8,      // Max questions to ask')
     print('      "focusAreas": ["assumptions", "risks", "tradeoffs", "architecture"]')
-    print('    }')
-    print('  },')
+    print("    }")
+    print("  },")
     print('  "paths": {')
     print('    "docs": "docs",     // Documentation directory')
     print('    "plans": "plans"    // Plans directory')
-    print('  },')
+    print("  },")
     print('  "locale": {')
     print('    "thinkingLanguage": null, // Language for reasoning ("en" recommended)')
     print('    "responseLanguage": null  // Language for output ("vi", "fr", etc.)')
-    print('  },')
+    print("  },")
     print('  "trust": {')
     print('    "passphrase": null,   // Secret for testing context injection')
     print('    "enabled": false      // Enable trust verification')
-    print('  },')
+    print("  },")
     print('  "project": {')
     print('    "type": "auto",           // "monorepo", "single-repo", "auto"')
     print('    "packageManager": "auto", // "npm", "pnpm", "yarn", "auto"')
     print('    "framework": "auto"       // "next", "react", "vue", "auto"')
-    print('  },')
+    print("  },")
     print('  "codingLevel": -1  // Adaptive communication (-1 to 5)')
-    print('}')
+    print("}")
     print("```")
     print()
     print("---")
@@ -1076,16 +1264,18 @@ def show_config_guide() -> None:
     print("- `{slug}` - Descriptive slug from branch or input")
     print()
     print("**Language Settings:**")
-    print("- `thinkingLanguage` - Language for internal reasoning (\"en\" recommended)")
-    print("- `responseLanguage` - Language for user-facing output (\"vi\", \"fr\", etc.)")
+    print('- `thinkingLanguage` - Language for internal reasoning ("en" recommended)')
+    print('- `responseLanguage` - Language for user-facing output ("vi", "fr", etc.)')
     print()
     print("When both are set, Claude thinks in one language but responds in another.")
-    print("This improves precision (English) while maintaining natural output (your language).")
+    print(
+        "This improves precision (English) while maintaining natural output (your language)."
+    )
     print()
     print("**Plan Validation:**")
-    print("- `mode: \"prompt\"` - Ask user after plan creation (default)")
-    print("- `mode: \"auto\"` - Always run validation interview")
-    print("- `mode: \"off\"` - Skip; user runs `/ck:plan validate` manually")
+    print('- `mode: "prompt"` - Ask user after plan creation (default)')
+    print('- `mode: "auto"` - Always run validation interview')
+    print('- `mode: "off"` - Skip; user runs `/ck:plan validate` manually')
     print()
     print("Validation interviews the user with critical questions to confirm")
     print("assumptions, risks, and architectural decisions before implementation.")
@@ -1099,7 +1289,9 @@ def show_config_guide() -> None:
     print("- `4` = Tech Lead - executive summary, risk matrix, business impact")
     print("- `5` = God Mode - code first, minimal prose, no hand-holding")
     print()
-    print("Guidelines auto-inject on session start. Skills like `/ck:brainstorm` respect them.")
+    print(
+        "Guidelines auto-inject on session start. Skills like `/ck:brainstorm` respect them."
+    )
     print()
     print("---")
     print()
@@ -1113,7 +1305,7 @@ def show_config_guide() -> None:
     print("- Null bytes and control chars rejected")
     print()
     print("**Slug Sanitization:**")
-    print("- Invalid filename chars removed: `< > : \" / \\ | ? *`")
+    print('- Invalid filename chars removed: `< > : " / \\ | ? *`')
     print("- Non-alphanumeric replaced with hyphen")
     print("- Multiple hyphens collapsed: `foo---bar` → `foo-bar`")
     print("- Leading/trailing hyphens removed")
@@ -1127,11 +1319,11 @@ def show_config_guide() -> None:
     print()
     print("**Consolidated Plans (advanced):**")
     print("```json")
-    print('{')
+    print("{")
     print('  "paths": {')
     print('    "plans": "/home/user/all-my-plans"')
-    print('  }')
-    print('}')
+    print("  }")
+    print("}")
     print("```")
     print("Absolute paths allow storing all plans in one location across projects.")
     print()
@@ -1147,16 +1339,16 @@ def show_config_guide() -> None:
     print()
     print("**Project with local override:**")
     print("```bash")
-    print("# Global: issuePrefix = \"GH-\"")
-    print("# Local (.claude/.ck.json): issuePrefix = \"JIRA-\"")
-    print("# Result: issuePrefix = \"JIRA-\" (local wins)")
+    print('# Global: issuePrefix = "GH-"')
+    print('# Local (.claude/.ck.json): issuePrefix = "JIRA-"')
+    print('# Result: issuePrefix = "JIRA-" (local wins)')
     print("```")
     print()
     print("**Deep merge behavior:**")
     print("```")
-    print("Global: { plan: { issuePrefix: \"GH-\", dateFormat: \"YYMMDD\" } }")
-    print("Local:  { plan: { issuePrefix: \"JIRA-\" } }")
-    print("Result: { plan: { issuePrefix: \"JIRA-\", dateFormat: \"YYMMDD\" } }")
+    print('Global: { plan: { issuePrefix: "GH-", dateFormat: "YYMMDD" } }')
+    print('Local:  { plan: { issuePrefix: "JIRA-" } }')
+    print('Result: { plan: { issuePrefix: "JIRA-", dateFormat: "YYMMDD" } }')
     print("```")
     print()
     print("*Tip: Config is optional - all fields have sensible defaults.*")
@@ -1191,9 +1383,9 @@ def show_coding_level_guide() -> None:
     print()
     print("**Set in `.ck.json`:**")
     print("```json")
-    print('{')
+    print("{")
     print('  "codingLevel": 0')
-    print('}')
+    print("}")
     print("```")
     print()
     print("**Location (cascading):**")
@@ -1205,7 +1397,9 @@ def show_coding_level_guide() -> None:
     print("## How It Works")
     print()
     print("1. SessionStart hook reads `codingLevel` from `.ck.json`")
-    print("2. If 0-5, injects guidelines from `.claude/output-styles/coding-level-*.md`")
+    print(
+        "2. If 0-5, injects guidelines from `.claude/output-styles/coding-level-*.md`"
+    )
     print("3. Skills like `/ck:brainstorm` follow the injected guidelines")
     print()
     print("**Token Efficiency:**")
@@ -1219,8 +1413,8 @@ def show_coding_level_guide() -> None:
     print("### Level 0 (ELI5)")
     print("- **MUST** use real-world analogies (labeled boxes, recipes)")
     print("- **MUST** define every technical term")
-    print("- **MUST** use \"we\" language")
-    print("- **MUST** end with check-in: \"Does this make sense?\"")
+    print('- **MUST** use "we" language')
+    print('- **MUST** end with check-in: "Does this make sense?"')
     print("- **MUST** comment every line of code")
     print("- Structure: Big Picture → Analogy → Baby Steps → Try It → Check-In")
     print()
@@ -1268,7 +1462,9 @@ def show_coding_level_guide() -> None:
     print("Guidelines live in `.claude/output-styles/coding-level-*.md`")
     print("Edit these files directly to customize behavior per level.")
     print()
-    print("*Tip: Use `-1` (disabled) unless you're teaching or want guided explanations.*")
+    print(
+        "*Tip: Use `-1` (disabled) unless you're teaching or want guided explanations.*"
+    )
 
 
 def main():
@@ -1298,7 +1494,14 @@ def main():
         return
 
     # Special case: coding level documentation
-    if input_str.lower() in ["coding-level", "codinglevel", "coding level", "level", "eli5", "god mode"]:
+    if input_str.lower() in [
+        "coding-level",
+        "codinglevel",
+        "coding level",
+        "level",
+        "eli5",
+        "god mode",
+    ]:
         show_coding_level_guide()
         return
 

@@ -13,6 +13,7 @@ Pool options (pass as --pool flag, not an app setting):
     gevent   — high-concurrency I/O (requires: pip install gevent)
     solo     — single-threaded, useful for debugging
 """
+
 import json
 import logging
 
@@ -114,7 +115,9 @@ def make_celery() -> Celery:
     """
     app = Celery("app")
 
-    task_queues = _build_queues(settings.CELERY_QUEUE_TYPE, settings.CELERY_EXTRA_QUEUES)
+    task_queues = _build_queues(
+        settings.CELERY_QUEUE_TYPE, settings.CELERY_EXTRA_QUEUES
+    )
     task_routes = _parse_task_routes(settings.CELERY_TASK_ROUTES)
 
     app.conf.update(

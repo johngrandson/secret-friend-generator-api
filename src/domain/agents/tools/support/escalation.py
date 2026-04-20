@@ -23,6 +23,5 @@ async def escalate_to_human(reason: str, customer_id: str) -> str:
         }
     )
     return (
-        f"Case for customer {customer_id} has been escalated "
-        f"to a human agent: {reason}"
+        f"Case for customer {customer_id} has been escalated to a human agent: {reason}"
     )

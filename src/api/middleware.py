@@ -3,6 +3,7 @@
 ExceptionMiddleware acts as Phoenix's FallbackController: it maps
 domain exceptions to HTTP status codes so routes stay clean.
 """
+
 import logging
 import time
 

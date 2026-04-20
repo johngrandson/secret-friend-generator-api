@@ -129,14 +129,16 @@ def scan_docs(source: Path) -> list[dict]:
         category = categorize_file(filepath.relative_to(source))
         rel_path = filepath.relative_to(source)
 
-        docs.append({
-            "title": title,
-            "description": description,
-            "category": category,
-            "rel_path": str(rel_path),
-            "abs_path": str(filepath),
-            "content": content,
-        })
+        docs.append(
+            {
+                "title": title,
+                "description": description,
+                "category": category,
+                "rel_path": str(rel_path),
+                "abs_path": str(filepath),
+                "content": content,
+            }
+        )
 
     return docs
 
@@ -225,9 +227,7 @@ def generate_llms_full_txt(
             # Include full content minus the H1
             content = doc["content"]
             # Strip frontmatter
-            content = re.sub(
-                r"^---\s*\n.*?\n---\s*\n", "", content, flags=re.DOTALL
-            )
+            content = re.sub(r"^---\s*\n.*?\n---\s*\n", "", content, flags=re.DOTALL)
             # Strip H1
             content = re.sub(r"^#\s+.+\n*", "", content)
             lines.append(content.strip())
@@ -248,6 +248,7 @@ def detect_project_info(source: Path) -> tuple[str, str]:
     if pkg.exists():
         try:
             import json
+
             data = json.loads(pkg.read_text(encoding="utf-8"))
             name = data.get("name", name)
             desc = data.get("description", desc)
@@ -278,9 +279,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate llms.txt from documentation directory"
     )
-    parser.add_argument(
-        "--source", required=True, help="Path to docs directory"
-    )
+    parser.add_argument("--source", required=True, help="Path to docs directory")
     parser.add_argument(
         "--output",
         default=".",

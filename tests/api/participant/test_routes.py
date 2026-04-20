@@ -1,7 +1,5 @@
 def _create_group(client, name: str = "Test Group") -> dict:
-    return client.post(
-        "/groups", json={"name": name, "description": "desc"}
-    ).json()
+    return client.post("/groups", json={"name": name, "description": "desc"}).json()
 
 
 def _create_participant(client, group_id: int, name: str = "Alice") -> dict:
@@ -29,9 +27,7 @@ def test_create_participant_response_contains_id_and_name(client):
 
 
 def test_create_participant_with_invalid_group_returns_404(client):
-    response = client.post(
-        "/participants", json={"name": "Ghost", "group_id": 99999}
-    )
+    response = client.post("/participants", json={"name": "Ghost", "group_id": 99999})
     assert response.status_code == 404
 
 
@@ -106,9 +102,7 @@ def test_update_participant_nonexistent_returns_404(client):
 def test_update_participant_empty_body_returns_422(client):
     group = _create_group(client, "Empty Update Group")
     participant = _create_participant(client, group["id"], "Someone")
-    response = client.patch(
-        f"/participants/{participant['id']}", json={}
-    )
+    response = client.patch(f"/participants/{participant['id']}", json={})
     assert response.status_code == 422
 
 

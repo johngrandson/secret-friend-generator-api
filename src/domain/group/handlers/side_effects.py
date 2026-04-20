@@ -1,4 +1,5 @@
 """Group side-effect handlers — @isolated, errors are swallowed."""
+
 import logging
 
 from src.domain.group.schemas import GroupRead

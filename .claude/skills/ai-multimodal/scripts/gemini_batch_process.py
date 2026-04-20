@@ -25,9 +25,10 @@ import shutil
 
 # Import centralized environment resolver (works for both local and global installs)
 CLAUDE_ROOT = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(CLAUDE_ROOT / 'scripts'))
+sys.path.insert(0, str(CLAUDE_ROOT / "scripts"))
 try:
     from resolve_env import resolve_env
+
     CENTRALIZED_RESOLVER_AVAILABLE = True
 except ImportError:
     # Fallback if centralized resolver not available
@@ -38,10 +39,11 @@ except ImportError:
         load_dotenv = None
 
 # Import key rotation support
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'common'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "common"))
 try:
     from api_key_rotator import KeyRotator, is_rate_limit_error, is_server_error
     from api_key_helper import find_all_api_keys
+
     KEY_ROTATION_AVAILABLE = True
 except ImportError:
     KEY_ROTATION_AVAILABLE = False
@@ -63,12 +65,14 @@ except ImportError:
 # Default: gemini-3.1-flash-image-preview (Nano Banana 2 - 3-5x faster, 95% Pro quality)
 # Alternative: imagen-4.0-generate-001 (production quality)
 # All image generation requires billing - no completely free option exists
-IMAGE_MODEL_DEFAULT = 'gemini-3.1-flash-image-preview'  # Nano Banana 2 (fastest, near-Pro quality)
-IMAGE_MODEL_FALLBACK = 'gemini-2.5-flash-image'  # Fallback if Nano Banana 2 fails
+IMAGE_MODEL_DEFAULT = (
+    "gemini-3.1-flash-image-preview"  # Nano Banana 2 (fastest, near-Pro quality)
+)
+IMAGE_MODEL_FALLBACK = "gemini-2.5-flash-image"  # Fallback if Nano Banana 2 fails
 IMAGEN_MODELS = {
-    'imagen-4.0-generate-001',
-    'imagen-4.0-ultra-generate-001',
-    'imagen-4.0-fast-generate-001',
+    "imagen-4.0-generate-001",
+    "imagen-4.0-ultra-generate-001",
+    "imagen-4.0-fast-generate-001",
 }
 # Video models have no fallback - Veo always requires billing
 
@@ -90,10 +94,10 @@ def find_api_key() -> Optional[str]:
     """
     if CENTRALIZED_RESOLVER_AVAILABLE:
         # Use centralized resolver (recommended)
-        return resolve_env('GEMINI_API_KEY', skill='ai-multimodal')
+        return resolve_env("GEMINI_API_KEY", skill="ai-multimodal")
 
     # Fallback: Local resolution (legacy)
-    api_key = os.getenv('GEMINI_API_KEY')
+    api_key = os.getenv("GEMINI_API_KEY")
     if api_key:
         return api_key
 
@@ -104,16 +108,16 @@ def find_api_key() -> Optional[str]:
         claude_dir = skills_dir.parent
 
         env_files = [
-            claude_dir / '.env',
-            skills_dir / '.env',
-            skill_dir / '.env',
+            claude_dir / ".env",
+            skills_dir / ".env",
+            skill_dir / ".env",
         ]
 
         for env_file in env_files:
             if env_file.exists():
                 load_dotenv(env_file, override=True)
 
-        api_key = os.getenv('GEMINI_API_KEY')
+        api_key = os.getenv("GEMINI_API_KEY")
         if api_key:
             return api_key
 
@@ -128,35 +132,35 @@ def get_default_model(task: str) -> str:
     2. Legacy GEMINI_MODEL variable
     3. Hard-coded defaults
     """
-    if task == 'generate':  # Image generation
-        model = os.getenv('IMAGE_GEN_MODEL')
+    if task == "generate":  # Image generation
+        model = os.getenv("IMAGE_GEN_MODEL")
         if model:
             return model
         # Fallback to legacy
-        model = os.getenv('GEMINI_IMAGE_GEN_MODEL')
+        model = os.getenv("GEMINI_IMAGE_GEN_MODEL")
         if model:
             return model
         # Default to Nano Banana 2 (fastest, near-Pro quality)
         # Alternative: imagen-4.0-generate-001 for production quality
-        return 'gemini-3.1-flash-image-preview'
+        return "gemini-3.1-flash-image-preview"
 
-    elif task == 'generate-video':
-        model = os.getenv('VIDEO_GEN_MODEL')
+    elif task == "generate-video":
+        model = os.getenv("VIDEO_GEN_MODEL")
         if model:
             return model
-        return 'veo-3.1-generate-preview'  # New default
+        return "veo-3.1-generate-preview"  # New default
 
-    elif task in ['analyze', 'transcribe', 'extract']:
-        model = os.getenv('MULTIMODAL_MODEL')
+    elif task in ["analyze", "transcribe", "extract"]:
+        model = os.getenv("MULTIMODAL_MODEL")
         if model:
             return model
         # Fallback to legacy
-        model = os.getenv('GEMINI_MODEL')
+        model = os.getenv("GEMINI_MODEL")
         if model:
             return model
-        return 'gemini-2.5-flash'  # Existing default
+        return "gemini-2.5-flash"  # Existing default
 
-    return 'gemini-2.5-flash'
+    return "gemini-2.5-flash"
 
 
 def validate_model_task_combination(model: str, task: str) -> None:
@@ -166,8 +170,8 @@ def validate_model_task_combination(model: str, task: str) -> None:
         ValueError: If combination is invalid
     """
     # Video generation requires Veo
-    if task == 'generate-video':
-        if not model.startswith('veo-'):
+    if task == "generate-video":
+        if not model.startswith("veo-"):
             raise ValueError(
                 f"Video generation requires Veo model, got '{model}'\n"
                 f"Valid models: veo-3.1-generate-preview, veo-3.1-fast-generate-preview, "
@@ -175,19 +179,19 @@ def validate_model_task_combination(model: str, task: str) -> None:
             )
 
     # Image generation models
-    if task == 'generate':
+    if task == "generate":
         valid_image_models = [
-            'imagen-4.0-generate-001',
-            'imagen-4.0-ultra-generate-001',
-            'imagen-4.0-fast-generate-001',
-            'gemini-3.1-flash-image-preview',
-            'gemini-3-pro-image-preview',
-            'gemini-2.5-flash-image',
-            'gemini-2.5-flash-image-preview',
+            "imagen-4.0-generate-001",
+            "imagen-4.0-ultra-generate-001",
+            "imagen-4.0-fast-generate-001",
+            "gemini-3.1-flash-image-preview",
+            "gemini-3-pro-image-preview",
+            "gemini-2.5-flash-image",
+            "gemini-2.5-flash-image-preview",
         ]
         if model not in valid_image_models:
             # Allow gemini models for analysis-based generation (backward compat)
-            if not model.startswith('gemini-'):
+            if not model.startswith("gemini-"):
                 raise ValueError(
                     f"Image generation requires Imagen/Gemini image model, got '{model}'\n"
                     f"Valid models: {', '.join(valid_image_models)}"
@@ -203,22 +207,42 @@ def infer_task_from_file(file_path: str) -> str:
     """
     ext = Path(file_path).suffix.lower()
 
-    audio_extensions = {'.mp3', '.wav', '.aac', '.flac', '.ogg', '.aiff', '.m4a'}
-    image_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.gif', '.bmp'}
-    video_extensions = {'.mp4', '.mpeg', '.mov', '.avi', '.flv', '.mpg', '.webm', '.wmv', '.3gpp', '.mkv'}
-    document_extensions = {'.pdf', '.txt', '.html', '.md', '.doc', '.docx'}
+    audio_extensions = {".mp3", ".wav", ".aac", ".flac", ".ogg", ".aiff", ".m4a"}
+    image_extensions = {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".heic",
+        ".heif",
+        ".gif",
+        ".bmp",
+    }
+    video_extensions = {
+        ".mp4",
+        ".mpeg",
+        ".mov",
+        ".avi",
+        ".flv",
+        ".mpg",
+        ".webm",
+        ".wmv",
+        ".3gpp",
+        ".mkv",
+    }
+    document_extensions = {".pdf", ".txt", ".html", ".md", ".doc", ".docx"}
 
     if ext in audio_extensions:
-        return 'transcribe'
+        return "transcribe"
     elif ext in image_extensions:
-        return 'analyze'
+        return "analyze"
     elif ext in video_extensions:
-        return 'analyze'
+        return "analyze"
     elif ext in document_extensions:
-        return 'extract'
+        return "extract"
 
     # Default to analyze for unknown types
-    return 'analyze'
+    return "analyze"
 
 
 def get_mime_type(file_path: str) -> str:
@@ -227,37 +251,37 @@ def get_mime_type(file_path: str) -> str:
 
     mime_types = {
         # Audio
-        '.mp3': 'audio/mp3',
-        '.wav': 'audio/wav',
-        '.aac': 'audio/aac',
-        '.flac': 'audio/flac',
-        '.ogg': 'audio/ogg',
-        '.aiff': 'audio/aiff',
+        ".mp3": "audio/mp3",
+        ".wav": "audio/wav",
+        ".aac": "audio/aac",
+        ".flac": "audio/flac",
+        ".ogg": "audio/ogg",
+        ".aiff": "audio/aiff",
         # Image
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.webp': 'image/webp',
-        '.heic': 'image/heic',
-        '.heif': 'image/heif',
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".heic": "image/heic",
+        ".heif": "image/heif",
         # Video
-        '.mp4': 'video/mp4',
-        '.mpeg': 'video/mpeg',
-        '.mov': 'video/quicktime',
-        '.avi': 'video/x-msvideo',
-        '.flv': 'video/x-flv',
-        '.mpg': 'video/mpeg',
-        '.webm': 'video/webm',
-        '.wmv': 'video/x-ms-wmv',
-        '.3gpp': 'video/3gpp',
+        ".mp4": "video/mp4",
+        ".mpeg": "video/mpeg",
+        ".mov": "video/quicktime",
+        ".avi": "video/x-msvideo",
+        ".flv": "video/x-flv",
+        ".mpg": "video/mpeg",
+        ".webm": "video/webm",
+        ".wmv": "video/x-ms-wmv",
+        ".3gpp": "video/3gpp",
         # Document
-        '.pdf': 'application/pdf',
-        '.txt': 'text/plain',
-        '.html': 'text/html',
-        '.md': 'text/markdown',
+        ".pdf": "application/pdf",
+        ".txt": "text/plain",
+        ".html": "text/html",
+        ".md": "text/markdown",
     }
 
-    return mime_types.get(ext, 'application/octet-stream')
+    return mime_types.get(ext, "application/octet-stream")
 
 
 def upload_file(client: genai.Client, file_path: str, verbose: bool = False) -> Any:
@@ -269,20 +293,20 @@ def upload_file(client: genai.Client, file_path: str, verbose: bool = False) -> 
 
     # Wait for processing (video/audio files need processing)
     mime_type = get_mime_type(file_path)
-    if mime_type.startswith('video/') or mime_type.startswith('audio/'):
+    if mime_type.startswith("video/") or mime_type.startswith("audio/"):
         max_wait = 300  # 5 minutes
         elapsed = 0
-        while myfile.state.name == 'PROCESSING' and elapsed < max_wait:
+        while myfile.state.name == "PROCESSING" and elapsed < max_wait:
             time.sleep(2)
             myfile = client.files.get(name=myfile.name)
             elapsed += 2
             if verbose and elapsed % 10 == 0:
                 print(f"  Processing... {elapsed}s")
 
-        if myfile.state.name == 'FAILED':
+        if myfile.state.name == "FAILED":
             raise ValueError(f"File processing failed: {file_path}")
 
-        if myfile.state.name == 'PROCESSING':
+        if myfile.state.name == "PROCESSING":
             raise TimeoutError(f"Processing timeout after {max_wait}s: {file_path}")
 
     if verbose:
@@ -295,12 +319,12 @@ def _is_billing_error(error: Exception) -> bool:
     """Check if error is due to billing/access restrictions."""
     error_str = str(error).lower()
     billing_indicators = [
-        'billing',
-        'billed users',
-        'payment',
-        'access denied',
-        'not authorized',
-        'permission denied',
+        "billing",
+        "billed users",
+        "payment",
+        "access denied",
+        "not authorized",
+        "permission denied",
     ]
     return any(indicator in error_str for indicator in billing_indicators)
 
@@ -313,9 +337,8 @@ def _is_free_tier_quota_error(error: Exception) -> bool:
     """
     error_str = str(error)
     # Check for zero quota indicators
-    return (
-        'RESOURCE_EXHAUSTED' in error_str and
-        ('limit: 0' in error_str or 'free_tier' in error_str.lower())
+    return "RESOURCE_EXHAUSTED" in error_str and (
+        "limit: 0" in error_str or "free_tier" in error_str.lower()
     )
 
 
@@ -340,9 +363,9 @@ def generate_image_imagen4(
     prompt: str,
     model: str,
     num_images: int = 1,
-    aspect_ratio: str = '1:1',
-    size: str = '1K',
-    verbose: bool = False
+    aspect_ratio: str = "1:1",
+    size: str = "1K",
+    verbose: bool = False,
 ) -> Dict[str, Any]:
     """Generate image using Imagen 4 models.
 
@@ -351,29 +374,24 @@ def generate_image_imagen4(
     """
     try:
         # Build config based on model (Fast doesn't support imageSize)
-        config_params = {
-            'numberOfImages': num_images,
-            'aspectRatio': aspect_ratio
-        }
+        config_params = {"numberOfImages": num_images, "aspectRatio": aspect_ratio}
 
         # Only Standard and Ultra support imageSize parameter
-        if 'fast' not in model.lower() and model.startswith('imagen-'):
-            config_params['imageSize'] = size
+        if "fast" not in model.lower() and model.startswith("imagen-"):
+            config_params["imageSize"] = size
 
         gen_config = types.GenerateImagesConfig(**config_params)
 
         if verbose:
             print(f"  Generating with: {model}")
-            print(f"  Config: {num_images} images, {aspect_ratio}", end='')
-            if 'fast' not in model.lower() and model.startswith('imagen-'):
+            print(f"  Config: {num_images} images, {aspect_ratio}", end="")
+            if "fast" not in model.lower() and model.startswith("imagen-"):
                 print(f", {size}")
             else:
                 print()
 
         response = client.models.generate_images(
-            model=model,
-            prompt=prompt,
-            config=gen_config
+            model=model, prompt=prompt, config=gen_config
         )
 
         # Save images
@@ -383,15 +401,15 @@ def generate_image_imagen4(
             script_dir = Path(__file__).parent
             project_root = script_dir
             for parent in [script_dir] + list(script_dir.parents):
-                if (parent / '.git').exists() or (parent / '.claude').exists():
+                if (parent / ".git").exists() or (parent / ".claude").exists():
                     project_root = parent
                     break
 
-            output_dir = project_root / 'docs' / 'assets'
+            output_dir = project_root / "docs" / "assets"
             output_dir.mkdir(parents=True, exist_ok=True)
             output_file = output_dir / f"imagen4_generated_{int(time.time())}_{i}.png"
 
-            with open(output_file, 'wb') as f:
+            with open(output_file, "wb") as f:
                 f.write(generated_image.image.image_bytes)
             generated_files.append(str(output_file))
 
@@ -399,38 +417,36 @@ def generate_image_imagen4(
                 print(f"  Saved: {output_file}")
 
         return {
-            'status': 'success',
-            'generated_images': generated_files,
-            'model': model
+            "status": "success",
+            "generated_images": generated_files,
+            "model": model,
         }
 
     except Exception as e:
         # Return special status for billing errors so caller can fallback
         if _is_billing_error(e) and model in IMAGEN_MODELS:
             return {
-                'status': 'billing_required',
-                'original_model': model,
-                'error': str(e)
+                "status": "billing_required",
+                "original_model": model,
+                "error": str(e),
             }
 
         if verbose:
             print(f"  Error: {str(e)}")
             import traceback
+
             traceback.print_exc()
-        return {
-            'status': 'error',
-            'error': str(e)
-        }
+        return {"status": "error", "error": str(e)}
 
 
 def generate_video_veo(
     client,
     prompt: str,
     model: str,
-    resolution: str = '1080p',
-    aspect_ratio: str = '16:9',
+    resolution: str = "1080p",
+    aspect_ratio: str = "16:9",
     reference_images: Optional[List[str]] = None,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> Dict[str, Any]:
     """Generate video using Veo models.
 
@@ -441,10 +457,7 @@ def generate_video_veo(
     """
     try:
         # Build config with snake_case for Python SDK
-        config_params = {
-            'aspect_ratio': aspect_ratio,
-            'resolution': resolution
-        }
+        config_params = {"aspect_ratio": aspect_ratio, "resolution": resolution}
 
         # Prepare first frame and last frame images
         first_frame = None
@@ -459,11 +472,8 @@ def generate_video_veo(
                 image_bytes = img_path.read_bytes()
                 mime_type, _ = mimetypes.guess_type(str(img_path))
                 if not mime_type:
-                    mime_type = 'image/png'
-                return types.Image(
-                    image_bytes=image_bytes,
-                    mime_type=mime_type
-                )
+                    mime_type = "image/png"
+                return types.Image(image_bytes=image_bytes, mime_type=mime_type)
 
             # First image = opening frame
             if len(reference_images) >= 1:
@@ -472,7 +482,7 @@ def generate_video_veo(
             # Second image = closing frame (last_frame in config)
             if len(reference_images) >= 2:
                 last_frame = load_image(reference_images[1])
-                config_params['last_frame'] = last_frame
+                config_params["last_frame"] = last_frame
 
         gen_config = types.GenerateVideosConfig(**config_params)
 
@@ -494,7 +504,7 @@ def generate_video_veo(
             model=model,
             prompt=prompt,
             image=first_frame,  # First frame as opening image
-            config=gen_config
+            config=gen_config,
         )
 
         # Poll operation until complete
@@ -519,11 +529,11 @@ def generate_video_veo(
         script_dir = Path(__file__).parent
         project_root = script_dir
         for parent in [script_dir] + list(script_dir.parents):
-            if (parent / '.git').exists() or (parent / '.claude').exists():
+            if (parent / ".git").exists() or (parent / ".claude").exists():
                 project_root = parent
                 break
 
-        output_dir = project_root / 'docs' / 'assets'
+        output_dir = project_root / "docs" / "assets"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_file = output_dir / f"veo_generated_{int(time.time())}.mp4"
 
@@ -538,22 +548,20 @@ def generate_video_veo(
             print(f"  Saved: {output_file}")
 
         return {
-            'status': 'success',
-            'generated_video': str(output_file),
-            'generation_time': duration,
-            'file_size_mb': file_size,
-            'model': model
+            "status": "success",
+            "generated_video": str(output_file),
+            "generation_time": duration,
+            "file_size_mb": file_size,
+            "model": model,
         }
 
     except Exception as e:
         if verbose:
             print(f"  Error: {str(e)}")
             import traceback
+
             traceback.print_exc()
-        return {
-            'status': 'error',
-            'error': str(e)
-        }
+        return {"status": "error", "error": str(e)}
 
 
 def process_file(
@@ -566,7 +574,7 @@ def process_file(
     aspect_ratio: Optional[str] = None,
     image_size: Optional[str] = None,
     verbose: bool = False,
-    max_retries: int = 3
+    max_retries: int = 3,
 ) -> Dict[str, Any]:
     """Process a single file with retry logic.
 
@@ -578,7 +586,7 @@ def process_file(
     for attempt in range(max_retries):
         try:
             # For generation tasks without input files
-            if task == 'generate' and not file_path:
+            if task == "generate" and not file_path:
                 content = [prompt]
             else:
                 # Process input file
@@ -593,51 +601,49 @@ def process_file(
                     content = [prompt, myfile]
                 else:
                     # Inline data
-                    with open(file_path, 'rb') as f:
+                    with open(file_path, "rb") as f:
                         file_bytes = f.read()
 
                     mime_type = get_mime_type(str(file_path))
                     content = [
                         prompt,
-                        types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+                        types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
                     ]
 
             # Configure request
             config_args = {}
-            if task == 'generate':
+            if task == "generate":
                 # Nano Banana requires fully uppercase 'IMAGE' per API spec
-                config_args['response_modalities'] = ['IMAGE']
+                config_args["response_modalities"] = ["IMAGE"]
                 # Build image_config with aspect_ratio and/or image_size
                 image_config_args = {}
                 if aspect_ratio:
-                    image_config_args['aspect_ratio'] = aspect_ratio
+                    image_config_args["aspect_ratio"] = aspect_ratio
                 if image_size:
                     # image_size must be uppercase K (1K, 2K, 4K)
-                    image_config_args['image_size'] = image_size
+                    image_config_args["image_size"] = image_size
                 if image_config_args:
-                    config_args['image_config'] = types.ImageConfig(**image_config_args)
+                    config_args["image_config"] = types.ImageConfig(**image_config_args)
 
-            if format_output == 'json':
-                config_args['response_mime_type'] = 'application/json'
+            if format_output == "json":
+                config_args["response_mime_type"] = "application/json"
 
             config = types.GenerateContentConfig(**config_args) if config_args else None
 
             # Generate content
             response = client.models.generate_content(
-                model=model,
-                contents=content,
-                config=config
+                model=model, contents=content, config=config
             )
 
             # Extract response
             result = {
-                'file': str(file_path) if file_path else 'generated',
-                'status': 'success',
-                'response': response.text if hasattr(response, 'text') else None
+                "file": str(file_path) if file_path else "generated",
+                "status": "success",
+                "response": response.text if hasattr(response, "text") else None,
             }
 
             # Handle image output
-            if task == 'generate' and hasattr(response, 'candidates'):
+            if task == "generate" and hasattr(response, "candidates"):
                 for i, part in enumerate(response.candidates[0].content.parts):
                     if part.inline_data:
                         # Determine output directory - use project root docs/assets
@@ -649,18 +655,20 @@ def process_file(
                             script_dir = Path(__file__).parent
                             project_root = script_dir
                             for parent in [script_dir] + list(script_dir.parents):
-                                if (parent / '.git').exists() or (parent / '.claude').exists():
+                                if (parent / ".git").exists() or (
+                                    parent / ".claude"
+                                ).exists():
                                     project_root = parent
                                     break
 
-                            output_dir = project_root / 'docs' / 'assets'
+                            output_dir = project_root / "docs" / "assets"
                             output_dir.mkdir(parents=True, exist_ok=True)
                             base_name = "generated"
 
                         output_file = output_dir / f"{base_name}_generated_{i}.png"
-                        with open(output_file, 'wb') as f:
+                        with open(output_file, "wb") as f:
                             f.write(part.inline_data.data)
-                        result['generated_image'] = str(output_file)
+                        result["generated_image"] = str(output_file)
                         if verbose:
                             print(f"  Saved image to: {output_file}")
 
@@ -670,44 +678,42 @@ def process_file(
             # Don't retry on billing/free tier errors - they won't resolve
             if _is_billing_error(e) or _is_free_tier_quota_error(e):
                 return {
-                    'file': str(file_path) if file_path else 'generated',
-                    'status': 'error',
-                    'error': str(e)
+                    "file": str(file_path) if file_path else "generated",
+                    "status": "error",
+                    "error": str(e),
                 }
 
             # Check if this is a rate limit error (candidate for key rotation)
             is_rate_limited = (
-                KEY_ROTATION_AVAILABLE and
-                is_rate_limit_error and
-                is_rate_limit_error(e)
+                KEY_ROTATION_AVAILABLE
+                and is_rate_limit_error
+                and is_rate_limit_error(e)
             )
 
             # Check if this is a transient server error (503, 500, etc.)
-            is_5xx = (
-                KEY_ROTATION_AVAILABLE and
-                is_server_error and
-                is_server_error(e)
-            )
+            is_5xx = KEY_ROTATION_AVAILABLE and is_server_error and is_server_error(e)
 
             # Use more retries for transient 5xx errors (up to 5 attempts)
             effective_max = max(max_retries, 5) if is_5xx else max_retries
 
             if attempt == effective_max - 1:
                 return {
-                    'file': str(file_path) if file_path else 'generated',
-                    'status': 'error',
-                    'error': str(e),
-                    'rate_limited': is_rate_limited  # Flag for caller to handle rotation
+                    "file": str(file_path) if file_path else "generated",
+                    "status": "error",
+                    "error": str(e),
+                    "rate_limited": is_rate_limited,  # Flag for caller to handle rotation
                 }
 
             # Longer backoff for 5xx (4s, 8s, 16s, 32s) vs default (1s, 2s, 4s)
             if is_5xx:
-                wait_time = 4 * (2 ** attempt)  # 4, 8, 16, 32, 64
+                wait_time = 4 * (2**attempt)  # 4, 8, 16, 32, 64
             else:
-                wait_time = 2 ** attempt  # 1, 2, 4
+                wait_time = 2**attempt  # 1, 2, 4
             if verbose:
                 error_type = "5xx server error" if is_5xx else "error"
-                print(f"  Retry {attempt + 1}/{effective_max - 1} after {wait_time}s ({error_type}): {e}")
+                print(
+                    f"  Retry {attempt + 1}/{effective_max - 1} after {wait_time}s ({error_type}): {e}"
+                )
             time.sleep(wait_time)
 
 
@@ -719,12 +725,12 @@ def batch_process(
     format_output: str,
     aspect_ratio: Optional[str] = None,
     num_images: int = 1,
-    size: str = '1K',
-    resolution: str = '1080p',
+    size: str = "1K",
+    resolution: str = "1080p",
     reference_images: Optional[List[str]] = None,
     output_file: Optional[str] = None,
     verbose: bool = False,
-    dry_run: bool = False
+    dry_run: bool = False,
 ) -> List[Dict[str, Any]]:
     """Batch process multiple files with automatic key rotation."""
 
@@ -739,7 +745,10 @@ def batch_process(
                 rotator = KeyRotator(keys=all_keys, verbose=verbose)
                 api_key = rotator.get_key()
                 if verbose:
-                    print(f"✓ Key rotation enabled with {len(all_keys)} keys", file=sys.stderr)
+                    print(
+                        f"✓ Key rotation enabled with {len(all_keys)} keys",
+                        file=sys.stderr,
+                    )
             else:
                 api_key = all_keys[0]
                 if verbose:
@@ -755,7 +764,8 @@ def batch_process(
         print("  1. OS environment (process.env)")
         if CENTRALIZED_RESOLVER_AVAILABLE:
             from resolve_env import get_env_file_paths
-            for i, (desc, path) in enumerate(get_env_file_paths('ai-multimodal'), 2):
+
+            for i, (desc, path) in enumerate(get_env_file_paths("ai-multimodal"), 2):
                 exists = "[OK]" if path.exists() else "[  ]"
                 print(f"  {i}. {exists} {path}")
         else:
@@ -764,7 +774,9 @@ def batch_process(
         print("  echo 'GEMINI_API_KEY=your-key' >> ~/.claude/.env")
         print("\nOther options:")
         print("  - Run setup checker: python scripts/check_setup.py")
-        print("  - Show full hierarchy: python ~/.claude/scripts/resolve_env.py --show-hierarchy --skill ai-multimodal -v")
+        print(
+            "  - Show full hierarchy: python ~/.claude/scripts/resolve_env.py --show-hierarchy --skill ai-multimodal -v"
+        )
         print("\nFor key rotation, add multiple keys to any .env:")
         print("   GEMINI_API_KEY=key1")
         print("   GEMINI_API_KEY_2=key2")
@@ -785,7 +797,9 @@ def batch_process(
     client = genai.Client(api_key=api_key)
     results = []
 
-    def get_client_with_rotation(error: Optional[Exception] = None) -> Optional[genai.Client]:
+    def get_client_with_rotation(
+        error: Optional[Exception] = None,
+    ) -> Optional[genai.Client]:
         """Get client, rotating key if rate limited."""
         nonlocal client, api_key
 
@@ -802,24 +816,24 @@ def batch_process(
         return client
 
     # For generation tasks without input files, process once
-    if task == 'generate' and not files:
+    if task == "generate" and not files:
         if verbose:
             print(f"\nGenerating image from prompt...")
 
         # Use Imagen 4 API for imagen models
-        if model.startswith('imagen-') or model in IMAGEN_MODELS:
+        if model.startswith("imagen-") or model in IMAGEN_MODELS:
             result = generate_image_imagen4(
                 client=client,
                 prompt=prompt,
                 model=model,
                 num_images=num_images,
-                aspect_ratio=aspect_ratio or '1:1',
-                size=size or '1K',  # Default to 1K for Imagen models
-                verbose=verbose
+                aspect_ratio=aspect_ratio or "1:1",
+                size=size or "1K",  # Default to 1K for Imagen models
+                verbose=verbose,
             )
 
             # Silent fallback to cheaper model if Imagen billing required
-            if result.get('status') == 'billing_required':
+            if result.get("status") == "billing_required":
                 if verbose:
                     print(f"  Falling back to: {IMAGE_MODEL_FALLBACK}")
                 result = process_file(
@@ -831,15 +845,15 @@ def batch_process(
                     format_output=format_output,
                     aspect_ratio=aspect_ratio,
                     image_size=size,
-                    verbose=verbose
+                    verbose=verbose,
                 )
                 # Check if free tier (zero quota) - stop immediately with clear message
-                error_str = result.get('error', '')
-                if result.get('status') == 'error':
+                error_str = result.get("error", "")
+                if result.get("status") == "error":
                     if _is_free_tier_quota_error(Exception(error_str)):
-                        result['error'] = FREE_TIER_NO_ACCESS_MSG
+                        result["error"] = FREE_TIER_NO_ACCESS_MSG
                     elif _is_billing_error(Exception(error_str)):
-                        result['error'] = (
+                        result["error"] = (
                             "Image generation requires billing. Enable billing at: "
                             "https://aistudio.google.com/apikey or use Google Cloud credits."
                         )
@@ -854,21 +868,21 @@ def batch_process(
                 format_output=format_output,
                 aspect_ratio=aspect_ratio,
                 image_size=size,
-                verbose=verbose
+                verbose=verbose,
             )
             # Check for free tier error
-            if result.get('status') == 'error':
-                error_str = result.get('error', '')
+            if result.get("status") == "error":
+                error_str = result.get("error", "")
                 if _is_free_tier_quota_error(Exception(error_str)):
-                    result['error'] = FREE_TIER_NO_ACCESS_MSG
+                    result["error"] = FREE_TIER_NO_ACCESS_MSG
 
         results.append(result)
 
         if verbose:
-            status = result.get('status', 'unknown')
+            status = result.get("status", "unknown")
             print(f"  Status: {status}")
 
-    elif task == 'generate-video' and not files:
+    elif task == "generate-video" and not files:
         if verbose:
             print(f"\nGenerating video from prompt...")
 
@@ -877,21 +891,23 @@ def batch_process(
             prompt=prompt,
             model=model,
             resolution=resolution,
-            aspect_ratio=aspect_ratio or '16:9',
+            aspect_ratio=aspect_ratio or "16:9",
             reference_images=reference_images,
-            verbose=verbose
+            verbose=verbose,
         )
 
         # Check for free tier error - video gen has NO free tier access
-        if result.get('status') == 'error':
-            error_str = result.get('error', '')
-            if _is_free_tier_quota_error(Exception(error_str)) or _is_billing_error(Exception(error_str)):
-                result['error'] = FREE_TIER_NO_ACCESS_MSG
+        if result.get("status") == "error":
+            error_str = result.get("error", "")
+            if _is_free_tier_quota_error(Exception(error_str)) or _is_billing_error(
+                Exception(error_str)
+            ):
+                result["error"] = FREE_TIER_NO_ACCESS_MSG
 
         results.append(result)
 
         if verbose:
-            status = result.get('status', 'unknown')
+            status = result.get("status", "unknown")
             print(f"  Status: {status}")
     else:
         # Process input files with key rotation support
@@ -913,13 +929,18 @@ def batch_process(
                     format_output=format_output,
                     aspect_ratio=aspect_ratio,
                     image_size=size,
-                    verbose=verbose
+                    verbose=verbose,
                 )
 
                 # Check if rate limited and can rotate
-                if (result.get('rate_limited') and rotator and
-                    rotation_attempt < max_rotation_attempts - 1):
-                    new_client = get_client_with_rotation(Exception(result.get('error', '')))
+                if (
+                    result.get("rate_limited")
+                    and rotator
+                    and rotation_attempt < max_rotation_attempts - 1
+                ):
+                    new_client = get_client_with_rotation(
+                        Exception(result.get("error", ""))
+                    )
                     if new_client:
                         client = new_client
                         if verbose:
@@ -928,14 +949,19 @@ def batch_process(
                     else:
                         # All keys exhausted - mark result with clear error
                         if verbose:
-                            print(f"  ⚠ All API keys exhausted (on cooldown)", file=sys.stderr)
-                        result['error'] = "All API keys exhausted (rate limited). Try again later."
+                            print(
+                                f"  ⚠ All API keys exhausted (on cooldown)",
+                                file=sys.stderr,
+                            )
+                        result["error"] = (
+                            "All API keys exhausted (rate limited). Try again later."
+                        )
                 break
 
             results.append(result)
 
             if verbose:
-                status = result.get('status', 'unknown')
+                status = result.get("status", "unknown")
                 print(f"  Status: {status}")
 
     # Save results
@@ -957,44 +983,44 @@ def print_results(results: List[Dict[str, Any]], task: str) -> None:
     print("\n=== RESULTS ===\n")
 
     for result in results:
-        file_name = result.get('file', 'generated')
-        status = result.get('status', 'unknown')
+        file_name = result.get("file", "generated")
+        status = result.get("status", "unknown")
 
         print(f"[{file_name}]")
         print(f"Status: {status}")
 
-        if status == 'success':
+        if status == "success":
             # Print task-specific output
-            if task in ['analyze', 'transcribe', 'extract']:
-                response = result.get('response')
+            if task in ["analyze", "transcribe", "extract"]:
+                response = result.get("response")
                 if response:
                     print(f"Result:\n{response}")
 
-            elif task == 'generate':
+            elif task == "generate":
                 # Image generation
-                generated_images = result.get('generated_images', [])
+                generated_images = result.get("generated_images", [])
                 if generated_images:
                     print(f"Generated images: {len(generated_images)}")
                     for img in generated_images:
                         print(f"  - {img}")
                 else:
-                    generated_image = result.get('generated_image')
+                    generated_image = result.get("generated_image")
                     if generated_image:
                         print(f"Generated image: {generated_image}")
 
-            elif task == 'generate-video':
-                generated_video = result.get('generated_video')
+            elif task == "generate-video":
+                generated_video = result.get("generated_video")
                 if generated_video:
                     print(f"Generated video: {generated_video}")
-                    gen_time = result.get('generation_time')
+                    gen_time = result.get("generation_time")
                     if gen_time:
                         print(f"Generation time: {gen_time:.1f}s")
-                    file_size = result.get('file_size_mb')
+                    file_size = result.get("file_size_mb")
                     if file_size:
                         print(f"File size: {file_size:.2f} MB")
 
-        elif status == 'error':
-            error = result.get('error', 'Unknown error')
+        elif status == "error":
+            error = result.get("error", "Unknown error")
             print(f"Error: {error}")
 
         print()  # Blank line between results
@@ -1005,74 +1031,80 @@ def save_results(results: List[Dict[str, Any]], output_file: str, format_output:
     output_path = Path(output_file)
 
     # Special handling for image generation - if output has image extension, copy the generated image
-    image_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp'}
-    video_extensions = {'.mp4', '.mov', '.avi', '.webm'}
+    image_extensions = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
+    video_extensions = {".mp4", ".mov", ".avi", ".webm"}
 
     if output_path.suffix.lower() in image_extensions and len(results) == 1:
         # Ensure output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Check for multiple generated images
-        generated_images = results[0].get('generated_images')
+        generated_images = results[0].get("generated_images")
         if generated_images:
             # Copy first image to the specified output location
             shutil.copy2(generated_images[0], output_path)
             return
 
         # Legacy single image field
-        generated_image = results[0].get('generated_image')
+        generated_image = results[0].get("generated_image")
         if generated_image:
             shutil.copy2(generated_image, output_path)
             return
         else:
             # Don't write text reports to image files - save error as .txt instead
-            output_path = output_path.with_suffix('.error.txt')
-            output_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+            output_path = output_path.with_suffix(".error.txt")
+            output_path.parent.mkdir(
+                parents=True, exist_ok=True
+            )  # Ensure directory exists
             print(f"Warning: Generation failed, saving error report to: {output_path}")
 
     if output_path.suffix.lower() in video_extensions and len(results) == 1:
         # Ensure output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        generated_video = results[0].get('generated_video')
+        generated_video = results[0].get("generated_video")
         if generated_video:
             shutil.copy2(generated_video, output_path)
             return
         else:
-            output_path = output_path.with_suffix('.error.txt')
+            output_path = output_path.with_suffix(".error.txt")
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            print(f"Warning: Video generation failed, saving error report to: {output_path}")
+            print(
+                f"Warning: Video generation failed, saving error report to: {output_path}"
+            )
 
-    if format_output == 'json':
-        with open(output_path, 'w', encoding='utf-8') as f:
+    if format_output == "json":
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
-    elif format_output == 'csv':
-        with open(output_path, 'w', newline='', encoding='utf-8') as f:
-            fieldnames = ['file', 'status', 'response', 'error']
+    elif format_output == "csv":
+        with open(output_path, "w", newline="", encoding="utf-8") as f:
+            fieldnames = ["file", "status", "response", "error"]
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             for result in results:
-                writer.writerow({
-                    'file': result.get('file', ''),
-                    'status': result.get('status', ''),
-                    'response': result.get('response', ''),
-                    'error': result.get('error', '')
-                })
+                writer.writerow(
+                    {
+                        "file": result.get("file", ""),
+                        "status": result.get("status", ""),
+                        "response": result.get("response", ""),
+                        "error": result.get("error", ""),
+                    }
+                )
     else:  # markdown
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write("# Batch Processing Results\n\n")
             for i, result in enumerate(results, 1):
                 f.write(f"## {i}. {result.get('file', 'Unknown')}\n\n")
                 f.write(f"**Status**: {result.get('status', 'unknown')}\n\n")
-                if result.get('response'):
+                if result.get("response"):
                     f.write(f"**Response**:\n\n{result['response']}\n\n")
-                if result.get('error'):
+                if result.get("error"):
                     f.write(f"**Error**: {result['error']}\n\n")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Batch process media files with Gemini API',
+        description="Batch process media files with Gemini API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1098,43 +1130,80 @@ Examples:
   # Generate images with Imagen 4 (production quality)
   %(prog)s --task generate --prompt "Product photo of coffee mug" \\
     --model imagen-4.0-ultra-generate-001 --aspect-ratio 1:1 --size 2K
-        """
+        """,
     )
 
-    parser.add_argument('--files', nargs='*', help='Input files to process')
-    parser.add_argument('--task',
-                       choices=['transcribe', 'analyze', 'extract', 'generate', 'generate-video'],
-                       help='Task to perform (auto-detected from file type if not specified)')
-    parser.add_argument('--prompt', help='Prompt for analysis/generation')
-    parser.add_argument('--model',
-                       help='Model to use (default: auto-detected from task and env vars)')
-    parser.add_argument('--format', dest='format_output', default='text',
-                       choices=['text', 'json', 'csv', 'markdown'],
-                       help='Output format (default: text)')
+    parser.add_argument("--files", nargs="*", help="Input files to process")
+    parser.add_argument(
+        "--task",
+        choices=["transcribe", "analyze", "extract", "generate", "generate-video"],
+        help="Task to perform (auto-detected from file type if not specified)",
+    )
+    parser.add_argument("--prompt", help="Prompt for analysis/generation")
+    parser.add_argument(
+        "--model", help="Model to use (default: auto-detected from task and env vars)"
+    )
+    parser.add_argument(
+        "--format",
+        dest="format_output",
+        default="text",
+        choices=["text", "json", "csv", "markdown"],
+        help="Output format (default: text)",
+    )
 
     # Image generation options
     # All 10 aspect ratios supported by Nano Banana / Imagen 4
-    parser.add_argument('--aspect-ratio',
-                       choices=['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'],
-                       help='Aspect ratio for image/video generation')
-    parser.add_argument('--num-images', type=int, default=1,
-                       help='Number of images to generate (1-4, default: 1)')
+    parser.add_argument(
+        "--aspect-ratio",
+        choices=[
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9",
+        ],
+        help="Aspect ratio for image/video generation",
+    )
+    parser.add_argument(
+        "--num-images",
+        type=int,
+        default=1,
+        help="Number of images to generate (1-4, default: 1)",
+    )
     # 4K available for Nano Banana Pro (gemini-3-pro-image-preview)
     # Note: Not all models support --size, only use when needed
-    parser.add_argument('--size', choices=['1K', '2K', '4K'], default=None,
-                       help='Image size - 1K/2K for Imagen 4, 1K/2K/4K for Nano Banana (optional)')
+    parser.add_argument(
+        "--size",
+        choices=["1K", "2K", "4K"],
+        default=None,
+        help="Image size - 1K/2K for Imagen 4, 1K/2K/4K for Nano Banana (optional)",
+    )
 
     # Video generation options
-    parser.add_argument('--resolution', choices=['720p', '1080p'], default='1080p',
-                       help='Video resolution (default: 1080p)')
-    parser.add_argument('--reference-images', nargs='+',
-                       help='Reference images for video generation (max 3)')
+    parser.add_argument(
+        "--resolution",
+        choices=["720p", "1080p"],
+        default="1080p",
+        help="Video resolution (default: 1080p)",
+    )
+    parser.add_argument(
+        "--reference-images",
+        nargs="+",
+        help="Reference images for video generation (max 3)",
+    )
 
-    parser.add_argument('--output', help='Output file for results')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                       help='Verbose output')
-    parser.add_argument('--dry-run', action='store_true',
-                       help='Show what would be done without making API calls')
+    parser.add_argument("--output", help="Output file for results")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without making API calls",
+    )
 
     args = parser.parse_args()
 
@@ -1160,20 +1229,20 @@ Examples:
         parser.error(str(e))
 
     # Validate arguments
-    if args.task not in ['generate', 'generate-video'] and not args.files:
+    if args.task not in ["generate", "generate-video"] and not args.files:
         parser.error("--files required for non-generation tasks")
 
-    if args.task in ['generate', 'generate-video'] and not args.prompt:
+    if args.task in ["generate", "generate-video"] and not args.prompt:
         parser.error("--prompt required for generation tasks")
 
-    if args.task not in ['generate', 'generate-video'] and not args.prompt:
+    if args.task not in ["generate", "generate-video"] and not args.prompt:
         # Set default prompts
-        if args.task == 'transcribe':
-            args.prompt = 'Generate a transcript with timestamps'
-        elif args.task == 'analyze':
-            args.prompt = 'Analyze this content'
-        elif args.task == 'extract':
-            args.prompt = 'Extract key information'
+        if args.task == "transcribe":
+            args.prompt = "Generate a transcript with timestamps"
+        elif args.task == "analyze":
+            args.prompt = "Analyze this content"
+        elif args.task == "extract":
+            args.prompt = "Extract key information"
 
     # Process files
     files = args.files or []
@@ -1190,7 +1259,7 @@ Examples:
         reference_images=args.reference_images,
         output_file=args.output,
         verbose=args.verbose,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
     )
 
     # Print results and summary
@@ -1199,13 +1268,13 @@ Examples:
         print_results(results, args.task)
 
         # Print summary
-        success = sum(1 for r in results if r.get('status') == 'success')
+        success = sum(1 for r in results if r.get("status") == "success")
         failed = len(results) - success
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
         print(f"Summary: {len(results)} processed, {success} success, {failed} failed")
         if args.output:
             print(f"Results saved to: {args.output}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

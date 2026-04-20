@@ -6,6 +6,7 @@ session entirely in SQLite (managed by tests/conftest.py fixtures).
 
 Sets ENV=test so CeleryBackend is not activated during tests.
 """
+
 import os
 import sys
 from unittest.mock import patch

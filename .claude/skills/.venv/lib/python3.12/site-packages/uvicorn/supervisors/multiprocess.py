@@ -144,7 +144,9 @@ class Multiprocess:
 
     def run(self) -> None:
         message = f"Started parent process [{os.getpid()}]"
-        color_message = "Started parent process [{}]".format(click.style(str(os.getpid()), fg="cyan", bold=True))
+        color_message = "Started parent process [{}]".format(
+            click.style(str(os.getpid()), fg="cyan", bold=True)
+        )
         logger.info(message, extra={"color_message": color_message})
 
         self.init_processes()
@@ -157,7 +159,9 @@ class Multiprocess:
         self.join_all()
 
         message = f"Stopping parent process [{os.getpid()}]"
-        color_message = "Stopping parent process [{}]".format(click.style(str(os.getpid()), fg="cyan", bold=True))
+        color_message = "Stopping parent process [{}]".format(
+            click.style(str(os.getpid()), fg="cyan", bold=True)
+        )
         logger.info(message, extra={"color_message": color_message})
 
     def keep_subprocess_alive(self) -> None:
@@ -187,7 +191,9 @@ class Multiprocess:
             if sig_handler is not None:
                 sig_handler()
             else:  # pragma: no cover
-                logger.debug(f"Received signal {sig_name}, but no handler is defined for it.")
+                logger.debug(
+                    f"Received signal {sig_name}, but no handler is defined for it."
+                )
 
     def handle_int(self) -> None:
         logger.info("Received SIGINT, exiting.")
@@ -215,7 +221,9 @@ class Multiprocess:
     def handle_ttou(self) -> None:  # pragma: py-win32
         logger.info("Received SIGTTOU, decreasing number of processes.")
         if self.processes_num <= 1:
-            logger.info("Already reached one process, cannot decrease the number of processes anymore.")
+            logger.info(
+                "Already reached one process, cannot decrease the number of processes anymore."
+            )
             return
         self.processes_num -= 1
         process = self.processes.pop()

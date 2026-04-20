@@ -53,7 +53,9 @@ class TestBetterAuthInit:
         monkeypatch.chdir(no_package_dir)
 
         # Mock parent to stop infinite loop
-        with patch.object(Path, "parent", new_callable=lambda: property(lambda self: self)):
+        with patch.object(
+            Path, "parent", new_callable=lambda: property(lambda self: self)
+        ):
             with pytest.raises(RuntimeError, match="Could not find project root"):
                 BetterAuthInit()
 
@@ -105,7 +107,9 @@ KEY4=value=with=equals
         skills_env.write_text("OVERRIDE=skills\nSKILLS_VAR=skills")
 
         # Mock process env (highest priority)
-        with patch.dict("os.environ", {"OVERRIDE": "process", "PROCESS_VAR": "process"}):
+        with patch.dict(
+            "os.environ", {"OVERRIDE": "process", "PROCESS_VAR": "process"}
+        ):
             result = auth_init._load_env_files()
 
         assert result["BASE_VAR"] == "base"
@@ -185,7 +189,9 @@ KEY4=value=with=equals
         assert config["type"] == "prisma"
 
         # Test invalid choice (defaults to direct DB)
-        with patch("builtins.input", side_effect=["99", "1", "postgresql://localhost/test"]):
+        with patch(
+            "builtins.input", side_effect=["99", "1", "postgresql://localhost/test"]
+        ):
             with patch("builtins.print"):
                 config = auth_init.prompt_database()
         assert config["type"] == "postgresql"
@@ -210,7 +216,7 @@ KEY4=value=with=equals
         """Test generating basic auth config."""
         db_config = {
             "import": "import Database from 'better-sqlite3';",
-            "config": "database: new Database('./dev.db')"
+            "config": "database: new Database('./dev.db')",
         }
         auth_methods = ["1"]  # Email/password only
 
@@ -225,7 +231,7 @@ KEY4=value=with=equals
         """Test generating config with OAuth providers."""
         db_config = {
             "import": "import { Pool } from 'pg';",
-            "config": "database: new Pool()"
+            "config": "database: new Pool()",
         }
         auth_methods = ["1", "2", "3", "4"]  # Email + GitHub + Google + Discord
 
@@ -266,9 +272,7 @@ KEY4=value=with=equals
 
     def test_generate_env_file_with_database_url(self, auth_init):
         """Test generating .env with database URL."""
-        db_config = {
-            "env_var": ("DATABASE_URL", "postgresql://localhost/test")
-        }
+        db_config = {"env_var": ("DATABASE_URL", "postgresql://localhost/test")}
         auth_methods = []
 
         env_content = auth_init.generate_env_file(db_config, auth_methods)
@@ -345,7 +349,7 @@ KEY4=value=with=equals
             "1",  # PostgreSQL
             "postgresql://localhost/test",
             "1 2",  # Email + GitHub
-            "n"  # Don't save
+            "n",  # Don't save
         ]
 
         with patch("builtins.input", side_effect=inputs):
@@ -361,10 +365,10 @@ KEY4=value=with=equals
         inputs = [
             "1",  # Direct DB
             "3",  # SQLite
-            "",   # Default path
+            "",  # Default path
             "1",  # Email only
             "y",  # Save
-            "1"   # Save location
+            "1",  # Save location
         ]
 
         with patch("builtins.input", side_effect=inputs):
@@ -410,7 +414,9 @@ class TestMainFunction:
         no_package.mkdir()
         monkeypatch.chdir(no_package)
 
-        with patch.object(Path, "parent", new_callable=lambda: property(lambda self: self)):
+        with patch.object(
+            Path, "parent", new_callable=lambda: property(lambda self: self)
+        ):
             with patch("sys.stderr", new_callable=StringIO):
                 exit_code = main()
 

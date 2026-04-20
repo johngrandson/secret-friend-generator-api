@@ -3,6 +3,7 @@
 Uses send_task() for dynamic dispatch — the FastAPI process never
 imports @shared_task definitions. Only the Celery worker does.
 """
+
 import logging
 
 from celery import Celery

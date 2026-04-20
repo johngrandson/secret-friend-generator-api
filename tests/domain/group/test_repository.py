@@ -30,8 +30,12 @@ def test_create_group_generates_link_url(db_session: Session):
 
 
 def test_create_group_link_url_is_unique_per_group(db_session: Session):
-    g1 = GroupRepository.create(GroupCreate(name="Group One", description="d"), db_session)
-    g2 = GroupRepository.create(GroupCreate(name="Group Two", description="d"), db_session)
+    g1 = GroupRepository.create(
+        GroupCreate(name="Group One", description="d"), db_session
+    )
+    g2 = GroupRepository.create(
+        GroupCreate(name="Group Two", description="d"), db_session
+    )
     assert g1.link_url != g2.link_url
 
 
@@ -43,7 +47,9 @@ def test_get_all_returns_a_list(db_session: Session):
 def test_get_all_returns_all_created_groups(db_session: Session):
     before = len(GroupRepository.get_all(db_session))
     GroupRepository.create(GroupCreate(name="First Group", description="d"), db_session)
-    GroupRepository.create(GroupCreate(name="Second Group", description="d"), db_session)
+    GroupRepository.create(
+        GroupCreate(name="Second Group", description="d"), db_session
+    )
     result = GroupRepository.get_all(db_session)
     assert len(result) == before + 2
 
@@ -84,7 +90,9 @@ def test_update_group_changes_name(db_session: Session):
         GroupCreate(name="Old Name Group", description="desc"), db_session
     )
     updated = GroupRepository.update(
-        group_id=group.id, payload=GroupUpdate(name="New Name Group"), db_session=db_session
+        group_id=group.id,
+        payload=GroupUpdate(name="New Name Group"),
+        db_session=db_session,
     )
     assert updated.name == "New Name Group"
     assert updated.id == group.id

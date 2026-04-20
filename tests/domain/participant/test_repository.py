@@ -2,11 +2,17 @@ import pytest
 from sqlalchemy.orm import Session
 
 from src.domain.participant.repository import ParticipantRepository
-from src.domain.participant.schemas import ParticipantCreate, ParticipantUpdate, ParticipantStatus
+from src.domain.participant.schemas import (
+    ParticipantCreate,
+    ParticipantUpdate,
+    ParticipantStatus,
+)
 from src.shared.exceptions import NotFoundError
 
 
-def test_create_participant_returns_participant_with_id(db_session: Session, group_fixture):
+def test_create_participant_returns_participant_with_id(
+    db_session: Session, group_fixture
+):
     group = group_fixture()
     participant = ParticipantRepository.create(
         ParticipantCreate(name="Alice", group_id=group.id), db_session
@@ -22,7 +28,9 @@ def test_create_participant_persists_name(db_session: Session, group_fixture):
     assert participant.name == "Bob"
 
 
-def test_create_participant_with_nonexistent_group_raises_not_found(db_session: Session):
+def test_create_participant_with_nonexistent_group_raises_not_found(
+    db_session: Session,
+):
     with pytest.raises(NotFoundError, match="Group not found"):
         ParticipantRepository.create(
             ParticipantCreate(name="Ghost", group_id=99999), db_session
@@ -37,25 +45,41 @@ def test_get_all_returns_a_list(db_session: Session):
 def test_get_all_returns_all_participants(db_session: Session, group_fixture):
     before = len(ParticipantRepository.get_all(db_session))
     group = group_fixture()
-    ParticipantRepository.create(ParticipantCreate(name="P1", group_id=group.id), db_session)
-    ParticipantRepository.create(ParticipantCreate(name="P2", group_id=group.id), db_session)
+    ParticipantRepository.create(
+        ParticipantCreate(name="P1", group_id=group.id), db_session
+    )
+    ParticipantRepository.create(
+        ParticipantCreate(name="P2", group_id=group.id), db_session
+    )
     result = ParticipantRepository.get_all(db_session)
     assert len(result) == before + 2
 
 
-def test_get_by_group_id_returns_participants_for_group(db_session: Session, group_fixture):
+def test_get_by_group_id_returns_participants_for_group(
+    db_session: Session, group_fixture
+):
     group = group_fixture()
-    ParticipantRepository.create(ParticipantCreate(name="PA", group_id=group.id), db_session)
-    ParticipantRepository.create(ParticipantCreate(name="PB", group_id=group.id), db_session)
-    result = ParticipantRepository.get_by_group_id(group_id=group.id, db_session=db_session)
+    ParticipantRepository.create(
+        ParticipantCreate(name="PA", group_id=group.id), db_session
+    )
+    ParticipantRepository.create(
+        ParticipantCreate(name="PB", group_id=group.id), db_session
+    )
+    result = ParticipantRepository.get_by_group_id(
+        group_id=group.id, db_session=db_session
+    )
     assert len(result) == 2
 
 
 def test_get_by_group_id_excludes_other_groups(db_session: Session, group_fixture):
     group_a = group_fixture(name="Group AAAA")
     group_b = group_fixture(name="Group BBBB")
-    ParticipantRepository.create(ParticipantCreate(name="OnlyA", group_id=group_a.id), db_session)
-    result = ParticipantRepository.get_by_group_id(group_id=group_b.id, db_session=db_session)
+    ParticipantRepository.create(
+        ParticipantCreate(name="OnlyA", group_id=group_a.id), db_session
+    )
+    result = ParticipantRepository.get_by_group_id(
+        group_id=group_b.id, db_session=db_session
+    )
     assert result == []
 
 
@@ -132,7 +156,9 @@ def test_delete_participant_removes_from_db(db_session: Session, group_fixture):
     participant_id = participant.id
     ParticipantRepository.delete(participant_id=participant_id, db_session=db_session)
     with pytest.raises(NotFoundError):
-        ParticipantRepository.get_by_id(participant_id=participant_id, db_session=db_session)
+        ParticipantRepository.get_by_id(
+            participant_id=participant_id, db_session=db_session
+        )
 
 
 def test_delete_participant_not_found_raises(db_session: Session):

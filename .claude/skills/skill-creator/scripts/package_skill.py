@@ -22,9 +22,9 @@ from quick_validate import validate_skill
 configure_utf8_console()
 
 # Exclusion patterns (from official Anthropic skill-creator)
-EXCLUDE_DIRS = {'__pycache__', 'node_modules', '.git', '.DS_Store'}
-EXCLUDE_GLOBS = {'*.pyc', '*.pyo', '.DS_Store', '*.egg-info'}
-ROOT_EXCLUDE_DIRS = {'evals'}  # Only excluded at skill root level
+EXCLUDE_DIRS = {"__pycache__", "node_modules", ".git", ".DS_Store"}
+EXCLUDE_GLOBS = {"*.pyc", "*.pyo", ".DS_Store", "*.egg-info"}
+ROOT_EXCLUDE_DIRS = {"evals"}  # Only excluded at skill root level
 
 
 def package_skill(skill_path, output_dir=None):
@@ -76,10 +76,10 @@ def package_skill(skill_path, output_dir=None):
 
     # Create the zip file
     try:
-        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
             # Walk through the skill directory, excluding unwanted files
             skipped = []
-            for file_path in skill_path.rglob('*'):
+            for file_path in skill_path.rglob("*"):
                 if file_path.is_file():
                     rel = file_path.relative_to(skill_path)
                     parts = rel.parts
@@ -104,8 +104,10 @@ def package_skill(skill_path, output_dir=None):
                     print(f"  Added: {arcname}")
 
             if skipped:
-                print(f"\n  Skipped {len(skipped)} file(s): {', '.join(skipped[:5])}"
-                      + ("..." if len(skipped) > 5 else ""))
+                print(
+                    f"\n  Skipped {len(skipped)} file(s): {', '.join(skipped[:5])}"
+                    + ("..." if len(skipped) > 5 else "")
+                )
 
         print(f"\n✅ Successfully packaged skill to: {zip_filename}")
         return zip_filename
@@ -117,7 +119,9 @@ def package_skill(skill_path, output_dir=None):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory]")
+        print(
+            "Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory]"
+        )
         print("\nExample:")
         print("  python utils/package_skill.py skills/public/my-skill")
         print("  python utils/package_skill.py skills/public/my-skill ./dist")
