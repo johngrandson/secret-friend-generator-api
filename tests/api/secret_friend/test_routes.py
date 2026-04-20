@@ -88,3 +88,19 @@ def test_delete_secret_friend_returns_204(client):
 def test_delete_secret_friend_nonexistent_returns_404(client):
     response = client.delete("/secret-friends/99999")
     assert response.status_code == 404
+
+
+def test_delete_secret_friend_verify_not_found_after_delete(client):
+    sf = _create_secret_friend(client)
+    client.delete(f"/secret-friends/{sf['id']}")
+    response = client.get(f"/secret-friends/{sf['id']}")
+    assert response.status_code == 404
+
+
+def test_get_secret_friend_returns_correct_fields(client):
+    sf = _create_secret_friend(client)
+    response = client.get(f"/secret-friends/{sf['id']}")
+    data = response.json()
+    assert "id" in data
+    assert "gift_giver_id" in data
+    assert "gift_receiver_id" in data

@@ -116,3 +116,11 @@ def test_delete_participant_returns_204(client):
 def test_delete_participant_nonexistent_returns_404(client):
     response = client.delete("/participants/99999")
     assert response.status_code == 404
+
+
+def test_delete_participant_verify_not_found_after_delete(client):
+    group = _create_group(client, "Verify Delete Group")
+    participant = _create_participant(client, group["id"], "ToVerify")
+    client.delete(f"/participants/{participant['id']}")
+    response = client.get(f"/participants/{participant['id']}")
+    assert response.status_code == 404

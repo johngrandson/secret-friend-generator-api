@@ -139,3 +139,12 @@ def test_delete_group_returns_204(client):
 def test_delete_group_nonexistent_returns_404(client):
     response = client.delete("/groups/99999")
     assert response.status_code == 404
+
+
+def test_delete_group_verify_not_found_after_delete(client):
+    created = client.post(
+        "/groups", json={"name": "Ephemeral Group", "description": "d"}
+    ).json()
+    client.delete(f"/groups/{created['id']}")
+    response = client.get(f"/groups/{created['id']}")
+    assert response.status_code == 404
