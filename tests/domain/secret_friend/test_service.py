@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from src.domain.secret_friend.service import SecretFriendService
 from src.domain.secret_friend.schemas import SecretFriendLink, SecretFriendRead
 from src.domain.participant.schemas import ParticipantRead, ParticipantStatus
+from src.domain.shared.exceptions import BusinessRuleError
 from datetime import datetime
 
 
@@ -21,7 +22,7 @@ def _make_participant_read(id: int, group_id: int = 1) -> ParticipantRead:
 
 def test_sort_secret_friends_raises_with_fewer_than_two_participants():
     participant = _make_participant_read(1)
-    with pytest.raises(ValueError, match="At least 2 participants"):
+    with pytest.raises(BusinessRuleError, match="At least 2 participants"):
         SecretFriendService.sort_secret_friends(
             participant=participant, participants=[participant]
         )
@@ -29,7 +30,7 @@ def test_sort_secret_friends_raises_with_fewer_than_two_participants():
 
 def test_sort_secret_friends_raises_with_empty_list():
     participant = _make_participant_read(1)
-    with pytest.raises(ValueError, match="At least 2 participants"):
+    with pytest.raises(BusinessRuleError, match="At least 2 participants"):
         SecretFriendService.sort_secret_friends(
             participant=participant, participants=[]
         )

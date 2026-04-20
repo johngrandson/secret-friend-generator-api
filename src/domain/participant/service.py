@@ -8,15 +8,17 @@ from src.domain.participant.schemas import (
     ParticipantUpdate,
 )
 from src.domain.participant.signals import participant_created, participant_updated
+from src.domain.shared.database_transaction import transaction
 
 
 class ParticipantService:
     @staticmethod
     def create(participant: ParticipantCreate, db_session: Session) -> ParticipantRead:
-        result = ParticipantRepository.create(participant=participant, db_session=db_session)
-        validated = ParticipantRead.model_validate(result)
-        participant_created.send(ParticipantService, participant=validated)
-        return validated
+        with transaction(db_session):
+            result = ParticipantRepository.create(participant=participant, db_session=db_session)
+            validated = ParticipantRead.model_validate(result)
+            participant_created.send(ParticipantService, participant=validated)
+            return validated
 
     @staticmethod
     def get_all(db_session: Session) -> ParticipantList:
@@ -42,9 +44,10 @@ class ParticipantService:
     def update(
         participant_id: int, payload: ParticipantUpdate, db_session: Session
     ) -> ParticipantRead:
-        result = ParticipantRepository.update(
-            participant_id=participant_id, payload=payload, db_session=db_session
-        )
-        validated = ParticipantRead.model_validate(result)
-        participant_updated.send(ParticipantService, participant=validated)
-        return validated
+        with transaction(db_session):
+            result = ParticipantRepository.update(
+                participant_id=participant_id, payload=payload, db_session=db_session
+            )
+            validated = ParticipantRead.model_validate(result)
+            participant_updated.send(ParticipantService, participant=validated)
+            return validated

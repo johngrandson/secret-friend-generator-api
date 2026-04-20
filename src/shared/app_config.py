@@ -1,41 +1,50 @@
-import logging
-import os
-from pathlib import Path
+"""Application settings via pydantic-settings.
 
-from dotenv import load_dotenv
-
-env_path = Path(".") / ".env"
-load_dotenv(dotenv_path=env_path)
-
-log = logging.getLogger(__name__)
+Reads from environment variables and .env file. Provides typed,
+validated configuration with sensible defaults. Equivalent to
+Phoenix's config/runtime.exs pattern.
+"""
+from pydantic import computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings:
-    PROJECT_NAME: str = "Secret Santa Generator"
-    PROJECT_VERSION: str = "1.0.0"
-
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
-    POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "localhost")
-    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "tdd")
-    DATABASE_URL: str = (
-        f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-        f"@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
     )
 
-    ENV: str = os.getenv("ENV", "local")
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "WARNING")
+    # App
+    PROJECT_NAME: str = "Secret Santa Generator"
+    PROJECT_VERSION: str = "1.0.0"
+    ENV: str = "local"
+    LOG_LEVEL: str = "WARNING"
+
+    # Database
+    POSTGRES_USER: str = ""
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_PORT: str = "5432"
+    POSTGRES_DB: str = "tdd"
 
     # Sentry (optional)
-    SENTRY_ENABLED: str = os.getenv("SENTRY_ENABLED", "")
-    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
+    SENTRY_ENABLED: bool = False
+    SENTRY_DSN: str = ""
 
     # LLM / MCP
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
-    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0"))
-    MCP_SERVERS_PATH: str | None = os.getenv("MCP_SERVERS_PATH")
+    OPENAI_API_KEY: str = ""
+    LLM_MODEL: str = "gpt-4o-mini"
+    LLM_TEMPERATURE: float = 0.0
+    MCP_SERVERS_PATH: str | None = None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def DATABASE_URL(self) -> str:
+        return (
+            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
 
 
 settings = Settings()

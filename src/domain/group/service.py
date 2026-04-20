@@ -3,15 +3,17 @@ from sqlalchemy.orm import Session
 from src.domain.group.repository import GroupRepository
 from src.domain.group.schemas import GroupCreate, GroupList, GroupRead
 from src.domain.group.signals import group_created
+from src.domain.shared.database_transaction import transaction
 
 
 class GroupService:
     @staticmethod
     def create(group: GroupCreate, db_session: Session) -> GroupRead:
-        result = GroupRepository.create(group=group, db_session=db_session)
-        validated = GroupRead.model_validate(result)
-        group_created.send(GroupService, group=validated)
-        return validated
+        with transaction(db_session):
+            result = GroupRepository.create(group=group, db_session=db_session)
+            validated = GroupRead.model_validate(result)
+            group_created.send(GroupService, group=validated)
+            return validated
 
     @staticmethod
     def get_all(db_session: Session) -> GroupList:

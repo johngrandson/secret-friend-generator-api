@@ -35,8 +35,12 @@ class ParticipantRepository:
 
     @staticmethod
     def get_by_group_id(group_id: int, db_session: Session) -> list[Participant]:
-        stmt = select(Participant).where(Participant.group_id == group_id)
-        return list(db_session.execute(stmt).scalars().all())
+        stmt = (
+            select(Participant)
+            .where(Participant.group_id == group_id)
+            .options(joinedload(Participant.gift_giver).joinedload(SecretFriend.receiver))
+        )
+        return list(db_session.execute(stmt).scalars().unique().all())
 
     @staticmethod
     def get_by_id(participant_id: int, db_session: Session) -> Participant:
