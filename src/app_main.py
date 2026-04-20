@@ -16,6 +16,7 @@ from src.api.router import api_router
 from src.api.agents.dependencies import init_agents_registry, shutdown_agents
 from src.domain.lifecycle import register_all_handlers
 from src.infrastructure.persistence import Base, engine
+from src.shared.config import settings
 from src.shared.rate_limiter import limiter
 
 log = logging.getLogger(__name__)
@@ -79,3 +80,9 @@ app.mount("/api/v1", app=api)
 
 _create_tables()
 register_all_handlers()
+
+if settings.ENV != "test":
+    from src.infrastructure.tasks import CeleryBackend, celery_app
+    from src.shared.task_backend import set_backend
+
+    set_backend(CeleryBackend(celery_app))

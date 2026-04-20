@@ -34,6 +34,7 @@ langchain-mcp-adapters = "^0.1"
 langchain-text-splitters = "^0.3"
 langchain = "^1.2.15"
 blinker = "^1.9.0"
+celery = {version = ">=5.3", extras = ["rabbitmq"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "7.4.0"

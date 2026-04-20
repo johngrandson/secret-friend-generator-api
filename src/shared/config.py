@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     SENTRY_ENABLED: bool = False
     SENTRY_DSN: str = ""
 
+    # Celery / RabbitMQ
+    CELERY_BROKER_URL: str = "amqp://guest:guest@localhost:5672//"
+    CELERY_RESULT_BACKEND: str = "rpc://"
+    CELERY_TASK_ALWAYS_EAGER: bool = False
+
     # LLM / MCP
     OPENAI_API_KEY: str = ""
     LLM_MODEL: str = "gpt-4o-mini"
