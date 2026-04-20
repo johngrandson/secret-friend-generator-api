@@ -5,7 +5,7 @@ All tests are pure function tests — no fixtures or broker needed.
 
 import pytest
 
-from src.infrastructure.tasks.app import (
+from src.infrastructure.messaging.celery.app import (
     _build_queues,
     _parse_task_routes,
     _queue_arguments,

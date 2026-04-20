@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from src.infrastructure.tasks.backend import CeleryBackend
+from src.infrastructure.messaging.celery.backend import CeleryBackend
 
 
 def test_celery_backend_calls_send_task_with_name():

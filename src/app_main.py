@@ -92,7 +92,7 @@ if settings.ENV in ("local", "test"):
 register_all_handlers()
 
 if settings.ENV != "test":
-    from src.infrastructure.tasks import CeleryBackend, celery_app
+    from src.infrastructure.messaging import CeleryBackend, celery_app
     from src.shared.task_backend import set_backend
 
     set_backend(CeleryBackend(celery_app))

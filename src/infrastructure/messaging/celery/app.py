@@ -5,7 +5,7 @@ Supports configurable RabbitMQ queue types (classic/quorum), task routing,
 and extra queue declarations — all driven by environment variables.
 
 Worker entrypoint:
-    celery -A src.infrastructure.tasks.app worker --loglevel=info --pool=prefork
+    celery -A src.infrastructure.messaging.celery.app worker --loglevel=info --pool=prefork
 
 Pool options (pass as --pool flag, not an app setting):
     prefork  — CPU-bound tasks (Celery default, uses multiprocessing)
@@ -145,7 +145,7 @@ def make_celery() -> Celery:
         task_routes=task_routes,
     )
 
-    app.autodiscover_tasks(["src.infrastructure.tasks"])
+    app.autodiscover_tasks(["src.infrastructure.messaging.celery.workers"])
     return app
 
 
