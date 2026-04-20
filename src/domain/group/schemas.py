@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class CategoryEnum(str, Enum):
@@ -16,6 +16,19 @@ class GroupCreate(BaseModel):
     name: str = Field(..., min_length=4)
     description: str
     category: CategoryEnum = CategoryEnum.santa
+
+
+class GroupUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    category: CategoryEnum | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def at_least_one_field(cls, data: object) -> object:
+        if isinstance(data, dict) and not any(data.values()):
+            raise ValueError("At least one field must be provided")
+        return data
 
 
 class GroupRead(BaseModel):

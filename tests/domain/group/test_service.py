@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from src.domain.group.service import GroupService
-from src.domain.group.schemas import GroupCreate, GroupRead, GroupList
+from src.domain.group.schemas import GroupCreate, GroupRead, GroupList, GroupUpdate
 from src.shared.exceptions import NotFoundError
 
 
@@ -69,3 +69,20 @@ def test_get_by_link_url_nonexistent_raises_not_found(db_session: Session):
         GroupService.get_by_link_url(
             link_url="does-not-exist", db_session=db_session
         )
+
+
+def test_update_group_returns_updated_data(db_session: Session):
+    created = GroupService.create(
+        GroupCreate(name="Update Service", description="desc"), db_session
+    )
+    updated = GroupService.update(
+        group_id=created.id, payload=GroupUpdate(name="Updated Name"), db_session=db_session
+    )
+    assert isinstance(updated, GroupRead)
+    assert updated.name == "Updated Name"
+    assert updated.id == created.id
+
+
+def test_delete_group_not_found_raises(db_session: Session):
+    with pytest.raises(NotFoundError):
+        GroupService.delete(group_id=99999, db_session=db_session)

@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from src.domain.group.repository import GroupRepository
-from src.domain.group.schemas import GroupCreate
+from src.domain.group.schemas import GroupCreate, GroupUpdate
 from src.shared.exceptions import NotFoundError
 
 
@@ -77,3 +77,35 @@ def test_get_by_link_url_nonexistent_raises_not_found(db_session: Session):
         GroupRepository.get_by_link_url(
             link_url="nonexistent-token-xyz", db_session=db_session
         )
+
+
+def test_update_group_changes_name(db_session: Session):
+    group = GroupRepository.create(
+        GroupCreate(name="Old Name Group", description="desc"), db_session
+    )
+    updated = GroupRepository.update(
+        group_id=group.id, payload=GroupUpdate(name="New Name Group"), db_session=db_session
+    )
+    assert updated.name == "New Name Group"
+    assert updated.id == group.id
+
+
+def test_update_group_not_found_raises(db_session: Session):
+    with pytest.raises(NotFoundError):
+        GroupRepository.update(
+            group_id=99999, payload=GroupUpdate(name="Ghost"), db_session=db_session
+        )
+
+
+def test_delete_group_removes_from_db(db_session: Session):
+    group = GroupRepository.create(
+        GroupCreate(name="Delete Me Group", description="desc"), db_session
+    )
+    GroupRepository.delete(group_id=group.id, db_session=db_session)
+    with pytest.raises(NotFoundError):
+        GroupRepository.get_by_id(group_id=group.id, db_session=db_session)
+
+
+def test_delete_group_not_found_raises(db_session: Session):
+    with pytest.raises(NotFoundError):
+        GroupRepository.delete(group_id=99999, db_session=db_session)

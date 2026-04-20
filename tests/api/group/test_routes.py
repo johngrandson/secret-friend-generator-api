@@ -97,3 +97,45 @@ def test_get_group_by_link_url_returns_correct_group(client):
 def test_get_group_by_link_url_nonexistent_returns_404(client):
     response = client.get("/groups/link/no-such-token")
     assert response.status_code == 404
+
+
+def test_update_group_returns_200(client):
+    created = client.post(
+        "/groups", json={"name": "Patch Group", "description": "d"}
+    ).json()
+    response = client.patch(f"/groups/{created['id']}", json={"name": "Patched Group"})
+    assert response.status_code == 200
+
+
+def test_update_group_name_reflects_in_response(client):
+    created = client.post(
+        "/groups", json={"name": "Before Patch", "description": "d"}
+    ).json()
+    response = client.patch(f"/groups/{created['id']}", json={"name": "After Patch"})
+    assert response.json()["name"] == "After Patch"
+
+
+def test_update_group_nonexistent_returns_404(client):
+    response = client.patch("/groups/99999", json={"name": "Ghost Group"})
+    assert response.status_code == 404
+
+
+def test_update_group_empty_body_returns_422(client):
+    created = client.post(
+        "/groups", json={"name": "Empty Patch", "description": "d"}
+    ).json()
+    response = client.patch(f"/groups/{created['id']}", json={})
+    assert response.status_code == 422
+
+
+def test_delete_group_returns_204(client):
+    created = client.post(
+        "/groups", json={"name": "Delete Group", "description": "d"}
+    ).json()
+    response = client.delete(f"/groups/{created['id']}")
+    assert response.status_code == 204
+
+
+def test_delete_group_nonexistent_returns_404(client):
+    response = client.delete("/groups/99999")
+    assert response.status_code == 404
