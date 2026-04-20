@@ -50,3 +50,52 @@ def test_transaction_yields_db_session(db_session: Session):
     """The context variable yielded is the same session object."""
     with transaction(db_session) as sess:
         assert sess is db_session
+
+
+def test_transaction_is_reentrant_inner_yields_same_session(db_session: Session):
+    """Nested transaction() calls yield the same session object."""
+    with transaction(db_session) as outer:
+        with transaction(db_session) as inner:
+            assert inner is outer
+            assert inner is db_session
+
+
+def test_transaction_is_reentrant_inner_does_not_commit(db_session: Session):
+    """Inner transaction() exits without committing — outer owns the commit.
+
+    Both records created inside nested transactions must survive after the
+    outermost block closes, proving the outer commit covered both writes.
+    """
+    with transaction(db_session) as outer:
+        group_outer = GroupRepository.create(
+            GroupCreate(name="Outer", description="outer"), outer
+        )
+
+        with transaction(db_session) as inner:
+            # _in_transaction flag is already set — inner must not commit
+            assert db_session.info.get("_in_transaction") is True
+            group_inner = GroupRepository.create(
+                GroupCreate(name="Inner", description="inner"), inner
+            )
+
+    # Outer commit ran — both rows must be visible
+    assert db_session.get(Group, group_outer.id) is not None
+    assert db_session.get(Group, group_inner.id) is not None
+
+
+def test_transaction_flag_cleared_after_outer_exits(db_session: Session):
+    """_in_transaction flag is removed from session.info once outer block ends."""
+    with transaction(db_session):
+        with transaction(db_session):
+            pass
+
+    assert "_in_transaction" not in db_session.info
+
+
+def test_transaction_flag_cleared_after_outer_exception(db_session: Session):
+    """_in_transaction flag is removed even when outer block raises."""
+    with pytest.raises(RuntimeError):
+        with transaction(db_session):
+            raise RuntimeError("boom")
+
+    assert "_in_transaction" not in db_session.info
