@@ -1,6 +1,5 @@
 """Tests for group domain signal emission via GroupService."""
 
-import pytest
 from sqlalchemy.orm import Session
 
 from src.domain.group.schemas import GroupCreate, GroupUpdate
