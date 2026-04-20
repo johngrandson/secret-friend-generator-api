@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -26,7 +25,7 @@ class GroupRead(BaseModel):
     name: str
     description: str
     category: CategoryEnum
-    link_url: Optional[str] = None
+    link_url: str | None = None
     participants: list["ParticipantBase"] = []
 
 

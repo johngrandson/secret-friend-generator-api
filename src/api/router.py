@@ -27,5 +27,5 @@ api_router.include_router(agents_router, prefix="/agents", tags=["agents"])
 
 
 @api_router.get("/healthcheck", include_in_schema=False)
-def healthcheck():
+def healthcheck() -> dict[str, str]:
     return {"status": "ok"}

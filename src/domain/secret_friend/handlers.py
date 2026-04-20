@@ -1,5 +1,6 @@
 """Secret friend lifecycle handlers."""
 import logging
+from typing import Any
 
 from src.domain.secret_friend.signals import secret_friend_assigned
 from src.domain.shared.signals import isolated
@@ -11,7 +12,7 @@ log = logging.getLogger(__name__)
 # ── Side-effect handlers ─────────────────────────────────────────────────────
 
 @isolated
-def _on_secret_friend_assigned(sender, *, assignment, group_id, **_):
+def _on_secret_friend_assigned(sender: type, *, assignment: Any, group_id: int, **_: Any) -> None:
     log.info(
         "lifecycle: secret friend assigned — id=%s group_id=%s",
         assignment.id,
@@ -22,7 +23,7 @@ def _on_secret_friend_assigned(sender, *, assignment, group_id, **_):
 # ── Task relays (bridge to background task queue) ────────────────────────────
 
 @isolated
-def _relay_secret_friend_assigned(sender, *, assignment, group_id, **_):
+def _relay_secret_friend_assigned(sender: type, *, assignment: Any, group_id: int, **_: Any) -> None:
     dispatch_task(
         "notifications.secret_friend_assigned",
         assignment_id=assignment.id,

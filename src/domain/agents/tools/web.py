@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 import httpx
 from langchain_core.tools import tool
@@ -22,7 +23,7 @@ async def web_search(query: str) -> str:
             params={"q": query, "format": "json", "no_html": "1"},
         )
         response.raise_for_status()
-        data = response.json()
+        data: dict[str, Any] = response.json()
 
     parts: list[str] = []
 

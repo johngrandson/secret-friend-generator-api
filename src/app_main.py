@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
@@ -7,6 +8,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 
 from src.api.middleware import ExceptionMiddleware, MetricsMiddleware
 from src.api.router import api_router
@@ -43,7 +45,10 @@ api.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Middleware
 @app.middleware("http")
-async def add_security_headers(request: Request, call_next):
+async def add_security_headers(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
     response = await call_next(request)
     response.headers["Strict-Transport-Security"] = "max-age=31536000 ; includeSubDomains"
     return response

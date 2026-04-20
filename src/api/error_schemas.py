@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 
 
@@ -8,4 +6,4 @@ class ErrorMessage(BaseModel):
 
 
 class ErrorResponse(BaseModel):
-    detail: Optional[list[ErrorMessage]] = None
+    detail: list[ErrorMessage] | None = None

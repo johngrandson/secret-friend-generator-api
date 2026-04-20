@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -7,7 +9,7 @@ class SecretFriendLink(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_ids_are_distinct(cls, data):
+    def validate_ids_are_distinct(cls, data: dict[str, Any]) -> dict[str, Any]:
         gift_giver_id = data.get("gift_giver_id")
         gift_receiver_id = data.get("gift_receiver_id")
         if gift_giver_id is not None and gift_giver_id == gift_receiver_id:

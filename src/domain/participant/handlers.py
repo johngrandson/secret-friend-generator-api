@@ -7,6 +7,9 @@ Two categories of handlers:
   MUST succeed or the whole operation fails.
 """
 import logging
+from typing import Any
+
+from sqlalchemy.orm import Session
 
 from src.domain.participant.signals import participant_created, participant_updated
 from src.domain.secret_friend.signals import secret_friend_assigned
@@ -19,7 +22,7 @@ log = logging.getLogger(__name__)
 # ── Side-effect handlers (@isolated) ─────────────────────────────────────────
 
 @isolated
-def _on_participant_created(sender, *, participant, **_):
+def _on_participant_created(sender: type, *, participant: Any, **_: Any) -> None:
     log.info(
         "lifecycle: participant created — id=%s group_id=%s",
         participant.id,
@@ -28,7 +31,7 @@ def _on_participant_created(sender, *, participant, **_):
 
 
 @isolated
-def _on_participant_updated(sender, *, participant, **_):
+def _on_participant_updated(sender: type, *, participant: Any, **_: Any) -> None:
     log.info(
         "lifecycle: participant updated — id=%s status=%s",
         participant.id,
@@ -38,7 +41,9 @@ def _on_participant_updated(sender, *, participant, **_):
 
 # ── Transactional handlers (no @isolated — errors roll back) ────────────────
 
-def _reveal_participant_on_assignment(sender, *, participant_id, db_session, **_):
+def _reveal_participant_on_assignment(
+    sender: type, *, participant_id: int, db_session: Session, **_: Any
+) -> None:
     """Mark participant as REVEALED when their secret friend is assigned.
 
     This is a transactional handler: if it fails, the entire assignment
@@ -60,7 +65,7 @@ def _reveal_participant_on_assignment(sender, *, participant_id, db_session, **_
 # ── Task relays (bridge to background task queue) ────────────────────────────
 
 @isolated
-def _relay_participant_created(sender, *, participant, **_):
+def _relay_participant_created(sender: type, *, participant: Any, **_: Any) -> None:
     dispatch_task(
         "notifications.participant_joined",
         participant_id=participant.id,
