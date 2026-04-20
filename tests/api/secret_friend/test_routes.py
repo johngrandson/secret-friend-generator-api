@@ -60,3 +60,33 @@ def test_generate_secret_friends_giver_id_matches_participant_id(client):
     response = client.post(f"/secret-friends/{group['id']}/{p1['id']}")
     sf = response.json()["secret_friends"]
     assert sf["gift_giver_id"] == p1["id"]
+
+
+def _create_secret_friend(client) -> dict:
+    group = _create_group(client, "Get/Del Group")
+    p1 = _create_participant(client, group["id"], "Alpha")
+    _create_participant(client, group["id"], "Beta")
+    response = client.post(f"/secret-friends/{group['id']}/{p1['id']}")
+    return response.json()["secret_friends"]
+
+
+def test_get_secret_friend_returns_200(client):
+    sf = _create_secret_friend(client)
+    response = client.get(f"/secret-friends/{sf['id']}")
+    assert response.status_code == 200
+
+
+def test_get_secret_friend_nonexistent_returns_404(client):
+    response = client.get("/secret-friends/99999")
+    assert response.status_code == 404
+
+
+def test_delete_secret_friend_returns_204(client):
+    sf = _create_secret_friend(client)
+    response = client.delete(f"/secret-friends/{sf['id']}")
+    assert response.status_code == 204
+
+
+def test_delete_secret_friend_nonexistent_returns_404(client):
+    response = client.delete("/secret-friends/99999")
+    assert response.status_code == 404

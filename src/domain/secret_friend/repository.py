@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from src.domain.secret_friend.model import SecretFriend
 from src.domain.secret_friend.schemas import SecretFriendLink
-from src.shared.exceptions import ConflictError
+from src.shared.exceptions import ConflictError, NotFoundError
 
 
 class SecretFriendRepository:
@@ -33,3 +33,18 @@ class SecretFriendRepository:
         except IntegrityError:
             raise ConflictError("Secret friend link failed. Unique constraint violated.")
         return new_sf
+
+    @staticmethod
+    def get_by_id(secret_friend_id: int, db_session: Session) -> SecretFriend:
+        secret_friend = db_session.get(SecretFriend, secret_friend_id)
+        if not secret_friend:
+            raise NotFoundError("Secret friend assignment not found")
+        return secret_friend
+
+    @staticmethod
+    def delete(secret_friend_id: int, db_session: Session) -> None:
+        secret_friend = db_session.get(SecretFriend, secret_friend_id)
+        if not secret_friend:
+            raise NotFoundError("Secret friend assignment not found")
+        db_session.delete(secret_friend)
+        db_session.flush()

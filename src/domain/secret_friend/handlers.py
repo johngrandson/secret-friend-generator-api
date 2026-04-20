@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from src.domain.secret_friend.signals import secret_friend_assigned
+from src.domain.secret_friend.signals import secret_friend_assigned, secret_friend_deleted
 from src.shared.signals import isolated
 from src.shared.task_backend import dispatch_task
 
@@ -31,9 +31,21 @@ def _relay_secret_friend_assigned(sender: type, *, assignment: Any, group_id: in
     )
 
 
+@isolated
+def _on_secret_friend_deleted(sender: type, *, secret_friend_id: int, **_: Any) -> None:
+    log.info("lifecycle: secret friend deleted — id=%s", secret_friend_id)
+
+
+@isolated
+def _relay_secret_friend_deleted(sender: type, *, secret_friend_id: int, **_: Any) -> None:
+    dispatch_task("notifications.secret_friend_deleted", secret_friend_id=secret_friend_id)
+
+
 # ── Registration ─────────────────────────────────────────────────────────────
 
 def register() -> None:
     """Connect secret friend lifecycle handlers to their signals."""
     secret_friend_assigned.connect(_on_secret_friend_assigned)
     secret_friend_assigned.connect(_relay_secret_friend_assigned)
+    secret_friend_deleted.connect(_on_secret_friend_deleted)
+    secret_friend_deleted.connect(_relay_secret_friend_deleted)
