@@ -7,7 +7,7 @@ session entirely in SQLite (managed by tests/conftest.py fixtures).
 import sys
 from unittest.mock import patch
 
-import src.infrastructure.database.base  # ensure module is imported before patch resolves
+import src.infrastructure.persistence.base  # ensure module is imported before patch resolves
 
 
 def _preload_app_main():
@@ -15,7 +15,7 @@ def _preload_app_main():
     if "src.app_main" in sys.modules:
         return
     # Patch the method that would open a Postgres connection at module load time.
-    with patch("src.infrastructure.database.base.Base.metadata.create_all"):
+    with patch("src.infrastructure.persistence.base.Base.metadata.create_all"):
         import src.app_main  # noqa: F401
 
 

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
-from src.infrastructure.database import Base, get_db
+from src.infrastructure.persistence import Base, get_db
 from src.domain.group.repository import GroupRepository
 from src.domain.group.schemas import GroupCreate
 from src.domain.participant.repository import ParticipantRepository

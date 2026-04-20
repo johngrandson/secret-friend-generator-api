@@ -7,7 +7,7 @@ from src.domain.participant.service import ParticipantService
 from src.domain.secret_friend.repository import SecretFriendRepository
 from src.domain.secret_friend.schemas import SecretFriendLink, SecretFriendRead
 from src.domain.secret_friend.signals import secret_friend_assigned, secret_friend_deleted
-from src.infrastructure.database import transaction
+from src.infrastructure.persistence import transaction
 from src.shared.exceptions import BusinessRuleError
 
 

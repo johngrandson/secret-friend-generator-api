@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.infrastructure.database import Base
+from src.infrastructure.persistence import Base
 
 
 class SecretFriend(Base):

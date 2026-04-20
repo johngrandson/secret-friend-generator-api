@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from src.shared.config import settings
-from src.infrastructure.database import Base
+from src.infrastructure.persistence import Base
 
 # Import all models so Alembic can detect them
 from src.domain.group.model import Group  # noqa: F401

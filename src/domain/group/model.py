@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, String
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.infrastructure.database import Base
+from src.infrastructure.persistence import Base
 from src.domain.group.schemas import CategoryEnum
 
 

@@ -15,7 +15,7 @@ from src.api.middleware import ExceptionMiddleware, MetricsMiddleware
 from src.api.router import api_router
 from src.api.agents.dependencies import init_agents_registry, shutdown_agents
 from src.domain.lifecycle import register_all_handlers
-from src.infrastructure.database import Base, engine
+from src.infrastructure.persistence import Base, engine
 from src.shared.rate_limiter import limiter
 
 log = logging.getLogger(__name__)

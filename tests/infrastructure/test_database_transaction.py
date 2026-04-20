@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from src.infrastructure.database import transaction
+from src.infrastructure.persistence import transaction
 from src.domain.group.model import Group
 from src.domain.group.schemas import GroupCreate
 from src.domain.group.repository import GroupRepository
