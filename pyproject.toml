@@ -56,15 +56,16 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
-# SQLAlchemy models use string forward references resolved at runtime.
 plugins = ["pydantic.mypy"]
 
 # Third-party libraries without stubs or py.typed marker.
+# celery-stubs exists but is not installed in the dev venv — treat as stub-less.
 [[tool.mypy.overrides]]
 module = [
+    "celery.*",
+    "kombu.*",
     "sentry_asgi.*",
     "slowapi.*",
-    "kombu.*",
     "langgraph.*",
     "langgraph_supervisor.*",
     "langgraph_swarm.*",
@@ -77,18 +78,39 @@ module = [
 ignore_missing_imports = true
 
 # SQLAlchemy models use string forward references resolved at runtime by the ORM registry.
+# Quoted names like Mapped["Participant"] cannot be imported (circular), so name-defined
+# is a permanent false positive — not fixable without restructuring all models.
 [[tool.mypy.overrides]]
 module = "src.domain.*.model"
 disable_error_code = ["name-defined"]
 
-# Agents domain uses dynamic LangChain APIs with loose typing.
+# LangChain @tool decorator returns StructuredTool at runtime but mypy infers
+# Callable[..., Any] due to absent stubs. False positives from the stub gap only.
 [[tool.mypy.overrides]]
 module = [
-    "src.domain.agents.*",
-    "src.api.agents.*",
+    "src.domain.agents.apps.*",
+    "src.domain.agents.tools.rag",
 ]
-disallow_untyped_defs = false
-disable_error_code = ["list-item", "call-arg", "return-value", "no-any-return"]
+disable_error_code = ["list-item", "return-value"]
+
+# create_agent / create_swarm / create_supervisor return Any without stubs.
+# The declared CompiledStateGraph return type is correct at runtime.
+[[tool.mypy.overrides]]
+module = [
+    "src.domain.agents.core.factory",
+    "src.domain.agents.core.supervisor",
+    "src.domain.agents.core.swarm",
+]
+disable_error_code = ["no-any-return"]
+
+# ChatOpenAI / OpenAIEmbeddings constructor kwargs are valid but unverifiable
+# without stubs for langchain_openai.
+[[tool.mypy.overrides]]
+module = [
+    "src.domain.agents.config.llm_factory",
+    "src.domain.agents.config.embeddings_factory",
+]
+disable_error_code = ["call-arg"]
 
 [build-system]
 requires = ["poetry-core"]

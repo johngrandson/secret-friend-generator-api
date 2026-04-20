@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     CELERY_EXTRA_QUEUES: str = ""
 
     # JSON mapping of task name → queue name for task routing.
-    # Parsed at startup; tasks not listed here go to the default queue.
+    # Parsed at startup; tasks not listed here go to the default query.
     # Example: '{"notifications.*": "notifications", "heavy.*": "heavy"}'
     # Env var must be a valid JSON object string.
     CELERY_TASK_ROUTES: str = "{}"

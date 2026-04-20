@@ -1,6 +1,6 @@
 """Shared helpers for message serialisation used across agent routes."""
 
-from typing import Any
+from typing import Any, cast
 
 from langchain_core.messages import BaseMessage
 
@@ -28,5 +28,5 @@ def serialise_message(m: BaseMessage | dict[str, Any]) -> dict[str, Any]:
         return m
     dumper = getattr(m, "model_dump", None) or getattr(m, "dict", None)
     if dumper is not None:
-        return dumper()
+        return cast(dict[str, Any], dumper())
     return {"content": str(m)}
