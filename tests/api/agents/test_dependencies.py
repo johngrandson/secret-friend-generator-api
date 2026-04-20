@@ -2,6 +2,7 @@
 
 import pytest
 from fastapi import HTTPException
+from unittest.mock import AsyncMock
 
 import src.api.agents.dependencies as deps
 
@@ -84,3 +85,30 @@ def test_get_mcp_tools_count_zero_when_empty():
 def test_get_mcp_tools_count_reflects_loaded_tools():
     deps._mcp_tools.extend(["tool_a", "tool_b", "tool_c"])
     assert deps.get_mcp_tools_count() == 3
+
+
+# --- shutdown_agents ---
+
+
+@pytest.mark.asyncio
+async def test_shutdown_agents_safe_when_no_client():
+    deps._mcp_client = None
+    # Should not raise any exception when no client is set
+    await deps.shutdown_agents()
+
+
+@pytest.mark.asyncio
+async def test_shutdown_agents_closes_client():
+    mock_client = AsyncMock()
+    deps._mcp_client = mock_client
+    await deps.shutdown_agents()
+    mock_client.close.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_shutdown_agents_logs_on_close_error():
+    mock_client = AsyncMock()
+    mock_client.close.side_effect = Exception("close failed")
+    deps._mcp_client = mock_client
+    # Should not propagate the exception
+    await deps.shutdown_agents()

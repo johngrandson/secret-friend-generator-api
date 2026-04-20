@@ -169,3 +169,82 @@ async def test_stream_returns_404_for_unknown_app(asgi_app):
                 json={"messages": [], "thread_id": "t1"},
             )
     assert response.status_code == 404
+
+
+async def test_stream_returns_200(asgi_app):
+    mock_app = MagicMock()
+
+    async def _empty():
+        return
+        yield
+
+    mock_app.astream.return_value = _empty()
+    with patch("src.api.agents.stream_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/supervisor/stream",
+                json={"messages": [], "thread_id": "t1"},
+            )
+    assert response.status_code == 200
+
+
+async def test_stream_body_contains_sse_events(asgi_app):
+    mock_app = MagicMock()
+
+    async def _empty():
+        return
+        yield
+
+    mock_app.astream.return_value = _empty()
+    with patch("src.api.agents.stream_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/supervisor/stream",
+                json={"messages": [], "thread_id": "t1"},
+            )
+    lines = response.text.splitlines()
+    events = _parse_events(lines)
+    assert any(e["type"] == "done" for e in events)
+
+
+async def test_stream_error_stays_as_sse_event(asgi_app):
+    mock_app = MagicMock()
+
+    async def _failing():
+        raise RuntimeError("stream exploded")
+        yield
+
+    mock_app.astream.return_value = _failing()
+    with patch("src.api.agents.stream_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/supervisor/stream",
+                json={"messages": [], "thread_id": "t1"},
+            )
+    assert response.status_code == 200
+    lines = response.text.splitlines()
+    events = _parse_events(lines)
+    assert any(e["type"] == "error" for e in events)
+
+
+async def test_stream_404_unknown_app(asgi_app):
+    from fastapi import HTTPException
+
+    with patch(
+        "src.api.agents.stream_route.get_app",
+        side_effect=HTTPException(status_code=404, detail="not found"),
+    ):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/missing_app/stream",
+                json={"messages": [], "thread_id": "t1"},
+            )
+    assert response.status_code == 404

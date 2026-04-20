@@ -139,3 +139,63 @@ async def test_invoke_returns_404_for_unknown_app(asgi_app):
                 json={"messages": [], "thread_id": "t1"},
             )
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_invoke_returns_structured_response(asgi_app):
+    mock_app = AsyncMock()
+    mock_app.ainvoke.return_value = {
+        "messages": [],
+        "structured_response": {"answer": "42"},
+    }
+    with patch("src.api.agents.invoke_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/supervisor/invoke",
+                json={"messages": [], "thread_id": "t1"},
+            )
+    assert response.json()["structured_response"] == {"answer": "42"}
+
+
+@pytest.mark.asyncio
+async def test_invoke_500_on_app_error():
+    from src.api.middleware import ExceptionMiddleware
+
+    app_with_middleware = FastAPI()
+    app_with_middleware.add_middleware(ExceptionMiddleware)
+    app_with_middleware.include_router(router)
+
+    mock_app = AsyncMock()
+    mock_app.ainvoke.side_effect = Exception("unexpected failure")
+    with patch("src.api.agents.invoke_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=app_with_middleware), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/supervisor/invoke",
+                json={"messages": [], "thread_id": "t1"},
+            )
+    assert response.status_code == 500
+
+
+@pytest.mark.asyncio
+async def test_invoke_multiple_messages_forwarded(asgi_app):
+    mock_app = AsyncMock()
+    mock_app.ainvoke.return_value = {"messages": []}
+    messages = [
+        {"role": "user", "content": "first"},
+        {"role": "user", "content": "second"},
+    ]
+    with patch("src.api.agents.invoke_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            await client.post(
+                "/supervisor/invoke",
+                json={"messages": messages, "thread_id": "t1"},
+            )
+    call_args = mock_app.ainvoke.call_args
+    forwarded_messages = call_args[0][0]["messages"]
+    assert len(forwarded_messages) == 2

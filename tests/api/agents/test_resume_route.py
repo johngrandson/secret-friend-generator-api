@@ -127,3 +127,44 @@ async def test_resume_returns_404_for_unknown_app(asgi_app):
                 json={"thread_id": "t1", "decision": "approve"},
             )
     assert response.status_code == 404
+
+
+async def test_resume_500_on_app_error():
+    from fastapi import FastAPI
+
+    from src.api.agents.resume_route import router as resume_router
+    from src.api.middleware import ExceptionMiddleware
+
+    app_with_middleware = FastAPI()
+    app_with_middleware.add_middleware(ExceptionMiddleware)
+    app_with_middleware.include_router(resume_router)
+
+    mock_app = AsyncMock()
+    mock_app.ainvoke.side_effect = Exception("internal failure")
+    with patch("src.api.agents.resume_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=app_with_middleware), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/interrupt/resume",
+                json={"thread_id": "t1", "decision": "approve"},
+            )
+    assert response.status_code == 500
+
+
+async def test_resume_non_dict_result(asgi_app):
+    class NonDictResult:
+        messages = [{"role": "ai", "content": "from object"}]
+
+    mock_app = AsyncMock()
+    mock_app.ainvoke.return_value = NonDictResult()
+    with patch("src.api.agents.resume_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            response = await client.post(
+                "/interrupt/resume",
+                json={"thread_id": "t1", "decision": "approve"},
+            )
+    assert response.status_code == 200
+    assert "messages" in response.json()

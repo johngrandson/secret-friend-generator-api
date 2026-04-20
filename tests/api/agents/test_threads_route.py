@@ -181,3 +181,57 @@ async def test_get_thread_history_returns_snapshots(asgi_app):
     data = response.json()
     assert len(data) == 1
     assert data[0]["values"] == {"step": 1}
+
+
+@pytest.mark.asyncio
+async def test_history_404_unknown_app(asgi_app):
+    from fastapi import HTTPException
+
+    with patch(
+        "src.api.agents.threads_route.get_app",
+        side_effect=HTTPException(status_code=404, detail="Unknown app"),
+    ):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            response = await client.get("/unknown/threads/t1/history")
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_history_forwards_thread_id(asgi_app):
+    mock_app = MagicMock()
+
+    async def _empty(**_kwargs):
+        return
+        yield
+
+    mock_app.aget_state_history.return_value = _empty()
+    with patch("src.api.agents.threads_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=asgi_app), base_url="http://testserver"
+        ) as client:
+            await client.get("/supervisor/threads/my-thread/history")
+    call_kwargs = mock_app.aget_state_history.call_args[1]
+    assert call_kwargs["config"]["configurable"]["thread_id"] == "my-thread"
+
+
+@pytest.mark.asyncio
+async def test_get_thread_500_on_error():
+    from fastapi import FastAPI
+
+    from src.api.agents.threads_route import router as threads_router
+    from src.api.middleware import ExceptionMiddleware
+
+    app_with_middleware = FastAPI()
+    app_with_middleware.add_middleware(ExceptionMiddleware)
+    app_with_middleware.include_router(threads_router)
+
+    mock_app = AsyncMock()
+    mock_app.aget_state.side_effect = Exception("state fetch failed")
+    with patch("src.api.agents.threads_route.get_app", return_value=mock_app):
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=app_with_middleware), base_url="http://testserver"
+        ) as client:
+            response = await client.get("/supervisor/threads/t1")
+    assert response.status_code == 500
