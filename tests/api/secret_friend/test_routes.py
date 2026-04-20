@@ -15,7 +15,7 @@ def test_generate_secret_friends_returns_200(client):
     p1 = _create_participant(client, group["id"], "Giver")
     _create_participant(client, group["id"], "Receiver")
 
-    response = client.get(f"/secret-friends/{group['id']}/{p1['id']}")
+    response = client.post(f"/secret-friends/{group['id']}/{p1['id']}")
     assert response.status_code == 200
 
 
@@ -24,7 +24,7 @@ def test_generate_secret_friends_response_contains_secret_friends_key(client):
     p1 = _create_participant(client, group["id"], "Person A")
     _create_participant(client, group["id"], "Person B")
 
-    response = client.get(f"/secret-friends/{group['id']}/{p1['id']}")
+    response = client.post(f"/secret-friends/{group['id']}/{p1['id']}")
     assert "secret_friends" in response.json()
 
 
@@ -33,14 +33,14 @@ def test_generate_secret_friends_receiver_differs_from_giver(client):
     p1 = _create_participant(client, group["id"], "Giver X")
     _create_participant(client, group["id"], "Receiver X")
 
-    response = client.get(f"/secret-friends/{group['id']}/{p1['id']}")
+    response = client.post(f"/secret-friends/{group['id']}/{p1['id']}")
     sf = response.json()["secret_friends"]
     assert sf["gift_giver_id"] != sf["gift_receiver_id"]
 
 
 def test_generate_secret_friends_nonexistent_participant_returns_404(client):
     group = _create_group(client, "Missing Part Group")
-    response = client.get(f"/secret-friends/{group['id']}/99999")
+    response = client.post(f"/secret-friends/{group['id']}/99999")
     assert response.status_code == 404
 
 
@@ -48,8 +48,8 @@ def test_generate_secret_friends_with_only_one_participant_returns_400(client):
     group = _create_group(client, "Solo Group")
     p1 = _create_participant(client, group["id"], "Lonely")
 
-    response = client.get(f"/secret-friends/{group['id']}/{p1['id']}")
-    assert response.status_code == 400
+    response = client.post(f"/secret-friends/{group['id']}/{p1['id']}")
+    assert response.status_code == 422
 
 
 def test_generate_secret_friends_giver_id_matches_participant_id(client):
@@ -57,6 +57,6 @@ def test_generate_secret_friends_giver_id_matches_participant_id(client):
     p1 = _create_participant(client, group["id"], "The Giver")
     _create_participant(client, group["id"], "The Receiver")
 
-    response = client.get(f"/secret-friends/{group['id']}/{p1['id']}")
+    response = client.post(f"/secret-friends/{group['id']}/{p1['id']}")
     sf = response.json()["secret_friends"]
     assert sf["gift_giver_id"] == p1["id"]

@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -66,7 +68,11 @@ def client(engine):
             db.close()
 
     api.dependency_overrides[get_db] = override_get_db
-    with TestClient(api, base_url="http://testserver/api/v1") as c:
+    with (
+        patch("src.app_main.init_agents_registry", new_callable=AsyncMock),
+        patch("src.app_main.shutdown_agents", new_callable=AsyncMock),
+        TestClient(api, base_url="http://testserver/api/v1") as c,
+    ):
         yield c
     api.dependency_overrides.clear()
 
