@@ -11,7 +11,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from src.domain.participant.signals import participant_created, participant_updated
+from src.domain.participant.signals import participant_created, participant_deleted, participant_updated
 from src.domain.secret_friend.signals import secret_friend_assigned
 from src.shared.signals import isolated
 from src.shared.task_backend import dispatch_task
@@ -37,6 +37,11 @@ def _on_participant_updated(sender: type, *, participant: Any, **_: Any) -> None
         participant.id,
         participant.status,
     )
+
+
+@isolated
+def _on_participant_deleted(sender: type, *, participant_id: int, **_: Any) -> None:
+    log.info("lifecycle: participant deleted — id=%s", participant_id)
 
 
 # ── Transactional handlers (no @isolated — errors roll back) ────────────────
@@ -73,6 +78,11 @@ def _relay_participant_created(sender: type, *, participant: Any, **_: Any) -> N
     )
 
 
+@isolated
+def _relay_participant_deleted(sender: type, *, participant_id: int, **_: Any) -> None:
+    dispatch_task("notifications.participant_deleted", participant_id=participant_id)
+
+
 # ── Registration ─────────────────────────────────────────────────────────────
 
 def register() -> None:
@@ -80,6 +90,8 @@ def register() -> None:
     # Own signals
     participant_created.connect(_on_participant_created)
     participant_updated.connect(_on_participant_updated)
+    participant_deleted.connect(_on_participant_deleted)
     participant_created.connect(_relay_participant_created)
+    participant_deleted.connect(_relay_participant_deleted)
     # Cross-domain: react to secret_friend assignment
     secret_friend_assigned.connect(_reveal_participant_on_assignment)

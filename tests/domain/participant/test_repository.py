@@ -122,3 +122,19 @@ def test_update_nonexistent_participant_raises_not_found(db_session: Session):
             payload=ParticipantUpdate(name="Nobody"),
             db_session=db_session,
         )
+
+
+def test_delete_participant_removes_from_db(db_session: Session, group_fixture):
+    group = group_fixture()
+    participant = ParticipantRepository.create(
+        ParticipantCreate(name="ToDelete", group_id=group.id), db_session
+    )
+    participant_id = participant.id
+    ParticipantRepository.delete(participant_id=participant_id, db_session=db_session)
+    with pytest.raises(NotFoundError):
+        ParticipantRepository.get_by_id(participant_id=participant_id, db_session=db_session)
+
+
+def test_delete_participant_not_found_raises(db_session: Session):
+    with pytest.raises(NotFoundError, match="Participant not found"):
+        ParticipantRepository.delete(participant_id=99999, db_session=db_session)

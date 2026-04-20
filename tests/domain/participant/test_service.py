@@ -113,3 +113,8 @@ def test_update_nonexistent_participant_raises_not_found(db_session: Session):
             payload=ParticipantUpdate(name="Nobody"),
             db_session=db_session,
         )
+
+
+def test_delete_participant_not_found_raises(db_session: Session):
+    with pytest.raises(NotFoundError):
+        ParticipantService.delete(participant_id=99999, db_session=db_session)

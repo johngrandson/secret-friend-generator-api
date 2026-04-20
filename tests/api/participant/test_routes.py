@@ -110,3 +110,15 @@ def test_update_participant_empty_body_returns_422(client):
         f"/participants/{participant['id']}", json={}
     )
     assert response.status_code == 422
+
+
+def test_delete_participant_returns_204(client):
+    group = _create_group(client, "Delete Group")
+    participant = _create_participant(client, group["id"], "ToBeDeleted")
+    response = client.delete(f"/participants/{participant['id']}")
+    assert response.status_code == 204
+
+
+def test_delete_participant_nonexistent_returns_404(client):
+    response = client.delete("/participants/99999")
+    assert response.status_code == 404

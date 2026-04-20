@@ -55,6 +55,14 @@ class ParticipantRepository:
         return participant
 
     @staticmethod
+    def delete(participant_id: int, db_session: Session) -> None:
+        participant = db_session.get(Participant, participant_id)
+        if not participant:
+            raise NotFoundError("Participant not found")
+        db_session.delete(participant)
+        db_session.flush()
+
+    @staticmethod
     def update(
         participant_id: int, payload: ParticipantUpdate, db_session: Session
     ) -> Participant:

@@ -7,7 +7,7 @@ from src.domain.participant.schemas import (
     ParticipantRead,
     ParticipantUpdate,
 )
-from src.domain.participant.signals import participant_created, participant_updated
+from src.domain.participant.signals import participant_created, participant_deleted, participant_updated
 from src.infrastructure.database import transaction
 
 
@@ -39,6 +39,12 @@ class ParticipantService:
             participant_id=participant_id, db_session=db_session
         )
         return ParticipantRead.model_validate(result)
+
+    @staticmethod
+    def delete(participant_id: int, db_session: Session) -> None:
+        with transaction(db_session):
+            ParticipantRepository.delete(participant_id=participant_id, db_session=db_session)
+            participant_deleted.send(ParticipantService, participant_id=participant_id)
 
     @staticmethod
     def update(

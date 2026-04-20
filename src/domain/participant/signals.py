@@ -3,3 +3,4 @@ from blinker import NamedSignal, signal
 
 participant_created: NamedSignal = signal("participant.created")
 participant_updated: NamedSignal = signal("participant.updated")
+participant_deleted: NamedSignal = signal("participant.deleted")

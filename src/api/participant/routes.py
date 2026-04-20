@@ -41,3 +41,8 @@ def update_participant(
     return ParticipantService.update(
         participant_id=participant_id, payload=payload, db_session=db_session
     )
+
+
+@router.delete("/{participant_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_participant(participant_id: int, db_session: Session = Depends(get_db)):
+    ParticipantService.delete(participant_id=participant_id, db_session=db_session)
