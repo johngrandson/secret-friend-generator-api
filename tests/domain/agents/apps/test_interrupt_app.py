@@ -14,9 +14,9 @@ def test_create_interrupt_app_returns_invokable(fake_llm: ToolCapableFakeLLM) ->
 
 def test_list_records_tool_exists() -> None:
     assert mod.list_records is not None
-    assert callable(mod.list_records)
+    assert hasattr(mod.list_records, "invoke")
 
 
 def test_delete_record_tool_exists() -> None:
     assert mod.delete_record is not None
-    assert callable(mod.delete_record)
+    assert hasattr(mod.delete_record, "invoke")

@@ -2,8 +2,8 @@ from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool
+from langchain.agents import create_agent
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.prebuilt import create_react_agent
 
 
 def make_agent(
@@ -27,7 +27,7 @@ def make_agent(
     """
     kwargs: dict[str, Any] = {"name": name, "model": llm, "tools": tools or []}
     if system:
-        kwargs["prompt"] = system
+        kwargs["system_prompt"] = system
     if response_format:
         kwargs["response_format"] = response_format
-    return create_react_agent(**kwargs)
+    return create_agent(**kwargs)

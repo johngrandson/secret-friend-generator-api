@@ -11,8 +11,8 @@ def test_escalate_to_human_tool_name() -> None:
     assert mod.escalate_to_human.name == "escalate_to_human"
 
 
-def test_escalate_to_human_is_callable() -> None:
-    assert callable(mod.escalate_to_human)
+def test_escalate_to_human_has_invoke() -> None:
+    assert hasattr(mod.escalate_to_human, "invoke")
 
 
 @pytest.mark.asyncio
