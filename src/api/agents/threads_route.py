@@ -3,6 +3,7 @@
 from typing import Any
 
 from fastapi import APIRouter
+from langgraph.pregel.types import StateSnapshot
 
 from src.api.agents.dependencies import get_app
 from src.api.agents.schemas import ThreadStateResponse
@@ -10,7 +11,7 @@ from src.api.agents.schemas import ThreadStateResponse
 router = APIRouter()
 
 
-def _serialise_state(state: Any) -> ThreadStateResponse:
+def _serialise_state(state: StateSnapshot | None) -> ThreadStateResponse:
     """Convert a LangGraph StateSnapshot into a ThreadStateResponse."""
     if state is None:
         return ThreadStateResponse(values=None, next=[], tasks=[])

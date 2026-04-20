@@ -1,18 +1,23 @@
 """App registry and lifecycle helpers for the agents API."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
+from langchain_core.tools import BaseTool
+from langgraph.graph.state import CompiledStateGraph
+
+if TYPE_CHECKING:
+    from langchain_mcp_adapters.client import MultiServerMCPClient
 
 log = logging.getLogger(__name__)
 
-_apps: dict[str, Any] = {}
-_mcp_tools: list = []
-_mcp_client: Any = None
+_apps: dict[str, CompiledStateGraph] = {}
+_mcp_tools: list[BaseTool] = []
+_mcp_client: "MultiServerMCPClient | None" = None
 
 
-def get_app(app_name: str) -> Any:
+def get_app(app_name: str) -> CompiledStateGraph:
     """Return the compiled graph for *app_name* or raise HTTP 404."""
     if app_name not in _apps:
         available = ", ".join(_apps.keys()) if _apps else "none"

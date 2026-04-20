@@ -8,7 +8,7 @@ from src.domain.agents.config.checkpointer import get_checkpointer, get_store
 
 
 def make_supervisor(
-    agents: list[Any],
+    agents: list[CompiledStateGraph],
     llm: BaseChatModel,
     output_mode: str = "last_message",
     supervisor_name: str = "supervisor",

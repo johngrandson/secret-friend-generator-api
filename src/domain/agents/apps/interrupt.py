@@ -10,7 +10,7 @@ from src.domain.agents.config.llm_factory import create_llm
 from src.domain.agents.core.factory import make_agent
 from src.domain.agents.core.supervisor import make_supervisor
 
-_RECORDS: list[dict] = [
+_RECORDS: list[dict[str, str | int]] = [
     {"id": 1, "name": "Alice", "role": "admin"},
     {"id": 2, "name": "Bob", "role": "user"},
     {"id": 3, "name": "Carol", "role": "user"},

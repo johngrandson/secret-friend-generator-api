@@ -3,13 +3,25 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, TypedDict
+
+from langchain_core.tools import BaseTool
+
+if TYPE_CHECKING:
+    from langchain_mcp_adapters.client import MultiServerMCPClient
 
 log = logging.getLogger(__name__)
-_cached: dict[str, Any] | None = None
 
 
-async def load_mcp_tools(config_path: str | None = None) -> dict[str, Any]:
+class McpLoadResult(TypedDict):
+    tools: list[BaseTool]
+    client: "MultiServerMCPClient | None"
+
+
+_cached: McpLoadResult | None = None
+
+
+async def load_mcp_tools(config_path: str | None = None) -> McpLoadResult:
     """Load MCP tools from a JSON config file, caching the result.
 
     Args:
@@ -17,7 +29,7 @@ async def load_mcp_tools(config_path: str | None = None) -> dict[str, Any]:
             does not exist, an empty result is returned immediately.
 
     Returns:
-        Dict with keys ``tools`` (list) and ``client`` (MultiServerMCPClient or None).
+        Dict with keys ``tools`` (list[BaseTool]) and ``client`` (MultiServerMCPClient or None).
 
     Raises:
         RuntimeError: If the config file exists but cannot be parsed.
@@ -26,7 +38,7 @@ async def load_mcp_tools(config_path: str | None = None) -> dict[str, Any]:
     if _cached is not None:
         return _cached
 
-    empty: dict[str, Any] = {"tools": [], "client": None}
+    empty: McpLoadResult = {"tools": [], "client": None}
 
     if not config_path or not Path(config_path).exists():
         return empty
@@ -47,7 +59,7 @@ async def load_mcp_tools(config_path: str | None = None) -> dict[str, Any]:
     return _cached
 
 
-def get_mcp_tools() -> list:
+def get_mcp_tools() -> list[BaseTool]:
     """Return the cached list of MCP tools (empty list if not yet loaded).
 
     Returns:

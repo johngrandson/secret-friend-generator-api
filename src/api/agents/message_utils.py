@@ -2,8 +2,10 @@
 
 from typing import Any
 
+from langchain_core.messages import BaseMessage
 
-def last_message_content(messages: list[Any]) -> str | None:
+
+def last_message_content(messages: list[BaseMessage | dict[str, Any]]) -> str | None:
     """Extract string content from the last message in the list.
 
     Handles both dict-style messages and LangChain message objects.
@@ -16,7 +18,7 @@ def last_message_content(messages: list[Any]) -> str | None:
     return getattr(last, "content", None)
 
 
-def serialise_message(m: Any) -> dict[str, Any]:
+def serialise_message(m: BaseMessage | dict[str, Any]) -> dict[str, Any]:
     """Serialise a LangChain message object or plain dict to a dict.
 
     Uses ``model_dump`` when available (Pydantic v2), falls back to

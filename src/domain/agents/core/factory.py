@@ -4,6 +4,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool
 from langchain.agents import create_agent
 from langgraph.graph.state import CompiledStateGraph
+from pydantic import BaseModel
 
 
 def make_agent(
@@ -11,7 +12,7 @@ def make_agent(
     llm: BaseChatModel,
     tools: list[BaseTool] | None = None,
     system: str | None = None,
-    response_format: type | None = None,
+    response_format: type[BaseModel] | None = None,
 ) -> CompiledStateGraph:
     """Create a ReAct agent using LangGraph's prebuilt factory.
 

@@ -7,6 +7,7 @@ from typing import Any, AsyncGenerator
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessageChunk
+from langgraph.graph.state import CompiledStateGraph
 
 from src.api.agents.dependencies import get_app
 from src.api.agents.schemas import InvokeBody
@@ -17,8 +18,8 @@ router = APIRouter()
 
 
 async def _event_generator(
-    app: Any,
-    messages: list[dict[str, Any]],
+    app: CompiledStateGraph,
+    messages: list[dict[str, str]],
     thread_id: str,
 ) -> AsyncGenerator[str, None]:
     """Yield SSE-formatted lines from the app stream."""
@@ -29,7 +30,8 @@ async def _event_generator(
             stream_mode="messages",
         )
         async for chunk, metadata in stream:
-            node = (metadata or {}).get("langgraph_node", "unknown")
+            meta: dict[str, Any] = metadata if isinstance(metadata, dict) else {}
+            node = meta.get("langgraph_node", "unknown")
             if isinstance(chunk, AIMessageChunk):
                 event: dict[str, Any] = {
                     "type": "token",

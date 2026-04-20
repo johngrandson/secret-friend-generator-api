@@ -5,7 +5,7 @@ import uuid
 
 from langchain_core.tools import tool
 
-from src.domain.agents.tools.support.mock_data import ORDERS, TICKETS
+from src.domain.agents.tools.support.mock_data import ORDERS, TICKETS, TicketRecord
 
 
 @tool
@@ -56,7 +56,7 @@ async def create_ticket(customer_id: str, issue: str) -> str:
         Confirmation with the new ticket ID.
     """
     ticket_id = f"TK-{uuid.uuid4().hex[:6].upper()}"
-    ticket: dict = {
+    ticket: TicketRecord = {
         "id": ticket_id,
         "customer_id": customer_id,
         "issue": issue,

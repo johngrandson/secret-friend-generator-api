@@ -2,11 +2,11 @@ import random
 
 from sqlalchemy.orm import Session
 
-from src.domain.participant.schemas import ParticipantRead, ParticipantStatus, ParticipantUpdate
+from src.domain.participant.schemas import ParticipantRead
 from src.domain.participant.service import ParticipantService
 from src.domain.secret_friend.repository import SecretFriendRepository
 from src.domain.secret_friend.schemas import SecretFriendLink, SecretFriendRead
-from src.domain.shared.signals import secret_friend_assigned
+from src.domain.secret_friend.signals import secret_friend_assigned
 
 
 class SecretFriendService:
@@ -18,8 +18,8 @@ class SecretFriendService:
 
         1. Fetch participant and group members
         2. Sort a secret friend (random, no self-link)
-        3. Mark participant as REVEALED
-        4. Persist the link
+        3. Persist the link
+        4. Emit signal (participant status update handled by participant handler)
         """
         participant = ParticipantService.get_by_id(
             participant_id=participant_id, db_session=db_session
@@ -28,13 +28,7 @@ class SecretFriendService:
             group_id=group_id, db_session=db_session
         )
 
-        link = SecretFriendService._sort_secret_friends(participant, all_participants)
-
-        ParticipantService.update(
-            participant_id=participant_id,
-            payload=ParticipantUpdate(status=ParticipantStatus.REVEALED),
-            db_session=db_session,
-        )
+        link = SecretFriendService.sort_secret_friends(participant, all_participants)
 
         result = SecretFriendRepository.link(
             secret_friend=SecretFriendLink(
@@ -45,7 +39,11 @@ class SecretFriendService:
         )
         validated = SecretFriendRead.model_validate(result)
         secret_friend_assigned.send(
-            None, group_id=group_id, participant_id=participant_id
+            SecretFriendService,
+            assignment=validated,
+            group_id=group_id,
+            participant_id=participant_id,
+            db_session=db_session,
         )
         return validated
 

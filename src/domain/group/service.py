@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from src.domain.group.repository import GroupRepository
 from src.domain.group.schemas import GroupCreate, GroupList, GroupRead
-from src.domain.shared.signals import group_created
+from src.domain.group.signals import group_created
 
 
 class GroupService:
@@ -10,7 +10,7 @@ class GroupService:
     def create(group: GroupCreate, db_session: Session) -> GroupRead:
         result = GroupRepository.create(group=group, db_session=db_session)
         validated = GroupRead.model_validate(result)
-        group_created.send(None, group=validated)
+        group_created.send(GroupService, group=validated)
         return validated
 
     @staticmethod

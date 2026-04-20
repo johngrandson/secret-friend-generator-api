@@ -3,6 +3,7 @@
 from typing import Any
 
 from fastapi import APIRouter
+from langchain_core.messages import BaseMessage
 
 from src.api.agents.dependencies import get_app
 from src.api.agents.message_utils import last_message_content, serialise_message
@@ -23,7 +24,7 @@ async def invoke(app_name: str, body: InvokeBody) -> InvokeResponse:
         {"messages": messages},
         config={"configurable": {"thread_id": body.thread_id}},
     )
-    result_messages: list[Any] = result.get("messages", [])
+    result_messages: list[BaseMessage | dict[str, Any]] = result.get("messages", [])
     return InvokeResponse(
         messages=[serialise_message(m) for m in result_messages],
         structured_response=result.get("structured_response"),

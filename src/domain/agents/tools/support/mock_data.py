@@ -1,6 +1,30 @@
 """Mock data for support agent tools (customers, orders, tickets)."""
 
-CUSTOMERS: dict[str, dict] = {
+from typing import TypedDict
+
+
+class CustomerRecord(TypedDict):
+    name: str
+    email: str
+    plan: str
+    balance: float
+
+
+class OrderRecord(TypedDict):
+    customer_id: str
+    item: str
+    status: str
+    total: float
+
+
+class TicketRecord(TypedDict):
+    id: str
+    customer_id: str
+    issue: str
+    status: str
+
+
+CUSTOMERS: dict[str, CustomerRecord] = {
     "C-1001": {
         "name": "Alice Johnson",
         "email": "alice@example.com",
@@ -21,7 +45,7 @@ CUSTOMERS: dict[str, dict] = {
     },
 }
 
-ORDERS: dict[str, dict] = {
+ORDERS: dict[str, OrderRecord] = {
     "ORD-501": {
         "customer_id": "C-1001",
         "item": "Wireless Headphones",
@@ -48,7 +72,7 @@ ORDERS: dict[str, dict] = {
     },
 }
 
-TICKETS: list[dict] = [
+TICKETS: list[TicketRecord] = [
     {
         "id": "TK-001",
         "customer_id": "C-1002",

@@ -1,5 +1,5 @@
 import math
-from typing import Any
+from typing import Any, TypedDict
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
@@ -23,6 +23,12 @@ def _cosine_similarity(a: list[float], b: list[float]) -> float:
     return dot / (norm_a * norm_b)
 
 
+class _Chunk(TypedDict):
+    content: str
+    embedding: list[float]
+    metadata: dict[str, Any]
+
+
 class InMemoryVectorStore:
     """Simple in-memory vector store backed by cosine similarity search.
 
@@ -31,7 +37,7 @@ class InMemoryVectorStore:
     """
 
     def __init__(self, embeddings: Embeddings) -> None:
-        self._chunks: list[dict[str, Any]] = []
+        self._chunks: list[_Chunk] = []
         self._embeddings = embeddings
 
     async def add_documents(self, docs: list[Document]) -> None:

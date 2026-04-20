@@ -1,7 +1,6 @@
 """Swarm app — alice and bob hand off to each other."""
 
-from typing import Any
-
+from langchain_core.tools import BaseTool
 from langgraph.graph.state import CompiledStateGraph
 
 from src.domain.agents.config.llm_factory import create_llm
@@ -11,7 +10,7 @@ from src.domain.agents.core.swarm import make_swarm
 from src.domain.agents.tools.local import add, echo, multiply
 
 
-def create_swarm_app(mcp_tools: list[Any] | None = None) -> CompiledStateGraph:
+def create_swarm_app(mcp_tools: list[BaseTool] | None = None) -> CompiledStateGraph:
     """Build a swarm graph where alice and bob hand off to each other.
 
     alice handles addition and can hand off to bob.

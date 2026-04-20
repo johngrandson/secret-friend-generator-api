@@ -1,7 +1,6 @@
 """Supervisor app — math_expert + writer coordinated by a supervisor."""
 
-from typing import Any
-
+from langchain_core.tools import BaseTool
 from langgraph.graph.state import CompiledStateGraph
 
 from src.domain.agents.config.llm_factory import create_llm
@@ -10,7 +9,7 @@ from src.domain.agents.core.supervisor import make_supervisor
 from src.domain.agents.tools.local import add, echo, multiply
 
 
-def create_supervisor_app(mcp_tools: list[Any] | None = None) -> CompiledStateGraph:
+def create_supervisor_app(mcp_tools: list[BaseTool] | None = None) -> CompiledStateGraph:
     """Build a supervisor graph with math_expert and writer agents.
 
     Args:
