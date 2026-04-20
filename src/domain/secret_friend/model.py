@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -20,14 +19,14 @@ class SecretFriend(Base):
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
 
-    gift_giver_id: Mapped[int] = mapped_column(ForeignKey("participants.id"), nullable=False)
-    giver: Mapped[Optional["Participant"]] = relationship(
+    gift_giver_id: Mapped[int] = mapped_column(ForeignKey("participants.id"), nullable=False, index=True)
+    giver: Mapped["Participant | None"] = relationship(
         foreign_keys=[gift_giver_id],
         back_populates="gift_giver",
     )
 
     gift_receiver_id: Mapped[int] = mapped_column(ForeignKey("participants.id"), nullable=False, index=True)
-    receiver: Mapped[Optional["Participant"]] = relationship(
+    receiver: Mapped["Participant | None"] = relationship(
         foreign_keys=[gift_receiver_id],
         back_populates="gift_receiver",
     )

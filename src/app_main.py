@@ -78,7 +78,9 @@ app.mount("/api/v1", app=api)
 
 # ── Bootstrap (run at import time) ───────────────────────────────────────────
 
-_create_tables()
+if settings.ENV in ("local", "test"):
+    _create_tables()
+
 register_all_handlers()
 
 if settings.ENV != "test":
