@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,7 +18,7 @@ def _make_embeddings(dim: int = 4) -> MagicMock:
     """Return mock Embeddings that produce deterministic unit vectors."""
     call_count = 0
 
-    async def fake_embed_documents(texts: list[str]) -> list[list[float]]:
+    def fake_embed_documents(texts: list[str]) -> list[list[float]]:
         nonlocal call_count
         result = []
         for i, _ in enumerate(texts):
@@ -28,7 +28,7 @@ def _make_embeddings(dim: int = 4) -> MagicMock:
         call_count += len(texts)
         return result
 
-    async def fake_embed_query(text: str) -> list[float]:
+    def fake_embed_query(text: str) -> list[float]:
         vec = [0.0] * dim
         vec[0] = 1.0
         return vec
@@ -103,8 +103,8 @@ async def test_retrieval_tool_empty_store_returns_not_found() -> None:
     from src.domain.agents.tools.rag_vector_store import InMemoryVectorStore
 
     embeddings = MagicMock()
-    embeddings.embed_documents = AsyncMock(return_value=[])
-    embeddings.embed_query = AsyncMock(return_value=[1.0, 0.0])
+    embeddings.embed_documents = MagicMock(return_value=[])
+    embeddings.embed_query = MagicMock(return_value=[1.0, 0.0])
 
     store = InMemoryVectorStore(embeddings)
     tool = create_retrieval_tool(store)

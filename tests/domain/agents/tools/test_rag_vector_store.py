@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from langchain_core.documents import Document
@@ -40,8 +40,8 @@ def _make_embeddings(vectors: list[list[float]]) -> MagicMock:
     """Return a mock Embeddings whose embed_documents returns `vectors`
     and embed_query returns the first vector."""
     embeddings = MagicMock()
-    embeddings.embed_documents = AsyncMock(return_value=vectors)
-    embeddings.embed_query = AsyncMock(return_value=vectors[0])
+    embeddings.embed_documents = MagicMock(return_value=vectors)
+    embeddings.embed_query = MagicMock(return_value=vectors[0])
     return embeddings
 
 
@@ -66,7 +66,7 @@ async def test_search_returns_most_similar_first() -> None:
     vecs = [[1.0, 0.0], [0.0, 1.0]]
     embeddings = _make_embeddings(vecs)
     # query vector = [1, 0]
-    embeddings.embed_query = AsyncMock(return_value=[1.0, 0.0])
+    embeddings.embed_query = MagicMock(return_value=[1.0, 0.0])
     store = InMemoryVectorStore(embeddings)
     docs = [Document(page_content="doc a"), Document(page_content="doc b")]
     await store.add_documents(docs)
@@ -78,7 +78,7 @@ async def test_search_returns_most_similar_first() -> None:
 async def test_search_respects_k_limit() -> None:
     vecs = [[1.0, 0.0], [0.9, 0.1], [0.8, 0.2], [0.1, 0.9]]
     embeddings = _make_embeddings(vecs)
-    embeddings.embed_query = AsyncMock(return_value=[1.0, 0.0])
+    embeddings.embed_query = MagicMock(return_value=[1.0, 0.0])
     store = InMemoryVectorStore(embeddings)
     docs = [Document(page_content=f"doc {i}") for i in range(4)]
     await store.add_documents(docs)

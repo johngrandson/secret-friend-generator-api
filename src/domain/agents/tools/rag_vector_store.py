@@ -41,7 +41,7 @@ class InMemoryVectorStore:
             docs: Documents whose page_content will be embedded and stored.
         """
         texts = [d.page_content for d in docs]
-        vectors = await self._embeddings.embed_documents(texts)
+        vectors = self._embeddings.embed_documents(texts)
         for i, doc in enumerate(docs):
             self._chunks.append(
                 {
@@ -63,7 +63,7 @@ class InMemoryVectorStore:
         """
         if not self._chunks:
             return []
-        query_vec = await self._embeddings.embed_query(query)
+        query_vec = self._embeddings.embed_query(query)
         scored = [
             (c["content"], _cosine_similarity(query_vec, c["embedding"]))
             for c in self._chunks

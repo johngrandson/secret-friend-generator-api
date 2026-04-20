@@ -1,6 +1,6 @@
 """Tests for the RAG app."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,10 +11,10 @@ from tests.domain.agents.apps.conftest import ToolCapableFakeLLM
 def _make_fake_embeddings(dim: int = 4) -> MagicMock:
     """Return a mock Embeddings that returns fixed-length vectors."""
     embeddings = MagicMock()
-    embeddings.embed_documents = AsyncMock(
+    embeddings.embed_documents = MagicMock(
         side_effect=lambda texts: [[float(i)] * dim for i in range(len(texts))]
     )
-    embeddings.embed_query = AsyncMock(return_value=[1.0] * dim)
+    embeddings.embed_query = MagicMock(return_value=[1.0] * dim)
     return embeddings
 
 
