@@ -43,7 +43,7 @@ class KeyRotator:
         self,
         keys: List[str],
         cooldown_seconds: int = DEFAULT_COOLDOWN_SECONDS,
-        verbose: bool = False
+        verbose: bool = False,
     ):
         """
         Initialize the key rotator.
@@ -114,7 +114,10 @@ class KeyRotator:
         if available != self._current_index:
             self._current_index = available
             if self._verbose:
-                print(f"→ Switched to key #{available + 1}: {self.current_key_masked}", file=sys.stderr)
+                print(
+                    f"→ Switched to key #{available + 1}: {self.current_key_masked}",
+                    file=sys.stderr,
+                )
 
         return self._keys[self._current_index]
 
@@ -136,7 +139,7 @@ class KeyRotator:
             print(
                 f"⚠ Key #{self._current_index + 1} rate-limited, "
                 f"cooldown {self._cooldown_seconds}s",
-                file=sys.stderr
+                file=sys.stderr,
             )
             if error_msg:
                 # Truncate long error messages
@@ -150,7 +153,10 @@ class KeyRotator:
 
         self._current_index = available
         if self._verbose:
-            print(f"→ Rotated to key #{available + 1}: {self.current_key_masked}", file=sys.stderr)
+            print(
+                f"→ Rotated to key #{available + 1}: {self.current_key_masked}",
+                file=sys.stderr,
+            )
 
         return True
 
@@ -171,10 +177,10 @@ class KeyRotator:
         on_cooldown = sum(1 for cd in self._cooldowns.values() if now < cd)
 
         return {
-            'total': len(self._keys),
-            'current_index': self._current_index,
-            'on_cooldown': on_cooldown,
-            'available': len(self._keys) - on_cooldown
+            "total": len(self._keys),
+            "current_index": self._current_index,
+            "on_cooldown": on_cooldown,
+            "available": len(self._keys) - on_cooldown,
         }
 
 
@@ -196,15 +202,15 @@ def is_rate_limit_error(error: Exception) -> bool:
     error_str = str(error).lower()
 
     rate_limit_indicators = [
-        'resource_exhausted',
-        'resourceexhausted',
-        '429',
-        'rate limit',
-        'ratelimit',
-        'quota exceeded',
-        'quota_exceeded',
-        'too many requests',
-        'limit: 0',
+        "resource_exhausted",
+        "resourceexhausted",
+        "429",
+        "rate limit",
+        "ratelimit",
+        "quota exceeded",
+        "quota_exceeded",
+        "too many requests",
+        "limit: 0",
     ]
 
     return any(indicator in error_str for indicator in rate_limit_indicators)
@@ -227,24 +233,24 @@ def is_server_error(error: Exception) -> bool:
     error_str = str(error).lower()
 
     server_error_indicators = [
-        '500',
-        '502',
-        '503',
-        '504',
-        'internal server error',
-        'internal_server_error',
-        'service unavailable',
-        'service_unavailable',
-        'bad gateway',
-        'gateway timeout',
-        'temporarily unavailable',
-        'overloaded',
+        "500",
+        "502",
+        "503",
+        "504",
+        "internal server error",
+        "internal_server_error",
+        "service unavailable",
+        "service_unavailable",
+        "bad gateway",
+        "gateway timeout",
+        "temporarily unavailable",
+        "overloaded",
     ]
 
     return any(indicator in error_str for indicator in server_error_indicators)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Demo/test the rotator
     print("=== KeyRotator Demo ===\n")
 

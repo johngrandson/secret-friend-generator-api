@@ -16,7 +16,7 @@ from core import CSV_CONFIG, MAX_RESULTS, search, search_all_domains
 # Fix Windows cp1252 encoding: hardcoded emojis can't encode on Windows.
 # Reconfigure stdout to UTF-8 with replacement (Python 3.7+).
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
-    if hasattr(sys.stdout, 'reconfigure'):
+    if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
@@ -28,9 +28,11 @@ def format_output(result):
     output = []
     output.append(f"## AI Artist Search Results")
     output.append(f"**Domain:** {result['domain']} | **Query:** {result['query']}")
-    output.append(f"**Source:** {result['file']} | **Found:** {result['count']} results\n")
+    output.append(
+        f"**Source:** {result['file']} | **Found:** {result['count']} results\n"
+    )
 
-    for i, row in enumerate(result['results'], 1):
+    for i, row in enumerate(result["results"], 1):
         output.append(f"### Result {i}")
         for key, value in row.items():
             value_str = str(value)
@@ -74,7 +76,9 @@ def generate_prompt_system(query, platform=None):
     if style.get("count", 0) > 0:
         output.append("### 🎭 Recommended Styles")
         for s in style["results"]:
-            output.append(f"**{s.get('Style Name', 'N/A')}** - {s.get('Description', '')}")
+            output.append(
+                f"**{s.get('Style Name', 'N/A')}** - {s.get('Description', '')}"
+            )
             if s.get("Prompt Keywords"):
                 output.append(f"  Keywords: `{s.get('Prompt Keywords')}`")
         output.append("")
@@ -83,15 +87,21 @@ def generate_prompt_system(query, platform=None):
     if lighting.get("count", 0) > 0:
         lt = lighting["results"][0]
         output.append("### 💡 Lighting Suggestion")
-        output.append(f"**{lt.get('Lighting Type', 'N/A')}** - {lt.get('Description', '')}")
-        output.append(f"  Mood: {lt.get('Mood', '')} | Keywords: `{lt.get('Prompt Keywords', '')}`")
+        output.append(
+            f"**{lt.get('Lighting Type', 'N/A')}** - {lt.get('Description', '')}"
+        )
+        output.append(
+            f"  Mood: {lt.get('Mood', '')} | Keywords: `{lt.get('Prompt Keywords', '')}`"
+        )
         output.append("")
 
     # Techniques
     if technique.get("count", 0) > 0:
         output.append("### 🔧 Relevant Techniques")
         for t in technique["results"]:
-            output.append(f"**{t.get('Technique', 'N/A')}**: {t.get('Description', '')}")
+            output.append(
+                f"**{t.get('Technique', 'N/A')}**: {t.get('Description', '')}"
+            )
             if t.get("Syntax Example"):
                 output.append(f"  Example: `{t.get('Syntax Example')}`")
         output.append("")
@@ -113,12 +123,31 @@ def generate_prompt_system(query, platform=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI Artist Search")
     parser.add_argument("query", help="Search query")
-    parser.add_argument("--domain", "-d", choices=list(CSV_CONFIG.keys()), help="Search domain")
-    parser.add_argument("--max-results", "-n", type=int, default=MAX_RESULTS, help="Max results (default: 3)")
+    parser.add_argument(
+        "--domain", "-d", choices=list(CSV_CONFIG.keys()), help="Search domain"
+    )
+    parser.add_argument(
+        "--max-results",
+        "-n",
+        type=int,
+        default=MAX_RESULTS,
+        help="Max results (default: 3)",
+    )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     # Prompt system generation
-    parser.add_argument("--prompt-system", "-ps", action="store_true", help="Generate comprehensive prompt system")
-    parser.add_argument("--platform", "-p", type=str, default=None, help="Target platform for prompt system")
+    parser.add_argument(
+        "--prompt-system",
+        "-ps",
+        action="store_true",
+        help="Generate comprehensive prompt system",
+    )
+    parser.add_argument(
+        "--platform",
+        "-p",
+        type=str,
+        default=None,
+        help="Target platform for prompt system",
+    )
     parser.add_argument("--all", "-a", action="store_true", help="Search all domains")
 
     args = parser.parse_args()
@@ -132,6 +161,7 @@ if __name__ == "__main__":
         results = search_all_domains(args.query, args.max_results)
         if args.json:
             import json
+
             print(json.dumps(results, indent=2, ensure_ascii=False))
         else:
             for domain, result in results.items():
@@ -142,6 +172,7 @@ if __name__ == "__main__":
         result = search(args.query, args.domain, args.max_results)
         if args.json:
             import json
+
             print(json.dumps(result, indent=2, ensure_ascii=False))
         else:
             print(format_output(result))

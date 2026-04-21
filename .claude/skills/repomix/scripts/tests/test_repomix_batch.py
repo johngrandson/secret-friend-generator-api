@@ -20,7 +20,7 @@ from repomix_batch import (
     EnvLoader,
     RepomixBatchProcessor,
     load_repositories_from_file,
-    main
+    main,
 )
 
 
@@ -47,7 +47,7 @@ class TestRepomixConfig:
             include_pattern="src/**",
             ignore_pattern="tests/**",
             no_security_check=True,
-            verbose=True
+            verbose=True,
         )
         assert config.style == "markdown"
         assert config.output_dir == "custom-output"
@@ -72,7 +72,7 @@ class TestEnvLoader:
     def test_parse_env_file_with_quotes(self, tmp_path):
         """Test parsing .env file with quoted values."""
         env_file = tmp_path / ".env"
-        env_file.write_text('KEY1="value with spaces"\nKEY2=\'single quotes\'\n')
+        env_file.write_text("KEY1=\"value with spaces\"\nKEY2='single quotes'\n")
 
         result = EnvLoader._parse_env_file(env_file)
         assert result == {"KEY1": "value with spaces", "KEY2": "single quotes"}
@@ -80,7 +80,9 @@ class TestEnvLoader:
     def test_parse_env_file_with_comments(self, tmp_path):
         """Test parsing .env file with comments."""
         env_file = tmp_path / ".env"
-        env_file.write_text("# Comment\nKEY1=value1\n\n# Another comment\nKEY2=value2\n")
+        env_file.write_text(
+            "# Comment\nKEY1=value1\n\n# Another comment\nKEY2=value2\n"
+        )
 
         result = EnvLoader._parse_env_file(env_file)
         assert result == {"KEY1": "value1", "KEY2": "value2"}
@@ -118,7 +120,7 @@ class TestEnvLoader:
     @patch.dict(os.environ, {"PROCESS_VAR": "from_process"}, clear=True)
     def test_load_env_files_process_env_priority(self):
         """Test that process environment has highest priority."""
-        with patch.object(Path, 'exists', return_value=False):
+        with patch.object(Path, "exists", return_value=False):
             env_vars = EnvLoader.load_env_files()
             assert env_vars.get("PROCESS_VAR") == "from_process"
 
@@ -202,10 +204,7 @@ class TestRepomixBatchProcessor:
 
     def test_build_command_with_patterns(self):
         """Test building command with include/ignore patterns."""
-        config = RepomixConfig(
-            include_pattern="src/**/*.ts",
-            ignore_pattern="tests/**"
-        )
+        config = RepomixConfig(include_pattern="src/**/*.ts", ignore_pattern="tests/**")
         processor = RepomixBatchProcessor(config)
 
         output_file = Path("output.xml")
@@ -256,11 +255,7 @@ class TestRepomixBatchProcessor:
     @patch("pathlib.Path.mkdir")
     def test_process_repository_failure(self, mock_mkdir, mock_run):
         """Test processing repository with failure."""
-        mock_run.return_value = Mock(
-            returncode=1,
-            stderr="Error message",
-            stdout=""
-        )
+        mock_run.return_value = Mock(returncode=1, stderr="Error message", stdout="")
 
         config = RepomixConfig()
         processor = RepomixBatchProcessor(config)
@@ -310,8 +305,7 @@ class TestRepomixBatchProcessor:
         processor = RepomixBatchProcessor(config)
 
         success, message = processor.process_repository(
-            "/path/to/repo",
-            output_name="custom-output.xml"
+            "/path/to/repo", output_name="custom-output.xml"
         )
 
         assert success is True
@@ -326,10 +320,7 @@ class TestRepomixBatchProcessor:
         config = RepomixConfig()
         processor = RepomixBatchProcessor(config)
 
-        success, message = processor.process_repository(
-            "owner/repo",
-            is_remote=True
-        )
+        success, message = processor.process_repository("owner/repo", is_remote=True)
 
         assert success is True
         cmd = mock_run.call_args[0][0]
@@ -347,7 +338,7 @@ class TestRepomixBatchProcessor:
         repositories = [
             {"path": "/repo1"},
             {"path": "/repo2", "output": "custom.xml"},
-            {"path": "owner/repo", "remote": True}
+            {"path": "owner/repo", "remote": True},
         ]
 
         results = processor.process_batch(repositories)
@@ -362,17 +353,13 @@ class TestRepomixBatchProcessor:
         mock_process.side_effect = [
             (True, "Success 1"),
             (False, "Failed"),
-            (True, "Success 2")
+            (True, "Success 2"),
         ]
 
         config = RepomixConfig()
         processor = RepomixBatchProcessor(config)
 
-        repositories = [
-            {"path": "/repo1"},
-            {"path": "/repo2"},
-            {"path": "/repo3"}
-        ]
+        repositories = [{"path": "/repo1"}, {"path": "/repo2"}, {"path": "/repo3"}]
 
         results = processor.process_batch(repositories)
 
@@ -401,10 +388,7 @@ class TestLoadRepositoriesFromFile:
     def test_load_valid_json(self, tmp_path):
         """Test loading valid JSON file."""
         json_file = tmp_path / "repos.json"
-        repos = [
-            {"path": "/repo1"},
-            {"path": "owner/repo", "remote": True}
-        ]
+        repos = [{"path": "/repo1"}, {"path": "owner/repo", "remote": True}]
         json_file.write_text(json.dumps(repos))
 
         result = load_repositories_from_file(str(json_file))
@@ -488,21 +472,22 @@ class TestMain:
     @patch.object(RepomixBatchProcessor, "process_batch")
     def test_main_with_failures(self, mock_process_batch, mock_check):
         """Test main function with processing failures."""
-        mock_process_batch.return_value = {
-            "success": ["msg1"],
-            "failed": ["error1"]
-        }
+        mock_process_batch.return_value = {"success": ["msg1"], "failed": ["error1"]}
 
         result = main()
         assert result == 1
 
-    @patch("sys.argv", [
-        "repomix_batch.py",
-        "/repo1",
-        "--style", "markdown",
-        "--remove-comments",
-        "--verbose"
-    ])
+    @patch(
+        "sys.argv",
+        [
+            "repomix_batch.py",
+            "/repo1",
+            "--style",
+            "markdown",
+            "--remove-comments",
+            "--verbose",
+        ],
+    )
     @patch.object(RepomixBatchProcessor, "check_repomix_installed", return_value=True)
     @patch.object(RepomixBatchProcessor, "process_batch")
     def test_main_with_options(self, mock_process_batch, mock_check):

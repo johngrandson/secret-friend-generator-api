@@ -25,9 +25,12 @@ def load_json_file(path: str):
     try:
         size_mb = os.path.getsize(path) / (1024 * 1024)
         if size_mb > MAX_FILE_SIZE_MB:
-            print(f"Error: File too large ({size_mb:.1f}MB). Max {MAX_FILE_SIZE_MB}MB", file=sys.stderr)
+            print(
+                f"Error: File too large ({size_mb:.1f}MB). Max {MAX_FILE_SIZE_MB}MB",
+                file=sys.stderr,
+            )
             sys.exit(1)
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         print(f"Error: File not found: {path}", file=sys.stderr)
@@ -113,20 +116,29 @@ def detect_lost_in_middle(messages: list, critical_keywords: list) -> list:
         if 0.1 < position < 0.9:
             for keyword in critical_keywords:
                 if keyword.lower() in content.lower():
-                    warnings.append({
-                        "position": i,
-                        "position_pct": f"{position:.1%}",
-                        "keyword": keyword,
-                        "risk": "high" if 0.3 < position < 0.7 else "medium"
-                    })
+                    warnings.append(
+                        {
+                            "position": i,
+                            "position_pct": f"{position:.1%}",
+                            "keyword": keyword,
+                            "risk": "high" if 0.3 < position < 0.7 else "medium",
+                        }
+                    )
     return warnings
 
 
 def detect_poisoning_patterns(messages: list) -> dict:
     """Detect potential context poisoning indicators."""
     error_patterns = [
-        r"error", r"failed", r"exception", r"cannot", r"unable",
-        r"invalid", r"not found", r"undefined", r"null"
+        r"error",
+        r"failed",
+        r"exception",
+        r"cannot",
+        r"unable",
+        r"invalid",
+        r"not found",
+        r"undefined",
+        r"null",
     ]
     # Simple contradiction check - look for both positive and negative statements
     contradiction_keywords = [
@@ -156,11 +168,15 @@ def detect_poisoning_patterns(messages: list) -> dict:
     return {
         "error_density": len(errors_found) / total,
         "contradiction_count": len(contradictions),
-        "poisoning_risk": min(1.0, (len(errors_found) * 0.1 + len(contradictions) * 0.3))
+        "poisoning_risk": min(
+            1.0, (len(errors_found) * 0.1 + len(contradictions) * 0.3)
+        ),
     }
 
 
-def calculate_health_score(utilization: float, degradation_risk: float, poisoning_risk: float) -> float:
+def calculate_health_score(
+    utilization: float, degradation_risk: float, poisoning_risk: float
+) -> float:
     """
     Calculate composite health score.
     1.0 = healthy, 0.0 = critical
@@ -187,8 +203,9 @@ def get_health_status(score: float) -> HealthStatus:
     return HealthStatus.CRITICAL
 
 
-def analyze_context(messages: list, token_limit: int = 128000,
-                    critical_keywords: Optional[list] = None) -> ContextAnalysis:
+def analyze_context(
+    messages: list, token_limit: int = 128000, critical_keywords: Optional[list] = None
+) -> ContextAnalysis:
     """
     Comprehensive context health analysis.
 
@@ -200,7 +217,13 @@ def analyze_context(messages: list, token_limit: int = 128000,
     Returns:
         ContextAnalysis with health metrics and recommendations
     """
-    critical_keywords = critical_keywords or ["goal", "task", "important", "critical", "must"]
+    critical_keywords = critical_keywords or [
+        "goal",
+        "task",
+        "important",
+        "critical",
+        "must",
+    ]
 
     # Calculate token utilization
     total_tokens = estimate_message_tokens(messages)
@@ -221,16 +244,24 @@ def analyze_context(messages: list, token_limit: int = 128000,
     # Generate recommendations
     recommendations = []
     if utilization > 0.8:
-        recommendations.append("URGENT: Context utilization >80%. Trigger compaction immediately.")
+        recommendations.append(
+            "URGENT: Context utilization >80%. Trigger compaction immediately."
+        )
     elif utilization > 0.7:
-        recommendations.append("WARNING: Context utilization >70%. Plan for compaction.")
+        recommendations.append(
+            "WARNING: Context utilization >70%. Plan for compaction."
+        )
 
     if middle_warnings:
-        recommendations.append(f"Found {len(middle_warnings)} critical items in middle region. "
-                               "Consider moving to beginning/end.")
+        recommendations.append(
+            f"Found {len(middle_warnings)} critical items in middle region. "
+            "Consider moving to beginning/end."
+        )
 
     if poisoning_risk > 0.3:
-        recommendations.append("High poisoning risk detected. Review recent tool outputs for errors.")
+        recommendations.append(
+            "High poisoning risk detected. Review recent tool outputs for errors."
+        )
 
     if health_status == HealthStatus.CRITICAL:
         recommendations.append("CRITICAL: Consider context reset with clean state.")
@@ -243,12 +274,13 @@ def analyze_context(messages: list, token_limit: int = 128000,
         health_score=health_score,
         degradation_risk=degradation_risk,
         poisoning_risk=poisoning_risk,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
 
-def calculate_budget(system: int, tools: int, docs: int, history: int,
-                     buffer_pct: float = 0.15) -> dict:
+def calculate_budget(
+    system: int, tools: int, docs: int, history: int, buffer_pct: float = 0.15
+) -> dict:
     """Calculate context budget allocation."""
     subtotal = system + tools + docs + history
     buffer = int(subtotal * buffer_pct)
@@ -260,7 +292,7 @@ def calculate_budget(system: int, tools: int, docs: int, history: int,
             "tool_definitions": tools,
             "retrieved_docs": docs,
             "message_history": history,
-            "reserved_buffer": buffer
+            "reserved_buffer": buffer,
         },
         "total_budget": total,
         "warning_threshold": int(total * 0.7),
@@ -268,8 +300,8 @@ def calculate_budget(system: int, tools: int, docs: int, history: int,
         "recommendations": [
             f"Trigger compaction at {int(total * 0.7):,} tokens",
             f"Aggressive optimization at {int(total * 0.8):,} tokens",
-            f"Reserved {buffer:,} tokens ({buffer_pct:.0%}) for responses"
-        ]
+            f"Reserved {buffer:,} tokens ({buffer_pct:.0%}) for responses",
+        ],
     }
 
 
@@ -281,15 +313,27 @@ def main():
     analyze_parser = subparsers.add_parser("analyze", help="Analyze context health")
     analyze_parser.add_argument("context_file", help="JSON file with messages array")
     analyze_parser.add_argument("--limit", type=int, default=128000, help="Token limit")
-    analyze_parser.add_argument("--keywords", nargs="+", help="Critical keywords to track")
+    analyze_parser.add_argument(
+        "--keywords", nargs="+", help="Critical keywords to track"
+    )
 
     # Budget command
     budget_parser = subparsers.add_parser("budget", help="Calculate context budget")
-    budget_parser.add_argument("--system", type=int, default=2000, help="System prompt tokens")
-    budget_parser.add_argument("--tools", type=int, default=1500, help="Tool definitions tokens")
-    budget_parser.add_argument("--docs", type=int, default=3000, help="Retrieved docs tokens")
-    budget_parser.add_argument("--history", type=int, default=5000, help="Message history tokens")
-    budget_parser.add_argument("--buffer", type=float, default=0.15, help="Buffer percentage")
+    budget_parser.add_argument(
+        "--system", type=int, default=2000, help="System prompt tokens"
+    )
+    budget_parser.add_argument(
+        "--tools", type=int, default=1500, help="Tool definitions tokens"
+    )
+    budget_parser.add_argument(
+        "--docs", type=int, default=3000, help="Retrieved docs tokens"
+    )
+    budget_parser.add_argument(
+        "--history", type=int, default=5000, help="Message history tokens"
+    )
+    budget_parser.add_argument(
+        "--buffer", type=float, default=0.15, help="Buffer percentage"
+    )
 
     args = parser.parse_args()
 
@@ -297,19 +341,26 @@ def main():
         data = load_json_file(args.context_file)
         messages = data if isinstance(data, list) else data.get("messages", [])
         result = analyze_context(messages, args.limit, args.keywords)
-        print(json.dumps({
-            "total_tokens": result.total_tokens,
-            "token_limit": result.token_limit,
-            "utilization": f"{result.utilization:.1%}",
-            "health_status": result.health_status.value,
-            "health_score": f"{result.health_score:.2f}",
-            "degradation_risk": f"{result.degradation_risk:.2f}",
-            "poisoning_risk": f"{result.poisoning_risk:.2f}",
-            "recommendations": result.recommendations
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "total_tokens": result.total_tokens,
+                    "token_limit": result.token_limit,
+                    "utilization": f"{result.utilization:.1%}",
+                    "health_status": result.health_status.value,
+                    "health_score": f"{result.health_score:.2f}",
+                    "degradation_risk": f"{result.degradation_risk:.2f}",
+                    "poisoning_risk": f"{result.poisoning_risk:.2f}",
+                    "recommendations": result.recommendations,
+                },
+                indent=2,
+            )
+        )
 
     elif args.command == "budget":
-        result = calculate_budget(args.system, args.tools, args.docs, args.history, args.buffer)
+        result = calculate_budget(
+            args.system, args.tools, args.docs, args.history, args.buffer
+        )
         print(json.dumps(result, indent=2))
 
 

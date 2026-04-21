@@ -16,25 +16,25 @@ from pathlib import Path
 # Fix Windows cp1252 encoding: Unicode symbols (✓, ⚠, ✗) can't encode on Windows.
 # Reconfigure stdout to UTF-8 with replacement (Python 3.7+).
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
-    if hasattr(sys.stdout, 'reconfigure'):
+    if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if hasattr(sys.stderr, 'reconfigure'):
+    if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Color codes for terminal output
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RED = '\033[91m'
-BLUE = '\033[94m'
-RESET = '\033[0m'
-BOLD = '\033[1m'
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RED = "\033[91m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
 
 
 def print_header(text):
     """Print section header."""
-    print(f"\n{BOLD}{BLUE}{'='*60}{RESET}")
+    print(f"\n{BOLD}{BLUE}{'=' * 60}{RESET}")
     print(f"{BOLD}{BLUE}{text}{RESET}")
-    print(f"{BOLD}{BLUE}{'='*60}{RESET}\n")
+    print(f"{BOLD}{BLUE}{'=' * 60}{RESET}\n")
 
 
 def print_success(text):
@@ -62,9 +62,9 @@ def check_dependencies():
     print_header("Checking Python Dependencies")
 
     dependencies = {
-        'google.genai': 'google-genai',
-        'dotenv': 'python-dotenv',
-        'PIL': 'pillow'
+        "google.genai": "google-genai",
+        "dotenv": "python-dotenv",
+        "PIL": "pillow",
     }
 
     missing = []
@@ -90,7 +90,7 @@ def check_centralized_resolver():
     print_header("Checking Centralized Resolver")
 
     claude_root = Path(__file__).parent.parent.parent.parent
-    resolver_path = claude_root / 'scripts' / 'resolve_env.py'
+    resolver_path = claude_root / "scripts" / "resolve_env.py"
 
     if resolver_path.exists():
         print_success(f"Centralized resolver found: {resolver_path}")
@@ -99,6 +99,7 @@ def check_centralized_resolver():
         sys.path.insert(0, str(resolver_path.parent))
         try:
             from resolve_env import resolve_env
+
             print_success("Centralized resolver can be imported")
             return True
         except ImportError as e:
@@ -116,12 +117,12 @@ def find_api_key():
 
     # Try to use centralized resolver
     claude_root = Path(__file__).parent.parent.parent.parent
-    sys.path.insert(0, str(claude_root / 'scripts'))
+    sys.path.insert(0, str(claude_root / "scripts"))
     try:
         from resolve_env import resolve_env
 
         print_info("Using centralized resolver...")
-        api_key = resolve_env('GEMINI_API_KEY', skill='ai-multimodal')
+        api_key = resolve_env("GEMINI_API_KEY", skill="ai-multimodal")
 
         if api_key:
             print_success("API key found via centralized resolver")
@@ -129,7 +130,9 @@ def find_api_key():
 
             # Show hierarchy
             print_info("\nTo see where the key was found, run:")
-            print_info("python ~/.claude/scripts/resolve_env.py GEMINI_API_KEY --skill ai-multimodal --verbose")
+            print_info(
+                "python ~/.claude/scripts/resolve_env.py GEMINI_API_KEY --skill ai-multimodal --verbose"
+            )
 
             return api_key
         else:
@@ -140,7 +143,7 @@ def find_api_key():
         print_warning("Centralized resolver not available, using fallback")
 
         # Fallback: check environment
-        api_key = os.getenv('GEMINI_API_KEY')
+        api_key = os.getenv("GEMINI_API_KEY")
         if api_key:
             print_success("API key found in process.env")
             print_info(f"Key preview: {api_key[:20]}...{api_key[-4:]}")
@@ -156,7 +159,7 @@ def validate_api_key_format(api_key):
         return False
 
     # Google AI Studio keys typically start with 'AIza'
-    if api_key.startswith('AIza'):
+    if api_key.startswith("AIza"):
         print_success("API key format looks valid (Google AI Studio)")
         return True
     elif len(api_key) > 20:
@@ -181,7 +184,9 @@ def test_api_connection(api_key):
         # List models to verify API key works
         models = list(client.models.list())
 
-        print_success(f"API connection successful! Found {len(models)} available models")
+        print_success(
+            f"API connection successful! Found {len(models)} available models"
+        )
 
         # Show some available models
         print_info("\nSample available models:")
@@ -206,9 +211,9 @@ def check_directory_structure():
     skill_dir = script_dir.parent
 
     required_files = [
-        ('SKILL.md', skill_dir / 'SKILL.md'),
-        ('.env.example', skill_dir / '.env.example'),
-        ('gemini_batch_process.py', script_dir / 'gemini_batch_process.py'),
+        ("SKILL.md", skill_dir / "SKILL.md"),
+        (".env.example", skill_dir / ".env.example"),
+        ("gemini_batch_process.py", script_dir / "gemini_batch_process.py"),
     ]
 
     all_exist = True
@@ -251,8 +256,12 @@ def provide_setup_instructions():
     print(f"   $ python {Path(__file__)}")
 
     print("\n4. Debug if needed:")
-    print(f"   $ python ~/.claude/scripts/resolve_env.py --show-hierarchy --skill ai-multimodal")
-    print(f"   $ python ~/.claude/scripts/resolve_env.py GEMINI_API_KEY --skill ai-multimodal --verbose")
+    print(
+        f"   $ python ~/.claude/scripts/resolve_env.py --show-hierarchy --skill ai-multimodal"
+    )
+    print(
+        f"   $ python ~/.claude/scripts/resolve_env.py GEMINI_API_KEY --skill ai-multimodal --verbose"
+    )
 
 
 def main():
@@ -311,5 +320,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

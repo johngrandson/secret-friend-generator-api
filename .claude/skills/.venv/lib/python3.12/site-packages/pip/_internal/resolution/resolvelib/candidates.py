@@ -297,9 +297,9 @@ class LinkCandidate(_InstallRequirementBackedCandidate):
             # Version may not be present for PEP 508 direct URLs
             if version is not None:
                 wheel_version = Version(wheel.version)
-                assert (
-                    version == wheel_version
-                ), f"{version!r} != {wheel_version!r} for wheel {name}"
+                assert version == wheel_version, (
+                    f"{version!r} != {wheel_version!r} for wheel {name}"
+                )
 
         if cache_entry is not None:
             assert ireq.link.is_wheel

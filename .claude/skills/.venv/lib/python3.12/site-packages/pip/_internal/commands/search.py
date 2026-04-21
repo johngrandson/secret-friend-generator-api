@@ -122,8 +122,7 @@ def print_dist_installation_info(latest: str, dist: BaseDistribution | None) -> 
                 write_output("INSTALLED: %s", dist.version)
                 if parse_version(latest).pre:
                     write_output(
-                        "LATEST:    %s (pre-release; install"
-                        " with `pip install --pre`)",
+                        "LATEST:    %s (pre-release; install with `pip install --pre`)",
                         latest,
                     )
                 else:

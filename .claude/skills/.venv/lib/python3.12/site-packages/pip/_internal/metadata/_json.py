@@ -67,7 +67,8 @@ def msg_to_json(msg: Message) -> dict[str, Any]:
         key = json_name(field)
         if multi:
             value: str | list[str] = [
-                sanitise_header(v) for v in msg.get_all(field)  # type: ignore
+                sanitise_header(v)
+                for v in msg.get_all(field)  # type: ignore
             ]
         else:
             value = sanitise_header(msg.get(field))  # type: ignore

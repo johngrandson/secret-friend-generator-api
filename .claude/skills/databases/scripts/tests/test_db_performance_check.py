@@ -12,7 +12,10 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from db_performance_check import (
-    SlowQuery, IndexRecommendation, PerformanceReport, PerformanceAnalyzer
+    SlowQuery,
+    IndexRecommendation,
+    PerformanceReport,
+    PerformanceAnalyzer,
 )
 
 
@@ -41,9 +44,7 @@ class TestSlowQuery:
     def test_slow_query_creation(self):
         """Test creating slow query object."""
         query = SlowQuery(
-            query="SELECT * FROM users",
-            execution_time_ms=150.5,
-            count=10
+            query="SELECT * FROM users", execution_time_ms=150.5, count=10
         )
 
         assert query.query == "SELECT * FROM users"
@@ -60,7 +61,7 @@ class TestIndexRecommendation:
             collection_or_table="users",
             fields=["email"],
             reason="Frequently queried field",
-            estimated_benefit="High"
+            estimated_benefit="High",
         )
 
         assert rec.collection_or_table == "users"
@@ -80,7 +81,7 @@ class TestPerformanceReport:
             timestamp=datetime.now(),
             slow_queries=[],
             index_recommendations=[],
-            database_metrics={}
+            database_metrics={},
         )
 
         assert report.database_type == "mongodb"
@@ -101,7 +102,7 @@ class TestPerformanceAnalyzer:
         assert analyzer.connection_string == "mongodb://localhost"
         assert analyzer.threshold_ms == 100
 
-    @patch('db_performance_check.MongoClient')
+    @patch("db_performance_check.MongoClient")
     def test_connect_mongodb(self, mock_client_class, mock_mongo_client):
         """Test MongoDB connection."""
         mock_client, mock_db = mock_mongo_client
@@ -114,7 +115,7 @@ class TestPerformanceAnalyzer:
         assert analyzer.client == mock_client
         assert analyzer.db == mock_db
 
-    @patch('db_performance_check.psycopg2')
+    @patch("db_performance_check.psycopg2")
     def test_connect_postgres(self, mock_psycopg2, mock_postgres_conn):
         """Test PostgreSQL connection."""
         mock_conn, mock_cursor = mock_postgres_conn
@@ -133,7 +134,7 @@ class TestPerformanceAnalyzer:
 
         assert result is False
 
-    @patch('db_performance_check.MongoClient')
+    @patch("db_performance_check.MongoClient")
     def test_analyze_mongodb(self, mock_client_class, mock_mongo_client):
         """Test MongoDB performance analysis."""
         mock_client, mock_db = mock_mongo_client
@@ -142,7 +143,7 @@ class TestPerformanceAnalyzer:
         # Mock profiling
         mock_db.command.side_effect = [
             {"was": 0},  # profile -1 (get status)
-            {},          # profile 1 (enable)
+            {},  # profile 1 (enable)
         ]
 
         # Mock slow queries
@@ -152,7 +153,7 @@ class TestPerformanceAnalyzer:
                 "command": {"find": "users"},
                 "millis": 150,
                 "ns": "testdb.users",
-                "planSummary": "COLLSCAN"
+                "planSummary": "COLLSCAN",
             }
         ]
         mock_db.system.profile.find.return_value = mock_profile_cursor
@@ -172,12 +173,12 @@ class TestPerformanceAnalyzer:
         # Mock server status and db stats
         mock_client.admin.command.return_value = {
             "connections": {"current": 10},
-            "opcounters": {"query": 1000}
+            "opcounters": {"query": 1000},
         }
         mock_db.command.return_value = {
             "dataSize": 1024 * 1024 * 100,
             "indexSize": 1024 * 1024 * 10,
-            "collections": 5
+            "collections": 5,
         }
 
         analyzer = PerformanceAnalyzer("mongodb", "mongodb://localhost")
@@ -191,7 +192,7 @@ class TestPerformanceAnalyzer:
         assert isinstance(report.index_recommendations, list)
         assert isinstance(report.database_metrics, dict)
 
-    @patch('db_performance_check.psycopg2')
+    @patch("db_performance_check.psycopg2")
     def test_analyze_postgres(self, mock_psycopg2, mock_postgres_conn):
         """Test PostgreSQL performance analysis."""
         mock_conn, mock_cursor = mock_postgres_conn
@@ -202,7 +203,7 @@ class TestPerformanceAnalyzer:
             {"has_extension": True},  # pg_stat_statements check
             {"connections": 10, "commits": 1000, "rollbacks": 5},  # stats
             {"db_size": 1024 * 1024 * 500},  # database size
-            {"cache_hit_ratio": 0.95}  # cache hit ratio
+            {"cache_hit_ratio": 0.95},  # cache hit ratio
         ]
 
         mock_cursor.fetchall.side_effect = [
@@ -212,7 +213,7 @@ class TestPerformanceAnalyzer:
                     "query": "SELECT * FROM users",
                     "mean_exec_time": 150.5,
                     "calls": 100,
-                    "total_exec_time": 15050
+                    "total_exec_time": 15050,
                 }
             ],
             # Sequential scans
@@ -222,11 +223,11 @@ class TestPerformanceAnalyzer:
                     "tablename": "users",
                     "seq_scan": 5000,
                     "seq_tup_read": 500000,
-                    "idx_scan": 100
+                    "idx_scan": 100,
                 }
             ],
             # Unused indexes
-            []
+            [],
         ]
 
         analyzer = PerformanceAnalyzer("postgres", "postgresql://localhost")
@@ -252,7 +253,7 @@ class TestPerformanceAnalyzer:
                     query="db.users.find({age: {$gte: 18}})",
                     execution_time_ms=150.5,
                     count=10,
-                    collection_or_table="users"
+                    collection_or_table="users",
                 )
             ],
             index_recommendations=[
@@ -260,13 +261,10 @@ class TestPerformanceAnalyzer:
                     collection_or_table="users",
                     fields=["age"],
                     reason="Frequently queried field",
-                    estimated_benefit="High"
+                    estimated_benefit="High",
                 )
             ],
-            database_metrics={
-                "connections": 10,
-                "database_size_mb": 100.5
-            }
+            database_metrics={"connections": 10, "database_size_mb": 100.5},
         )
 
         analyzer.print_report(report)
@@ -287,7 +285,7 @@ class TestPerformanceAnalyzer:
             timestamp=datetime.now(),
             slow_queries=[],
             index_recommendations=[],
-            database_metrics={}
+            database_metrics={},
         )
 
         output_file = tmp_path / "report.json"
@@ -313,7 +311,7 @@ class TestPerformanceAnalyzer:
         analyzer.client.close.assert_called_once()
         analyzer.conn.close.assert_called_once()
 
-    @patch('db_performance_check.MongoClient')
+    @patch("db_performance_check.MongoClient")
     def test_analyze_error_handling(self, mock_client_class, mock_mongo_client):
         """Test error handling during analysis."""
         mock_client, mock_db = mock_mongo_client
@@ -333,8 +331,10 @@ class TestPerformanceAnalyzer:
 class TestIntegration:
     """Integration tests."""
 
-    @patch('db_performance_check.MongoClient')
-    def test_full_mongodb_workflow(self, mock_client_class, mock_mongo_client, tmp_path):
+    @patch("db_performance_check.MongoClient")
+    def test_full_mongodb_workflow(
+        self, mock_client_class, mock_mongo_client, tmp_path
+    ):
         """Test complete MongoDB analysis workflow."""
         mock_client, mock_db = mock_mongo_client
         mock_client_class.return_value = mock_client
@@ -345,7 +345,7 @@ class TestIntegration:
         mock_db.list_collection_names.return_value = []
         mock_client.admin.command.return_value = {
             "connections": {"current": 10},
-            "opcounters": {"query": 1000}
+            "opcounters": {"query": 1000},
         }
 
         analyzer = PerformanceAnalyzer("mongodb", "mongodb://localhost", 100)

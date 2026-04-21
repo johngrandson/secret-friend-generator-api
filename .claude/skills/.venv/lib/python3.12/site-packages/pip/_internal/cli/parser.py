@@ -238,7 +238,6 @@ class ConfigOptionParser(CustomOptionParser):
 
         for _, value in self.config.items():
             for section_key, val in value.items():
-
                 section, key = section_key.split(".", 1)
                 if section in override_order:
                     section_items_dict[section][key] = val

@@ -194,7 +194,7 @@ Note: This is a text placeholder. Actual assets can be any file type.
 
 def title_case_skill_name(skill_name):
     """Convert hyphenated skill name to Title Case for display."""
-    return ' '.join(word.capitalize() for word in skill_name.split('-'))
+    return " ".join(word.capitalize() for word in skill_name.split("-"))
 
 
 def parse_skill_identifier(skill_identifier):
@@ -207,7 +207,7 @@ def parse_skill_identifier(skill_identifier):
     """
     value = skill_identifier.strip().strip('"').strip("'")
 
-    if value.count(':') > 1:
+    if value.count(":") > 1:
         raise ValueError(
             "Skill name must contain at most one colon: use 'skill-name' or "
             "'namespace:skill-name'"
@@ -215,10 +215,10 @@ def parse_skill_identifier(skill_identifier):
 
     namespace = None
     skill_slug = value
-    if ':' in value:
-        namespace, skill_slug = value.split(':', 1)
+    if ":" in value:
+        namespace, skill_slug = value.split(":", 1)
 
-    pattern = r'^[a-z0-9-]+$'
+    pattern = r"^[a-z0-9-]+$"
     if namespace and not re.match(pattern, namespace):
         raise ValueError(
             f"Invalid namespace '{namespace}'. Use lowercase letters, digits, and hyphens only."
@@ -229,7 +229,9 @@ def parse_skill_identifier(skill_identifier):
         )
 
     for label, segment in [("Namespace", namespace), ("Skill id", skill_slug)]:
-        if segment and (segment.startswith('-') or segment.endswith('-') or '--' in segment):
+        if segment and (
+            segment.startswith("-") or segment.endswith("-") or "--" in segment
+        ):
             raise ValueError(
                 f"{label} '{segment}' cannot start/end with hyphen or contain consecutive hyphens."
             )
@@ -276,12 +278,9 @@ def init_skill(skill_name, path):
 
     # Create SKILL.md from template
     skill_title = title_case_skill_name(skill_slug)
-    skill_content = SKILL_TEMPLATE.format(
-        skill_name=full_name,
-        skill_title=skill_title
-    )
+    skill_content = SKILL_TEMPLATE.format(skill_name=full_name, skill_title=skill_title)
 
-    skill_md_path = skill_dir / 'SKILL.md'
+    skill_md_path = skill_dir / "SKILL.md"
     try:
         write_text_utf8(skill_md_path, skill_content)
         print("✅ Created SKILL.md")
@@ -292,24 +291,26 @@ def init_skill(skill_name, path):
     # Create resource directories with example files
     try:
         # Create scripts/ directory with example script
-        scripts_dir = skill_dir / 'scripts'
+        scripts_dir = skill_dir / "scripts"
         scripts_dir.mkdir(exist_ok=True)
-        example_script = scripts_dir / 'example.py'
+        example_script = scripts_dir / "example.py"
         write_text_utf8(example_script, EXAMPLE_SCRIPT.format(skill_name=full_name))
         example_script.chmod(0o755)
         print("✅ Created scripts/example.py")
 
         # Create references/ directory with example reference doc
-        references_dir = skill_dir / 'references'
+        references_dir = skill_dir / "references"
         references_dir.mkdir(exist_ok=True)
-        example_reference = references_dir / 'api_reference.md'
-        write_text_utf8(example_reference, EXAMPLE_REFERENCE.format(skill_title=skill_title))
+        example_reference = references_dir / "api_reference.md"
+        write_text_utf8(
+            example_reference, EXAMPLE_REFERENCE.format(skill_title=skill_title)
+        )
         print("✅ Created references/api_reference.md")
 
         # Create assets/ directory with example asset placeholder
-        assets_dir = skill_dir / 'assets'
+        assets_dir = skill_dir / "assets"
         assets_dir.mkdir(exist_ok=True)
-        example_asset = assets_dir / 'example_asset.txt'
+        example_asset = assets_dir / "example_asset.txt"
         write_text_utf8(example_asset, EXAMPLE_ASSET)
         print("✅ Created assets/example_asset.txt")
     except Exception as e:
@@ -320,17 +321,21 @@ def init_skill(skill_name, path):
     print(f"\n✅ Skill '{full_name}' initialized successfully at {skill_dir}")
     print("\nNext steps:")
     print("1. Edit SKILL.md to complete the TODO items and update the description")
-    print("2. Customize or delete the example files in scripts/, references/, and assets/")
+    print(
+        "2. Customize or delete the example files in scripts/, references/, and assets/"
+    )
     print("3. Run the validator when ready to check the skill structure")
 
     return skill_dir
 
 
 def main():
-    if len(sys.argv) < 4 or sys.argv[2] != '--path':
+    if len(sys.argv) < 4 or sys.argv[2] != "--path":
         print("Usage: init_skill.py <skill-name> --path <path>")
         print("\nSkill name requirements:")
-        print("  - Use either 'skill-name' or 'namespace:skill-name' (e.g., 'ck:data-analyzer')")
+        print(
+            "  - Use either 'skill-name' or 'namespace:skill-name' (e.g., 'ck:data-analyzer')"
+        )
         print("  - Namespace and skill id: lowercase letters, digits, and hyphens only")
         print("  - Skill id max 40 characters")
         print("  - Directory name is always the skill id segment")

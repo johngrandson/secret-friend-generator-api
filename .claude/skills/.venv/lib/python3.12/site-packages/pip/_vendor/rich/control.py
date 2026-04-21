@@ -38,9 +38,9 @@ CONTROL_CODES_FORMAT: Dict[int, Callable[..., str]] = {
     ControlType.CURSOR_DOWN: lambda param: f"\x1b[{param}B",
     ControlType.CURSOR_FORWARD: lambda param: f"\x1b[{param}C",
     ControlType.CURSOR_BACKWARD: lambda param: f"\x1b[{param}D",
-    ControlType.CURSOR_MOVE_TO_COLUMN: lambda param: f"\x1b[{param+1}G",
+    ControlType.CURSOR_MOVE_TO_COLUMN: lambda param: f"\x1b[{param + 1}G",
     ControlType.ERASE_IN_LINE: lambda param: f"\x1b[{param}K",
-    ControlType.CURSOR_MOVE_TO: lambda x, y: f"\x1b[{y+1};{x+1}H",
+    ControlType.CURSOR_MOVE_TO: lambda x, y: f"\x1b[{y + 1};{x + 1}H",
     ControlType.SET_WINDOW_TITLE: lambda title: f"\x1b]0;{title}\x07",
 }
 

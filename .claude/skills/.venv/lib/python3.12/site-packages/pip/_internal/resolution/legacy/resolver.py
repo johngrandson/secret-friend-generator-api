@@ -234,9 +234,9 @@ class Resolver(BaseResolver):
                 )
 
         # This next bit is really a sanity check.
-        assert (
-            not install_req.user_supplied or parent_req_name is None
-        ), "a user supplied req shouldn't have a parent"
+        assert not install_req.user_supplied or parent_req_name is None, (
+            "a user supplied req shouldn't have a parent"
+        )
 
         # Unnamed requirements are scanned again and the requirement won't be
         # added as a dependency until after scanning.

@@ -40,21 +40,21 @@ def load_env_files():
     # Determine base paths
     script_dir = Path(__file__).parent
     skill_dir = script_dir.parent  # .claude/skills/ai-multimodal
-    skills_dir = skill_dir.parent   # .claude/skills
+    skills_dir = skill_dir.parent  # .claude/skills
     claude_dir = skills_dir.parent  # .claude
 
     # Priority 2: Skill-specific .env
-    env_file = skill_dir / '.env'
+    env_file = skill_dir / ".env"
     if env_file.exists():
         load_dotenv(env_file)
 
     # Priority 3: Shared skills .env
-    env_file = skills_dir / '.env'
+    env_file = skills_dir / ".env"
     if env_file.exists():
         load_dotenv(env_file)
 
     # Priority 4: Claude global .env
-    env_file = claude_dir / '.env'
+    env_file = claude_dir / ".env"
     if env_file.exists():
         load_dotenv(env_file)
 
@@ -66,10 +66,12 @@ load_env_files()
 def check_ffmpeg() -> bool:
     """Check if ffmpeg is installed."""
     try:
-        subprocess.run(['ffmpeg', '-version'],
-                      stdout=subprocess.DEVNULL,
-                      stderr=subprocess.DEVNULL,
-                      check=True)
+        subprocess.run(
+            ["ffmpeg", "-version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
         return True
     except (subprocess.CalledProcessError, FileNotFoundError, Exception):
         return False
@@ -82,32 +84,34 @@ def get_media_info(file_path: str) -> Dict[str, Any]:
 
     try:
         cmd = [
-            'ffprobe',
-            '-v', 'quiet',
-            '-print_format', 'json',
-            '-show_format',
-            '-show_streams',
-            file_path
+            "ffprobe",
+            "-v",
+            "quiet",
+            "-print_format",
+            "json",
+            "-show_format",
+            "-show_streams",
+            file_path,
         ]
 
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         data = json.loads(result.stdout)
 
         info = {
-            'size': int(data['format'].get('size', 0)),
-            'duration': float(data['format'].get('duration', 0)),
-            'bit_rate': int(data['format'].get('bit_rate', 0)),
+            "size": int(data["format"].get("size", 0)),
+            "duration": float(data["format"].get("duration", 0)),
+            "bit_rate": int(data["format"].get("bit_rate", 0)),
         }
 
         # Get video/audio specific info
-        for stream in data.get('streams', []):
-            if stream['codec_type'] == 'video':
-                info['width'] = stream.get('width', 0)
-                info['height'] = stream.get('height', 0)
-                info['fps'] = eval(stream.get('r_frame_rate', '0/1'))
-            elif stream['codec_type'] == 'audio':
-                info['sample_rate'] = int(stream.get('sample_rate', 0))
-                info['channels'] = stream.get('channels', 0)
+        for stream in data.get("streams", []):
+            if stream["codec_type"] == "video":
+                info["width"] = stream.get("width", 0)
+                info["height"] = stream.get("height", 0)
+                info["fps"] = eval(stream.get("r_frame_rate", "0/1"))
+            elif stream["codec_type"] == "audio":
+                info["sample_rate"] = int(stream.get("sample_rate", 0))
+                info["channels"] = stream.get("channels", 0)
 
         return info
 
@@ -122,7 +126,7 @@ def optimize_video(
     max_duration: Optional[int] = None,
     quality: int = 23,
     resolution: Optional[str] = None,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> bool:
     """Optimize video file for Gemini API."""
     if not check_ffmpeg():
@@ -137,39 +141,41 @@ def optimize_video(
 
     if verbose:
         print(f"Input: {Path(input_path).name}")
-        print(f"  Size: {info['size'] / (1024*1024):.2f} MB")
+        print(f"  Size: {info['size'] / (1024 * 1024):.2f} MB")
         print(f"  Duration: {info['duration']:.2f}s")
-        if 'width' in info:
+        if "width" in info:
             print(f"  Resolution: {info['width']}x{info['height']}")
         print(f"  Bit rate: {info['bit_rate'] / 1000:.0f} kbps")
 
     # Build ffmpeg command
-    cmd = ['ffmpeg', '-i', input_path, '-y']
+    cmd = ["ffmpeg", "-i", input_path, "-y"]
 
     # Video codec
-    cmd.extend(['-c:v', 'libx264', '-crf', str(quality)])
+    cmd.extend(["-c:v", "libx264", "-crf", str(quality)])
 
     # Resolution
     if resolution:
-        cmd.extend(['-vf', f'scale={resolution}'])
-    elif 'width' in info and info['width'] > 1920:
-        cmd.extend(['-vf', 'scale=1920:-2'])  # Max 1080p
+        cmd.extend(["-vf", f"scale={resolution}"])
+    elif "width" in info and info["width"] > 1920:
+        cmd.extend(["-vf", "scale=1920:-2"])  # Max 1080p
 
     # Audio codec
-    cmd.extend(['-c:a', 'aac', '-b:a', '128k', '-ac', '2'])
+    cmd.extend(["-c:a", "aac", "-b:a", "128k", "-ac", "2"])
 
     # Duration limit
-    if max_duration and info['duration'] > max_duration:
-        cmd.extend(['-t', str(max_duration)])
+    if max_duration and info["duration"] > max_duration:
+        cmd.extend(["-t", str(max_duration)])
 
     # Target size (rough estimate using bitrate)
     if target_size_mb:
         target_bits = target_size_mb * 8 * 1024 * 1024
-        duration = min(info['duration'], max_duration) if max_duration else info['duration']
+        duration = (
+            min(info["duration"], max_duration) if max_duration else info["duration"]
+        )
         target_bitrate = int(target_bits / duration)
         # Reserve some for audio (128kbps)
         video_bitrate = max(target_bitrate - 128000, 500000)
-        cmd.extend(['-b:v', str(video_bitrate)])
+        cmd.extend(["-b:v", str(video_bitrate)])
 
     cmd.append(output_path)
 
@@ -184,11 +190,11 @@ def optimize_video(
         output_info = get_media_info(output_path)
         if output_info and verbose:
             print(f"\nOutput: {Path(output_path).name}")
-            print(f"  Size: {output_info['size'] / (1024*1024):.2f} MB")
+            print(f"  Size: {output_info['size'] / (1024 * 1024):.2f} MB")
             print(f"  Duration: {output_info['duration']:.2f}s")
-            if 'width' in output_info:
+            if "width" in output_info:
                 print(f"  Resolution: {output_info['width']}x{output_info['height']}")
-            compression = (1 - output_info['size'] / info['size']) * 100
+            compression = (1 - output_info["size"] / info["size"]) * 100
             print(f"  Compression: {compression:.1f}%")
 
         return True
@@ -202,9 +208,9 @@ def optimize_audio(
     input_path: str,
     output_path: str,
     target_size_mb: Optional[int] = None,
-    bitrate: str = '64k',
+    bitrate: str = "64k",
     sample_rate: int = 16000,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> bool:
     """Optimize audio file for Gemini API."""
     if not check_ffmpeg():
@@ -218,17 +224,24 @@ def optimize_audio(
 
     if verbose:
         print(f"Input: {Path(input_path).name}")
-        print(f"  Size: {info['size'] / (1024*1024):.2f} MB")
+        print(f"  Size: {info['size'] / (1024 * 1024):.2f} MB")
         print(f"  Duration: {info['duration']:.2f}s")
 
     # Build command
     cmd = [
-        'ffmpeg', '-i', input_path, '-y',
-        '-c:a', 'aac',
-        '-b:a', bitrate,
-        '-ar', str(sample_rate),
-        '-ac', '1',  # Mono (Gemini uses mono anyway)
-        output_path
+        "ffmpeg",
+        "-i",
+        input_path,
+        "-y",
+        "-c:a",
+        "aac",
+        "-b:a",
+        bitrate,
+        "-ar",
+        str(sample_rate),
+        "-ac",
+        "1",  # Mono (Gemini uses mono anyway)
+        output_path,
     ]
 
     if verbose:
@@ -240,8 +253,8 @@ def optimize_audio(
         output_info = get_media_info(output_path)
         if output_info and verbose:
             print(f"\nOutput: {Path(output_path).name}")
-            print(f"  Size: {output_info['size'] / (1024*1024):.2f} MB")
-            compression = (1 - output_info['size'] / info['size']) * 100
+            print(f"  Size: {output_info['size'] / (1024 * 1024):.2f} MB")
+            compression = (1 - output_info["size"] / info["size"]) * 100
             print(f"  Compression: {compression:.1f}%")
 
         return True
@@ -256,7 +269,7 @@ def optimize_image(
     output_path: str,
     max_width: int = 1920,
     quality: int = 85,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> bool:
     """Optimize image file for Gemini API."""
     try:
@@ -283,9 +296,11 @@ def optimize_image(
                 print(f"  Resized to: {img.width}x{img.height}")
 
         # Convert RGBA to RGB if saving as JPEG
-        if output_path.lower().endswith('.jpg') or output_path.lower().endswith('.jpeg'):
-            if img.mode == 'RGBA':
-                rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+        if output_path.lower().endswith(".jpg") or output_path.lower().endswith(
+            ".jpeg"
+        ):
+            if img.mode == "RGBA":
+                rgb_img = Image.new("RGB", img.size, (255, 255, 255))
                 rgb_img.paste(img, mask=img.split()[3])
                 img = rgb_img
 
@@ -295,7 +310,9 @@ def optimize_image(
         if verbose:
             print(f"\nOutput: {Path(output_path).name}")
             print(f"  Size: {Path(output_path).stat().st_size / 1024:.2f} KB")
-            compression = (1 - Path(output_path).stat().st_size / Path(input_path).stat().st_size) * 100
+            compression = (
+                1 - Path(output_path).stat().st_size / Path(input_path).stat().st_size
+            ) * 100
             print(f"  Compression: {compression:.1f}%")
 
         return True
@@ -306,10 +323,7 @@ def optimize_image(
 
 
 def split_video(
-    input_path: str,
-    output_dir: str,
-    chunk_duration: int = 3600,
-    verbose: bool = False
+    input_path: str, output_dir: str, chunk_duration: int = 3600, verbose: bool = False
 ) -> List[str]:
     """Split long video into chunks."""
     if not check_ffmpeg():
@@ -320,7 +334,7 @@ def split_video(
     if not info:
         return []
 
-    total_duration = info['duration']
+    total_duration = info["duration"]
     num_chunks = int(total_duration / chunk_duration) + 1
 
     if num_chunks == 1:
@@ -333,31 +347,37 @@ def split_video(
 
     for i in range(num_chunks):
         start_time = i * chunk_duration
-        output_file = Path(output_dir) / f"{Path(input_path).stem}_chunk_{i+1}.mp4"
+        output_file = Path(output_dir) / f"{Path(input_path).stem}_chunk_{i + 1}.mp4"
 
         cmd = [
-            'ffmpeg', '-i', input_path, '-y',
-            '-ss', str(start_time),
-            '-t', str(chunk_duration),
-            '-c', 'copy',
-            str(output_file)
+            "ffmpeg",
+            "-i",
+            input_path,
+            "-y",
+            "-ss",
+            str(start_time),
+            "-t",
+            str(chunk_duration),
+            "-c",
+            "copy",
+            str(output_file),
         ]
 
         if verbose:
-            print(f"Creating chunk {i+1}/{num_chunks}...")
+            print(f"Creating chunk {i + 1}/{num_chunks}...")
 
         try:
             subprocess.run(cmd, check=True, capture_output=not verbose)
             output_files.append(str(output_file))
         except subprocess.CalledProcessError as e:
-            print(f"Error creating chunk {i+1}: {e}")
+            print(f"Error creating chunk {i + 1}: {e}")
 
     return output_files
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Optimize media files for Gemini API',
+        description="Optimize media files for Gemini API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -375,25 +395,35 @@ Examples:
 
   # Batch optimize directory
   %(prog)s --input-dir ./videos --output-dir ./optimized --quality 85
-        """
+        """,
     )
 
-    parser.add_argument('--input', help='Input file')
-    parser.add_argument('--output', help='Output file')
-    parser.add_argument('--input-dir', help='Input directory for batch processing')
-    parser.add_argument('--output-dir', help='Output directory for batch processing')
-    parser.add_argument('--target-size', type=int, help='Target size in MB')
-    parser.add_argument('--quality', type=int, default=85,
-                       help='Quality (video: 0-51 CRF, image: 1-100) (default: 85)')
-    parser.add_argument('--max-width', type=int, default=1920,
-                       help='Max image width (default: 1920)')
-    parser.add_argument('--bitrate', default='64k',
-                       help='Audio bitrate (default: 64k)')
-    parser.add_argument('--resolution', help='Video resolution (e.g., 1920x1080)')
-    parser.add_argument('--split', action='store_true', help='Split long video into chunks')
-    parser.add_argument('--chunk-duration', type=int, default=3600,
-                       help='Chunk duration in seconds (default: 3600 = 1 hour)')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
+    parser.add_argument("--input", help="Input file")
+    parser.add_argument("--output", help="Output file")
+    parser.add_argument("--input-dir", help="Input directory for batch processing")
+    parser.add_argument("--output-dir", help="Output directory for batch processing")
+    parser.add_argument("--target-size", type=int, help="Target size in MB")
+    parser.add_argument(
+        "--quality",
+        type=int,
+        default=85,
+        help="Quality (video: 0-51 CRF, image: 1-100) (default: 85)",
+    )
+    parser.add_argument(
+        "--max-width", type=int, default=1920, help="Max image width (default: 1920)"
+    )
+    parser.add_argument("--bitrate", default="64k", help="Audio bitrate (default: 64k)")
+    parser.add_argument("--resolution", help="Video resolution (e.g., 1920x1080)")
+    parser.add_argument(
+        "--split", action="store_true", help="Split long video into chunks"
+    )
+    parser.add_argument(
+        "--chunk-duration",
+        type=int,
+        default=3600,
+        help="Chunk duration in seconds (default: 3600 = 1 hour)",
+    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -409,8 +439,10 @@ Examples:
             sys.exit(1)
 
         if args.split:
-            output_dir = args.output_dir or './chunks'
-            chunks = split_video(str(input_path), output_dir, args.chunk_duration, args.verbose)
+            output_dir = args.output_dir or "./chunks"
+            chunks = split_video(
+                str(input_path), output_dir, args.chunk_duration, args.verbose
+            )
             print(f"\nCreated {len(chunks)} chunks in {output_dir}")
             sys.exit(0)
 
@@ -423,30 +455,30 @@ Examples:
         # Determine file type
         ext = input_path.suffix.lower()
 
-        if ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv']:
+        if ext in [".mp4", ".mov", ".avi", ".mkv", ".webm", ".flv"]:
             success = optimize_video(
                 str(input_path),
                 str(output_path),
                 target_size_mb=args.target_size,
                 quality=args.quality,
                 resolution=args.resolution,
-                verbose=args.verbose
+                verbose=args.verbose,
             )
-        elif ext in ['.mp3', '.wav', '.m4a', '.flac', '.aac']:
+        elif ext in [".mp3", ".wav", ".m4a", ".flac", ".aac"]:
             success = optimize_audio(
                 str(input_path),
                 str(output_path),
                 target_size_mb=args.target_size,
                 bitrate=args.bitrate,
-                verbose=args.verbose
+                verbose=args.verbose,
             )
-        elif ext in ['.jpg', '.jpeg', '.png', '.webp']:
+        elif ext in [".jpg", ".jpeg", ".png", ".webp"]:
             success = optimize_image(
                 str(input_path),
                 str(output_path),
                 max_width=args.max_width,
                 quality=args.quality,
-                verbose=args.verbose
+                verbose=args.verbose,
             )
         else:
             print(f"Error: Unsupported file type: {ext}")
@@ -464,9 +496,21 @@ Examples:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # Find all media files
-        patterns = ['*.mp4', '*.mov', '*.avi', '*.mkv', '*.webm',
-                   '*.mp3', '*.wav', '*.m4a', '*.flac',
-                   '*.jpg', '*.jpeg', '*.png', '*.webp']
+        patterns = [
+            "*.mp4",
+            "*.mov",
+            "*.avi",
+            "*.mkv",
+            "*.webm",
+            "*.mp3",
+            "*.wav",
+            "*.m4a",
+            "*.flac",
+            "*.jpg",
+            "*.jpeg",
+            "*.png",
+            "*.webp",
+        ]
 
         files = []
         for pattern in patterns:
@@ -485,16 +529,28 @@ Examples:
             ext = input_file.suffix.lower()
             success = False
 
-            if ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv']:
-                success = optimize_video(str(input_file), str(output_file),
-                                        quality=args.quality, verbose=args.verbose)
-            elif ext in ['.mp3', '.wav', '.m4a', '.flac', '.aac']:
-                success = optimize_audio(str(input_file), str(output_file),
-                                        bitrate=args.bitrate, verbose=args.verbose)
-            elif ext in ['.jpg', '.jpeg', '.png', '.webp']:
-                success = optimize_image(str(input_file), str(output_file),
-                                        max_width=args.max_width, quality=args.quality,
-                                        verbose=args.verbose)
+            if ext in [".mp4", ".mov", ".avi", ".mkv", ".webm", ".flv"]:
+                success = optimize_video(
+                    str(input_file),
+                    str(output_file),
+                    quality=args.quality,
+                    verbose=args.verbose,
+                )
+            elif ext in [".mp3", ".wav", ".m4a", ".flac", ".aac"]:
+                success = optimize_audio(
+                    str(input_file),
+                    str(output_file),
+                    bitrate=args.bitrate,
+                    verbose=args.verbose,
+                )
+            elif ext in [".jpg", ".jpeg", ".png", ".webp"]:
+                success = optimize_image(
+                    str(input_file),
+                    str(output_file),
+                    max_width=args.max_width,
+                    quality=args.quality,
+                    verbose=args.verbose,
+                )
 
             if success:
                 success_count += 1
@@ -502,5 +558,5 @@ Examples:
         print(f"\nProcessed: {success_count}/{len(files)} files")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

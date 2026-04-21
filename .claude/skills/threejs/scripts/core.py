@@ -18,31 +18,107 @@ CSV_CONFIG = {
     "examples": {
         "file": "examples-all.csv",
         "search_cols": ["Category", "Name", "Keywords", "Use Cases", "Description"],
-        "output_cols": ["ID", "Category", "Name", "File", "Keywords", "URL", "Complexity", "Use Cases", "Description"]
+        "output_cols": [
+            "ID",
+            "Category",
+            "Name",
+            "File",
+            "Keywords",
+            "URL",
+            "Complexity",
+            "Use Cases",
+            "Description",
+        ],
     },
     "categories": {
         "file": "categories.csv",
         "search_cols": ["Category", "Keywords", "Description", "Primary Use Cases"],
-        "output_cols": ["Category", "Keywords", "Description", "Complexity Range", "Example Count", "Primary Use Cases", "Related Categories"]
+        "output_cols": [
+            "Category",
+            "Keywords",
+            "Description",
+            "Complexity Range",
+            "Example Count",
+            "Primary Use Cases",
+            "Related Categories",
+        ],
     },
     "use-cases": {
         "file": "use-cases.csv",
         "search_cols": ["Use Case", "Keywords", "Description", "Technologies"],
-        "output_cols": ["Use Case", "Keywords", "Recommended Examples", "Complexity", "Technologies", "Description"]
+        "output_cols": [
+            "Use Case",
+            "Keywords",
+            "Recommended Examples",
+            "Complexity",
+            "Technologies",
+            "Description",
+        ],
     },
     "api": {
         "file": "api-reference.csv",
-        "search_cols": ["Category", "Class", "Keywords", "Description", "Common Methods"],
-        "output_cols": ["Category", "Class", "Keywords", "Description", "Common Methods", "Related Classes"]
-    }
+        "search_cols": [
+            "Category",
+            "Class",
+            "Keywords",
+            "Description",
+            "Common Methods",
+        ],
+        "output_cols": [
+            "Category",
+            "Class",
+            "Keywords",
+            "Description",
+            "Common Methods",
+            "Related Classes",
+        ],
+    },
 }
 
 # Domain keyword mapping for auto-detection
 DOMAIN_KEYWORDS = {
-    "examples": ["example", "demo", "showcase", "webgl", "webgpu", "animation", "loader", "material", "geometry", "light", "shadow", "postprocessing", "effect", "particle", "physics", "vr", "xr"],
+    "examples": [
+        "example",
+        "demo",
+        "showcase",
+        "webgl",
+        "webgpu",
+        "animation",
+        "loader",
+        "material",
+        "geometry",
+        "light",
+        "shadow",
+        "postprocessing",
+        "effect",
+        "particle",
+        "physics",
+        "vr",
+        "xr",
+    ],
     "categories": ["category", "group", "section", "list all", "types of"],
-    "use-cases": ["use case", "project", "application", "build", "create", "make", "implement", "for", "suitable"],
-    "api": ["api", "class", "method", "function", "property", "how to", "what is", "parameter", "constructor"]
+    "use-cases": [
+        "use case",
+        "project",
+        "application",
+        "build",
+        "create",
+        "make",
+        "implement",
+        "for",
+        "suitable",
+    ],
+    "api": [
+        "api",
+        "class",
+        "method",
+        "function",
+        "property",
+        "how to",
+        "what is",
+        "parameter",
+        "constructor",
+    ],
 }
 
 
@@ -62,7 +138,7 @@ class BM25:
 
     def tokenize(self, text):
         """Lowercase, split, remove punctuation, filter short words"""
-        text = re.sub(r'[^\w\s]', ' ', str(text).lower())
+        text = re.sub(r"[^\w\s]", " ", str(text).lower())
         return [w for w in text.split() if len(w) > 1]
 
     def fit(self, documents):
@@ -101,7 +177,9 @@ class BM25:
                     tf = term_freqs[token]
                     idf = self.idf[token]
                     numerator = tf * (self.k1 + 1)
-                    denominator = tf + self.k1 * (1 - self.b + self.b * doc_len / self.avgdl)
+                    denominator = tf + self.k1 * (
+                        1 - self.b + self.b * doc_len / self.avgdl
+                    )
                     score += idf * numerator / denominator
 
             scores.append((idx, score))
@@ -112,7 +190,7 @@ class BM25:
 # ============ SEARCH FUNCTIONS ============
 def _load_csv(filepath):
     """Load CSV and return list of dicts"""
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -164,14 +242,16 @@ def search(query, domain=None, max_results=MAX_RESULTS):
     if not filepath.exists():
         return {"error": f"File not found: {filepath}", "domain": domain}
 
-    results = _search_csv(filepath, config["search_cols"], config["output_cols"], query, max_results)
+    results = _search_csv(
+        filepath, config["search_cols"], config["output_cols"], query, max_results
+    )
 
     return {
         "domain": domain,
         "query": query,
         "file": config["file"],
         "count": len(results),
-        "results": results
+        "results": results,
     }
 
 
@@ -182,13 +262,15 @@ def search_by_complexity(complexity, max_results=MAX_RESULTS):
         return {"error": f"File not found: {filepath}"}
 
     data = _load_csv(filepath)
-    results = [row for row in data if row.get("Complexity", "").lower() == complexity.lower()][:max_results]
+    results = [
+        row for row in data if row.get("Complexity", "").lower() == complexity.lower()
+    ][:max_results]
 
     return {
         "domain": "examples",
         "complexity": complexity,
         "count": len(results),
-        "results": results
+        "results": results,
     }
 
 
@@ -199,13 +281,15 @@ def search_by_category(category, max_results=MAX_RESULTS):
         return {"error": f"File not found: {filepath}"}
 
     data = _load_csv(filepath)
-    results = [row for row in data if category.lower() in row.get("Category", "").lower()][:max_results]
+    results = [
+        row for row in data if category.lower() in row.get("Category", "").lower()
+    ][:max_results]
 
     return {
         "domain": "examples",
         "category": category,
         "count": len(results),
-        "results": results
+        "results": results,
     }
 
 
@@ -232,5 +316,5 @@ def get_recommended_examples(use_case, max_results=MAX_RESULTS):
         "domain": "examples",
         "use_case": use_case,
         "count": len(all_results),
-        "results": all_results
+        "results": all_results,
     }

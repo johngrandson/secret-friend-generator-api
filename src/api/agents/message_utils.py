@@ -1,0 +1,32 @@
+"""Shared helpers for message serialisation used across agent routes."""
+
+from typing import Any, cast
+
+from langchain_core.messages import BaseMessage
+
+
+def last_message_content(messages: list[BaseMessage | dict[str, Any]]) -> str | None:
+    """Extract string content from the last message in the list.
+
+    Handles both dict-style messages and LangChain message objects.
+    """
+    if not messages:
+        return None
+    last = messages[-1]
+    if isinstance(last, dict):
+        return last.get("content")
+    return getattr(last, "content", None)
+
+
+def serialise_message(m: BaseMessage | dict[str, Any]) -> dict[str, Any]:
+    """Serialise a LangChain message object or plain dict to a dict.
+
+    Uses ``model_dump`` when available (Pydantic v2), falls back to
+    ``dict()``, and finally wraps the string representation.
+    """
+    if isinstance(m, dict):
+        return m
+    dumper = getattr(m, "model_dump", None) or getattr(m, "dict", None)
+    if dumper is not None:
+        return cast(dict[str, Any], dumper())
+    return {"content": str(m)}

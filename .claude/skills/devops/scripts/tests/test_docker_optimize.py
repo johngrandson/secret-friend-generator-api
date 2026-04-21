@@ -24,7 +24,7 @@ def temp_dockerfile(tmp_path):
 
 def write_dockerfile(filepath, content):
     """Helper to write Dockerfile content"""
-    with open(filepath, 'w') as f:
+    with open(filepath, "w") as f:
         f.write(content)
 
 
@@ -72,8 +72,8 @@ class TestAnalyzeBaseImage:
         analyzer.analyze_base_image()
 
         assert len(analyzer.issues) == 1
-        assert analyzer.issues[0]['category'] == 'base_image'
-        assert 'latest' in analyzer.issues[0]['message']
+        assert analyzer.issues[0]["category"] == "base_image"
+        assert "latest" in analyzer.issues[0]["message"]
 
     def test_no_tag(self, temp_dockerfile):
         write_dockerfile(temp_dockerfile, "FROM node\n")
@@ -82,7 +82,7 @@ class TestAnalyzeBaseImage:
         analyzer.analyze_base_image()
 
         assert len(analyzer.issues) == 1
-        assert 'no tag' in analyzer.issues[0]['message']
+        assert "no tag" in analyzer.issues[0]["message"]
 
     def test_specific_tag(self, temp_dockerfile):
         write_dockerfile(temp_dockerfile, "FROM node:20-alpine\n")
@@ -91,7 +91,9 @@ class TestAnalyzeBaseImage:
         analyzer.analyze_base_image()
 
         # Should have no issues with specific tag
-        base_image_issues = [i for i in analyzer.issues if i['category'] == 'base_image']
+        base_image_issues = [
+            i for i in analyzer.issues if i["category"] == "base_image"
+        ]
         assert len(base_image_issues) == 0
 
     def test_non_alpine_suggestion(self, temp_dockerfile):
@@ -101,7 +103,7 @@ class TestAnalyzeBaseImage:
         analyzer.analyze_base_image()
 
         assert len(analyzer.suggestions) >= 1
-        assert any('Alpine' in s['message'] for s in analyzer.suggestions)
+        assert any("Alpine" in s["message"] for s in analyzer.suggestions)
 
 
 class TestAnalyzeMultiStage:
@@ -122,8 +124,8 @@ CMD ["node", "server.js"]
         analyzer.analyze_multi_stage()
 
         assert len(analyzer.issues) == 1
-        assert analyzer.issues[0]['category'] == 'optimization'
-        assert 'multi-stage' in analyzer.issues[0]['message'].lower()
+        assert analyzer.issues[0]["category"] == "optimization"
+        assert "multi-stage" in analyzer.issues[0]["message"].lower()
 
     def test_multi_stage_no_issues(self, temp_dockerfile):
         content = """
@@ -144,7 +146,9 @@ CMD ["node", "dist/server.js"]
         analyzer.load_dockerfile()
         analyzer.analyze_multi_stage()
 
-        multi_stage_issues = [i for i in analyzer.issues if i['category'] == 'optimization']
+        multi_stage_issues = [
+            i for i in analyzer.issues if i["category"] == "optimization"
+        ]
         assert len(multi_stage_issues) == 0
 
 
@@ -164,7 +168,7 @@ RUN npm install
         analyzer.analyze_layer_caching()
 
         assert len(analyzer.issues) == 1
-        assert analyzer.issues[0]['category'] == 'caching'
+        assert analyzer.issues[0]["category"] == "caching"
 
     def test_correct_order(self, temp_dockerfile):
         content = """
@@ -179,7 +183,7 @@ COPY . .
         analyzer.load_dockerfile()
         analyzer.analyze_layer_caching()
 
-        caching_issues = [i for i in analyzer.issues if i['category'] == 'caching']
+        caching_issues = [i for i in analyzer.issues if i["category"] == "caching"]
         assert len(caching_issues) == 0
 
 
@@ -199,8 +203,8 @@ CMD ["node", "server.js"]
         analyzer.analyze_security()
 
         assert len(analyzer.issues) >= 1
-        security_issues = [i for i in analyzer.issues if i['category'] == 'security']
-        assert any('root' in i['message'] for i in security_issues)
+        security_issues = [i for i in analyzer.issues if i["category"] == "security"]
+        assert any("root" in i["message"] for i in security_issues)
 
     def test_with_user_instruction(self, temp_dockerfile):
         content = """
@@ -216,8 +220,11 @@ CMD ["node", "server.js"]
         analyzer.analyze_security()
 
         # Should not have root user issue
-        root_issues = [i for i in analyzer.issues
-                      if i['category'] == 'security' and 'root' in i['message']]
+        root_issues = [
+            i
+            for i in analyzer.issues
+            if i["category"] == "security" and "root" in i["message"]
+        ]
         assert len(root_issues) == 0
 
     def test_detect_secrets(self, temp_dockerfile):
@@ -231,8 +238,11 @@ ENV PASSWORD=mypassword
         analyzer.load_dockerfile()
         analyzer.analyze_security()
 
-        secret_issues = [i for i in analyzer.issues
-                        if i['category'] == 'security' and 'secret' in i['message'].lower()]
+        secret_issues = [
+            i
+            for i in analyzer.issues
+            if i["category"] == "security" and "secret" in i["message"].lower()
+        ]
         assert len(secret_issues) >= 1
 
 
@@ -250,7 +260,7 @@ RUN apt-get update && apt-get install -y curl
         analyzer.analyze_apt_cache()
 
         assert len(analyzer.suggestions) >= 1
-        assert any('apt cache' in s['message'] for s in analyzer.suggestions)
+        assert any("apt cache" in s["message"] for s in analyzer.suggestions)
 
     def test_apt_with_cleanup(self, temp_dockerfile):
         content = """
@@ -262,7 +272,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
         analyzer.load_dockerfile()
         analyzer.analyze_apt_cache()
 
-        apt_suggestions = [s for s in analyzer.suggestions if 'apt cache' in s['message']]
+        apt_suggestions = [
+            s for s in analyzer.suggestions if "apt cache" in s["message"]
+        ]
         assert len(apt_suggestions) == 0
 
 
@@ -282,7 +294,7 @@ RUN apt-get clean
         analyzer.analyze_combine_run()
 
         assert len(analyzer.suggestions) >= 1
-        assert any('consecutive' in s['message'] for s in analyzer.suggestions)
+        assert any("consecutive" in s["message"] for s in analyzer.suggestions)
 
     def test_non_consecutive_runs(self, temp_dockerfile):
         content = """
@@ -296,8 +308,9 @@ RUN npm install
         analyzer.load_dockerfile()
         analyzer.analyze_combine_run()
 
-        consecutive_suggestions = [s for s in analyzer.suggestions
-                                  if 'consecutive' in s['message']]
+        consecutive_suggestions = [
+            s for s in analyzer.suggestions if "consecutive" in s["message"]
+        ]
         assert len(consecutive_suggestions) == 0
 
 
@@ -316,7 +329,7 @@ CMD ["node", "/app/server.js"]
         analyzer.analyze_workdir()
 
         assert len(analyzer.suggestions) >= 1
-        assert any('WORKDIR' in s['message'] for s in analyzer.suggestions)
+        assert any("WORKDIR" in s["message"] for s in analyzer.suggestions)
 
     def test_with_workdir(self, temp_dockerfile):
         content = """
@@ -330,7 +343,9 @@ CMD ["node", "server.js"]
         analyzer.load_dockerfile()
         analyzer.analyze_workdir()
 
-        workdir_suggestions = [s for s in analyzer.suggestions if 'WORKDIR' in s['message']]
+        workdir_suggestions = [
+            s for s in analyzer.suggestions if "WORKDIR" in s["message"]
+        ]
         assert len(workdir_suggestions) == 0
 
 
@@ -348,15 +363,15 @@ CMD ["node", "server.js"]
         analyzer = DockerfileAnalyzer(temp_dockerfile)
         results = analyzer.analyze()
 
-        assert 'dockerfile' in results
-        assert 'total_lines' in results
-        assert 'issues' in results
-        assert 'suggestions' in results
-        assert 'summary' in results
+        assert "dockerfile" in results
+        assert "total_lines" in results
+        assert "issues" in results
+        assert "suggestions" in results
+        assert "summary" in results
 
         # Should have multiple issues and suggestions
-        assert results['summary']['warnings'] > 0
-        assert results['summary']['suggestions'] > 0
+        assert results["summary"]["warnings"] > 0
+        assert results["summary"]["suggestions"] > 0
 
     def test_analyze_good_dockerfile(self, temp_dockerfile):
         content = """
@@ -380,7 +395,7 @@ CMD ["node", "dist/server.js"]
         results = analyzer.analyze()
 
         # Should have minimal issues
-        assert results['summary']['errors'] == 0
+        assert results["summary"]["errors"] == 0
         # May have some suggestions, but fewer issues overall
 
 
@@ -422,13 +437,15 @@ CMD ["python", "/app/app.py"]
         assert len(analyzer.suggestions) > 0
 
         # Should flag multiple categories
-        categories = {i['category'] for i in analyzer.issues}
-        assert 'security' in categories
+        categories = {i["category"] for i in analyzer.issues}
+        assert "security" in categories
 
         # Verify summary calculations
-        total_findings = (results['summary']['errors'] +
-                         results['summary']['warnings'] +
-                         results['summary']['suggestions'])
+        total_findings = (
+            results["summary"]["errors"]
+            + results["summary"]["warnings"]
+            + results["summary"]["suggestions"]
+        )
         assert total_findings > 0
 
 

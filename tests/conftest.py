@@ -1,20 +1,21 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
-from src.domain.shared.database_base import Base
-from src.domain.shared.database_session import get_db
-from src.domain.group.group_repository import GroupRepository
-from src.domain.group.group_schemas import GroupCreate
-from src.domain.participant.participant_repository import ParticipantRepository
-from src.domain.participant.participant_schemas import ParticipantCreate
+from src.infrastructure.persistence import Base, get_db
+from src.domain.group.repository import GroupRepository
+from src.domain.group.schemas import GroupCreate
+from src.domain.participant.repository import ParticipantRepository
+from src.domain.participant.schemas import ParticipantCreate
 
 # Import models so Base.metadata knows all tables
-from src.domain.group.group_model import Group  # noqa: F401
-from src.domain.participant.participant_model import Participant  # noqa: F401
-from src.domain.secret_friend.secret_friend_model import SecretFriend  # noqa: F401
+from src.domain.group.model import Group  # noqa: F401
+from src.domain.participant.model import Participant  # noqa: F401
+from src.domain.secret_friend.model import SecretFriend  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 
@@ -67,7 +68,11 @@ def client(engine):
             db.close()
 
     api.dependency_overrides[get_db] = override_get_db
-    with TestClient(api, base_url="http://testserver/api/v1") as c:
+    with (
+        patch("src.app_main.init_agents_registry", new_callable=AsyncMock),
+        patch("src.app_main.shutdown_agents", new_callable=AsyncMock),
+        TestClient(api, base_url="http://testserver/api/v1") as c,
+    ):
         yield c
     api.dependency_overrides.clear()
 
@@ -79,6 +84,7 @@ def group_fixture(db_session: Session):
         return GroupRepository.create(
             GroupCreate(**{**defaults, **overrides}), db_session
         )
+
     return _create
 
 
@@ -90,4 +96,5 @@ def participant_fixture(db_session: Session, group_fixture):
         return ParticipantRepository.create(
             ParticipantCreate(**{**defaults, **overrides}), db_session
         )
+
     return _create

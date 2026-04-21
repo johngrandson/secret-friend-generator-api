@@ -60,11 +60,7 @@ class TestCommandBuilding:
 
     def test_build_video_command_web_preset(self):
         """Test video command with web preset."""
-        cmd = build_video_command(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            preset="web"
-        )
+        cmd = build_video_command(Path("input.mp4"), Path("output.mp4"), preset="web")
 
         assert "ffmpeg" in cmd
         assert "-i" in cmd
@@ -80,9 +76,7 @@ class TestCommandBuilding:
     def test_build_video_command_archive_preset(self):
         """Test video command with archive preset."""
         cmd = build_video_command(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            preset="archive"
+            Path("input.mp4"), Path("output.mp4"), preset="archive"
         )
 
         assert "18" in cmd  # CRF for archive
@@ -90,11 +84,7 @@ class TestCommandBuilding:
 
     def test_build_audio_command_mp3(self):
         """Test audio command for MP3 output."""
-        cmd = build_audio_command(
-            Path("input.wav"),
-            Path("output.mp3"),
-            preset="web"
-        )
+        cmd = build_audio_command(Path("input.wav"), Path("output.mp3"), preset="web")
 
         assert "ffmpeg" in cmd
         assert "-c:a" in cmd
@@ -103,22 +93,14 @@ class TestCommandBuilding:
 
     def test_build_audio_command_flac(self):
         """Test audio command for FLAC (lossless)."""
-        cmd = build_audio_command(
-            Path("input.wav"),
-            Path("output.flac"),
-            preset="web"
-        )
+        cmd = build_audio_command(Path("input.wav"), Path("output.flac"), preset="web")
 
         assert "flac" in cmd
         assert "-b:a" not in cmd  # No bitrate for lossless
 
     def test_build_image_command(self):
         """Test image command building."""
-        cmd = build_image_command(
-            Path("input.png"),
-            Path("output.jpg"),
-            preset="web"
-        )
+        cmd = build_image_command(Path("input.png"), Path("output.jpg"), preset="web")
 
         assert "magick" in cmd
         assert str(Path("input.png")) in cmd
@@ -142,6 +124,7 @@ class TestDependencyCheck:
     @patch("subprocess.run")
     def test_check_dependencies_ffmpeg_only(self, mock_run):
         """Test when only FFmpeg is available."""
+
         def side_effect(*args, **kwargs):
             if "ffmpeg" in args[0]:
                 return MagicMock(returncode=0)
@@ -163,10 +146,7 @@ class TestFileConversion:
         mock_detect.return_value = "video"
 
         result = convert_file(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            preset="web",
-            dry_run=True
+            Path("input.mp4"), Path("output.mp4"), preset="web", dry_run=True
         )
 
         assert result is True
@@ -179,11 +159,7 @@ class TestFileConversion:
         mock_detect.return_value = "image"
         mock_run.return_value = MagicMock(returncode=0)
 
-        result = convert_file(
-            Path("input.png"),
-            Path("output.jpg"),
-            preset="web"
-        )
+        result = convert_file(Path("input.png"), Path("output.jpg"), preset="web")
 
         assert result is True
         mock_run.assert_called_once()
@@ -195,10 +171,7 @@ class TestFileConversion:
         mock_detect.return_value = "video"
         mock_run.side_effect = Exception("Conversion failed")
 
-        result = convert_file(
-            Path("input.mp4"),
-            Path("output.mp4")
-        )
+        result = convert_file(Path("input.mp4"), Path("output.mp4"))
 
         assert result is False
 
@@ -207,10 +180,7 @@ class TestFileConversion:
         """Test conversion with unknown format."""
         mock_detect.return_value = "unknown"
 
-        result = convert_file(
-            Path("input.txt"),
-            Path("output.txt")
-        )
+        result = convert_file(Path("input.txt"), Path("output.txt"))
 
         assert result is False
 
@@ -220,11 +190,7 @@ class TestQualityPresets:
 
     def test_web_preset_settings(self):
         """Test web preset values."""
-        cmd = build_video_command(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            preset="web"
-        )
+        cmd = build_video_command(Path("input.mp4"), Path("output.mp4"), preset="web")
 
         cmd_str = " ".join(cmd)
         assert "23" in cmd_str  # CRF
@@ -233,9 +199,7 @@ class TestQualityPresets:
     def test_archive_preset_settings(self):
         """Test archive preset values."""
         cmd = build_video_command(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            preset="archive"
+            Path("input.mp4"), Path("output.mp4"), preset="archive"
         )
 
         cmd_str = " ".join(cmd)
@@ -245,9 +209,7 @@ class TestQualityPresets:
     def test_mobile_preset_settings(self):
         """Test mobile preset values."""
         cmd = build_video_command(
-            Path("input.mp4"),
-            Path("output.mp4"),
-            preset="mobile"
+            Path("input.mp4"), Path("output.mp4"), preset="mobile"
         )
 
         cmd_str = " ".join(cmd)

@@ -477,8 +477,7 @@ class LinkCollector:
                 if s is not None and s.link is not None
             ]
             lines = [
-                f"{len(lines)} location(s) to search "
-                f"for versions of {project_name}:"
+                f"{len(lines)} location(s) to search for versions of {project_name}:"
             ] + lines
             logger.debug("\n".join(lines))
 

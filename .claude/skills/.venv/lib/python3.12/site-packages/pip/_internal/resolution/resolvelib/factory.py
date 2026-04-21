@@ -706,8 +706,7 @@ class Factory:
                 version_type = "final version"
 
         logger.critical(
-            "Could not find a %s that satisfies the requirement %s "
-            "(from versions: %s)",
+            "Could not find a %s that satisfies the requirement %s (from versions: %s)",
             version_type,
             req_disp,
             ", ".join(versions) or "none",

@@ -22,8 +22,8 @@ def mock_monorepo(tmp_path):
         "workspaces": ["apps/*", "packages/*"],
         "scripts": {
             "build": "npm run build --workspaces",
-            "test": "npm run test --workspaces"
-        }
+            "test": "npm run test --workspaces",
+        },
     }
 
     (tmp_path / "package.json").write_text(json.dumps(root_pkg, indent=2))
@@ -34,20 +34,22 @@ def mock_monorepo(tmp_path):
 
     web_dir = apps_dir / "web"
     web_dir.mkdir()
-    (web_dir / "package.json").write_text(json.dumps({
-        "name": "web",
-        "version": "1.0.0",
-        "scripts": {
-            "dev": "next dev",
-            "build": "next build",
-            "test": "jest",
-            "lint": "eslint ."
-        },
-        "dependencies": {
-            "@repo/ui": "*",
-            "next": "latest"
-        }
-    }, indent=2))
+    (web_dir / "package.json").write_text(
+        json.dumps(
+            {
+                "name": "web",
+                "version": "1.0.0",
+                "scripts": {
+                    "dev": "next dev",
+                    "build": "next build",
+                    "test": "jest",
+                    "lint": "eslint .",
+                },
+                "dependencies": {"@repo/ui": "*", "next": "latest"},
+            },
+            indent=2,
+        )
+    )
 
     # Create Next.js output directory
     (web_dir / ".next").mkdir()
@@ -58,18 +60,17 @@ def mock_monorepo(tmp_path):
 
     ui_dir = packages_dir / "ui"
     ui_dir.mkdir()
-    (ui_dir / "package.json").write_text(json.dumps({
-        "name": "@repo/ui",
-        "version": "0.0.0",
-        "scripts": {
-            "build": "tsc",
-            "test": "jest",
-            "lint": "eslint ."
-        },
-        "dependencies": {
-            "react": "latest"
-        }
-    }, indent=2))
+    (ui_dir / "package.json").write_text(
+        json.dumps(
+            {
+                "name": "@repo/ui",
+                "version": "0.0.0",
+                "scripts": {"build": "tsc", "test": "jest", "lint": "eslint ."},
+                "dependencies": {"react": "latest"},
+            },
+            indent=2,
+        )
+    )
 
     # Create dist directory
     (ui_dir / "dist").mkdir()
@@ -82,11 +83,7 @@ class TestTurborepoMigrator:
 
     def test_init(self, tmp_path):
         """Test migrator initialization."""
-        migrator = TurborepoMigrator(
-            path=tmp_path,
-            dry_run=True,
-            package_manager="npm"
-        )
+        migrator = TurborepoMigrator(path=tmp_path, dry_run=True, package_manager="npm")
 
         assert migrator.path == tmp_path.resolve()
         assert migrator.dry_run is True
@@ -136,10 +133,9 @@ class TestTurborepoMigrator:
     def test_analyze_workspace_pnpm(self, tmp_path):
         """Test workspace analysis for pnpm workspaces."""
         # Create root package.json without workspaces
-        (tmp_path / "package.json").write_text(json.dumps({
-            "name": "test-monorepo",
-            "private": True
-        }))
+        (tmp_path / "package.json").write_text(
+            json.dumps({"name": "test-monorepo", "private": True})
+        )
 
         # Create pnpm-workspace.yaml
         (tmp_path / "pnpm-workspace.yaml").write_text("""packages:
@@ -362,10 +358,9 @@ class TestTurborepoMigrator:
     def test_monorepo_without_workspaces(self, tmp_path):
         """Test migration fails for non-workspace monorepo."""
         # Create package.json without workspaces
-        (tmp_path / "package.json").write_text(json.dumps({
-            "name": "not-a-monorepo",
-            "version": "1.0.0"
-        }))
+        (tmp_path / "package.json").write_text(
+            json.dumps({"name": "not-a-monorepo", "version": "1.0.0"})
+        )
 
         migrator = TurborepoMigrator(path=tmp_path)
 

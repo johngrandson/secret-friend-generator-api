@@ -51,7 +51,7 @@ class TestMigration:
             id="20250101120000",
             name="test_migration",
             timestamp=datetime.now(),
-            database_type="mongodb"
+            database_type="mongodb",
         )
 
         assert migration.id == "20250101120000"
@@ -65,32 +65,42 @@ class TestMigrationManager:
 
     def test_init(self, temp_migrations_dir):
         """Test manager initialization."""
-        manager = MigrationManager("mongodb", "mongodb://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "mongodb", "mongodb://localhost", temp_migrations_dir
+        )
 
         assert manager.db_type == "mongodb"
         assert manager.connection_string == "mongodb://localhost"
         assert Path(temp_migrations_dir).exists()
 
-    @patch('db_migrate.MongoClient')
-    def test_connect_mongodb(self, mock_client_class, temp_migrations_dir, mock_mongo_client):
+    @patch("db_migrate.MongoClient")
+    def test_connect_mongodb(
+        self, mock_client_class, temp_migrations_dir, mock_mongo_client
+    ):
         """Test MongoDB connection."""
         mock_client, mock_db = mock_mongo_client
         mock_client_class.return_value = mock_client
 
-        manager = MigrationManager("mongodb", "mongodb://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "mongodb", "mongodb://localhost", temp_migrations_dir
+        )
         result = manager.connect()
 
         assert result is True
         assert manager.client == mock_client
         assert manager.db == mock_db
 
-    @patch('db_migrate.psycopg2')
-    def test_connect_postgres(self, mock_psycopg2, temp_migrations_dir, mock_postgres_conn):
+    @patch("db_migrate.psycopg2")
+    def test_connect_postgres(
+        self, mock_psycopg2, temp_migrations_dir, mock_postgres_conn
+    ):
         """Test PostgreSQL connection."""
         mock_conn, mock_cursor = mock_postgres_conn
         mock_psycopg2.connect.return_value = mock_conn
 
-        manager = MigrationManager("postgres", "postgresql://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "postgres", "postgresql://localhost", temp_migrations_dir
+        )
         result = manager.connect()
 
         assert result is True
@@ -98,14 +108,18 @@ class TestMigrationManager:
 
     def test_connect_unsupported_db(self, temp_migrations_dir):
         """Test connection with unsupported database type."""
-        manager = MigrationManager("unsupported", "connection_string", temp_migrations_dir)
+        manager = MigrationManager(
+            "unsupported", "connection_string", temp_migrations_dir
+        )
         result = manager.connect()
 
         assert result is False
 
     def test_generate_migration(self, temp_migrations_dir):
         """Test migration generation."""
-        manager = MigrationManager("mongodb", "mongodb://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "mongodb", "mongodb://localhost", temp_migrations_dir
+        )
         migration = manager.generate_migration("test_migration")
 
         assert migration is not None
@@ -123,7 +137,9 @@ class TestMigrationManager:
 
     def test_generate_migration_dry_run(self, temp_migrations_dir):
         """Test migration generation in dry-run mode."""
-        manager = MigrationManager("postgres", "postgresql://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "postgres", "postgresql://localhost", temp_migrations_dir
+        )
         migration = manager.generate_migration("test_migration", dry_run=True)
 
         assert migration is not None
@@ -134,7 +150,9 @@ class TestMigrationManager:
 
     def test_get_pending_migrations(self, temp_migrations_dir):
         """Test getting pending migrations."""
-        manager = MigrationManager("mongodb", "mongodb://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "mongodb", "mongodb://localhost", temp_migrations_dir
+        )
 
         # Create test migration file
         migration_data = {
@@ -142,7 +160,7 @@ class TestMigrationManager:
             "name": "test_migration",
             "timestamp": datetime.now().isoformat(),
             "database_type": "mongodb",
-            "mongodb_operations": []
+            "mongodb_operations": [],
         }
 
         migration_file = Path(temp_migrations_dir) / "20250101120000_test.json"
@@ -150,7 +168,7 @@ class TestMigrationManager:
             json.dump(migration_data, f)
 
         # Mock database connection
-        with patch.object(manager, 'db', MagicMock()):
+        with patch.object(manager, "db", MagicMock()):
             manager.db.migrations.find.return_value = []
 
             pending = manager.get_pending_migrations()
@@ -159,13 +177,17 @@ class TestMigrationManager:
             assert pending[0].id == "20250101120000"
             assert pending[0].name == "test_migration"
 
-    @patch('db_migrate.MongoClient')
-    def test_apply_mongodb_migration(self, mock_client_class, temp_migrations_dir, mock_mongo_client):
+    @patch("db_migrate.MongoClient")
+    def test_apply_mongodb_migration(
+        self, mock_client_class, temp_migrations_dir, mock_mongo_client
+    ):
         """Test applying MongoDB migration."""
         mock_client, mock_db = mock_mongo_client
         mock_client_class.return_value = mock_client
 
-        manager = MigrationManager("mongodb", "mongodb://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "mongodb", "mongodb://localhost", temp_migrations_dir
+        )
         manager.connect()
 
         migration = Migration(
@@ -178,9 +200,9 @@ class TestMigrationManager:
                     "operation": "createIndex",
                     "collection": "users",
                     "index": {"email": 1},
-                    "options": {}
+                    "options": {},
                 }
-            ]
+            ],
         )
 
         result = manager.apply_migration(migration)
@@ -191,27 +213,33 @@ class TestMigrationManager:
 
     def test_apply_migration_dry_run(self, temp_migrations_dir):
         """Test applying migration in dry-run mode."""
-        manager = MigrationManager("mongodb", "mongodb://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "mongodb", "mongodb://localhost", temp_migrations_dir
+        )
 
         migration = Migration(
             id="20250101120000",
             name="test_migration",
             timestamp=datetime.now(),
             database_type="mongodb",
-            mongodb_operations=[]
+            mongodb_operations=[],
         )
 
         result = manager.apply_migration(migration, dry_run=True)
 
         assert result is True
 
-    @patch('db_migrate.psycopg2')
-    def test_rollback_postgres_migration(self, mock_psycopg2, temp_migrations_dir, mock_postgres_conn):
+    @patch("db_migrate.psycopg2")
+    def test_rollback_postgres_migration(
+        self, mock_psycopg2, temp_migrations_dir, mock_postgres_conn
+    ):
         """Test rolling back PostgreSQL migration."""
         mock_conn, mock_cursor = mock_postgres_conn
         mock_psycopg2.connect.return_value = mock_conn
 
-        manager = MigrationManager("postgres", "postgresql://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "postgres", "postgresql://localhost", temp_migrations_dir
+        )
         manager.connect()
 
         # Create migration file
@@ -221,7 +249,7 @@ class TestMigrationManager:
             "timestamp": datetime.now().isoformat(),
             "database_type": "postgres",
             "up_sql": "CREATE TABLE test (id INT);",
-            "down_sql": "DROP TABLE test;"
+            "down_sql": "DROP TABLE test;",
         }
 
         migration_file = Path(temp_migrations_dir) / "20250101120000_test.json"
@@ -236,7 +264,9 @@ class TestMigrationManager:
 
     def test_rollback_migration_not_found(self, temp_migrations_dir):
         """Test rollback with non-existent migration."""
-        manager = MigrationManager("mongodb", "mongodb://localhost", temp_migrations_dir)
+        manager = MigrationManager(
+            "mongodb", "mongodb://localhost", temp_migrations_dir
+        )
 
         result = manager.rollback_migration("99999999999999")
 
@@ -254,14 +284,14 @@ def test_migration_sorting(temp_migrations_dir):
             "name": f"migration_{i}",
             "timestamp": datetime.now().isoformat(),
             "database_type": "mongodb",
-            "mongodb_operations": []
+            "mongodb_operations": [],
         }
 
         migration_file = Path(temp_migrations_dir) / f"2025010112000{i}_test.json"
         with open(migration_file, "w") as f:
             json.dump(migration_data, f)
 
-    with patch.object(manager, 'db', MagicMock()):
+    with patch.object(manager, "db", MagicMock()):
         manager.db.migrations.find.return_value = []
 
         pending = manager.get_pending_migrations()

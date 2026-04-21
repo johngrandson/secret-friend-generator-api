@@ -5,13 +5,13 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from src.shared.app_config import settings
-from src.domain.shared.database_base import Base
+from src.shared.config import settings
+from src.infrastructure.persistence import Base
 
 # Import all models so Alembic can detect them
-from src.domain.group.group_model import Group  # noqa: F401
-from src.domain.participant.participant_model import Participant  # noqa: F401
-from src.domain.secret_friend.secret_friend_model import SecretFriend  # noqa: F401
+from src.domain.group.model import Group  # noqa: F401
+from src.domain.participant.model import Participant  # noqa: F401
+from src.domain.secret_friend.model import SecretFriend  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

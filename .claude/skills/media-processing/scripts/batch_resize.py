@@ -25,10 +25,10 @@ class ImageResizer:
         """Check if ImageMagick is available."""
         try:
             subprocess.run(
-                ['magick', '-version'],
+                ["magick", "-version"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                check=True
+                check=True,
             )
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
@@ -42,63 +42,73 @@ class ImageResizer:
         height: Optional[int],
         strategy: str,
         quality: int,
-        watermark: Optional[Path] = None
+        watermark: Optional[Path] = None,
     ) -> List[str]:
         """Build ImageMagick resize command based on strategy."""
-        cmd = ['magick', str(input_path)]
+        cmd = ["magick", str(input_path)]
 
         # Apply resize strategy
-        if strategy == 'fit':
+        if strategy == "fit":
             # Fit within dimensions, maintain aspect ratio
             geometry = f"{width or ''}x{height or ''}"
-            cmd.extend(['-resize', geometry])
+            cmd.extend(["-resize", geometry])
 
-        elif strategy == 'fill':
+        elif strategy == "fill":
             # Fill dimensions, crop excess
             if not width or not height:
                 raise ValueError("Both width and height required for 'fill' strategy")
-            cmd.extend([
-                '-resize', f'{width}x{height}^',
-                '-gravity', 'center',
-                '-extent', f'{width}x{height}'
-            ])
+            cmd.extend(
+                [
+                    "-resize",
+                    f"{width}x{height}^",
+                    "-gravity",
+                    "center",
+                    "-extent",
+                    f"{width}x{height}",
+                ]
+            )
 
-        elif strategy == 'cover':
+        elif strategy == "cover":
             # Cover dimensions, may exceed
             if not width or not height:
                 raise ValueError("Both width and height required for 'cover' strategy")
-            cmd.extend(['-resize', f'{width}x{height}^'])
+            cmd.extend(["-resize", f"{width}x{height}^"])
 
-        elif strategy == 'exact':
+        elif strategy == "exact":
             # Force exact dimensions, ignore aspect ratio
             if not width or not height:
                 raise ValueError("Both width and height required for 'exact' strategy")
-            cmd.extend(['-resize', f'{width}x{height}!'])
+            cmd.extend(["-resize", f"{width}x{height}!"])
 
-        elif strategy == 'thumbnail':
+        elif strategy == "thumbnail":
             # Create square thumbnail
             size = width or height or 200
-            cmd.extend([
-                '-resize', f'{size}x{size}^',
-                '-gravity', 'center',
-                '-extent', f'{size}x{size}'
-            ])
+            cmd.extend(
+                [
+                    "-resize",
+                    f"{size}x{size}^",
+                    "-gravity",
+                    "center",
+                    "-extent",
+                    f"{size}x{size}",
+                ]
+            )
 
         # Add watermark if specified
         if watermark:
-            cmd.extend([
-                str(watermark),
-                '-gravity', 'southeast',
-                '-geometry', '+10+10',
-                '-composite'
-            ])
+            cmd.extend(
+                [
+                    str(watermark),
+                    "-gravity",
+                    "southeast",
+                    "-geometry",
+                    "+10+10",
+                    "-composite",
+                ]
+            )
 
         # Output settings
-        cmd.extend([
-            '-quality', str(quality),
-            '-strip',
-            str(output_path)
-        ])
+        cmd.extend(["-quality", str(quality), "-strip", str(output_path)])
 
         return cmd
 
@@ -108,9 +118,9 @@ class ImageResizer:
         output_path: Path,
         width: Optional[int],
         height: Optional[int],
-        strategy: str = 'fit',
+        strategy: str = "fit",
         quality: int = 85,
-        watermark: Optional[Path] = None
+        watermark: Optional[Path] = None,
     ) -> bool:
         """Resize a single image."""
         try:
@@ -118,8 +128,7 @@ class ImageResizer:
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
             cmd = self.build_resize_command(
-                input_path, output_path, width, height,
-                strategy, quality, watermark
+                input_path, output_path, width, height, strategy, quality, watermark
             )
 
             if self.verbose or self.dry_run:
@@ -132,7 +141,7 @@ class ImageResizer:
                 cmd,
                 stdout=subprocess.PIPE if not self.verbose else None,
                 stderr=subprocess.PIPE if not self.verbose else None,
-                check=True
+                check=True,
             )
             return True
 
@@ -151,11 +160,11 @@ class ImageResizer:
         output_dir: Path,
         width: Optional[int],
         height: Optional[int],
-        strategy: str = 'fit',
+        strategy: str = "fit",
         quality: int = 85,
         format_ext: Optional[str] = None,
         watermark: Optional[Path] = None,
-        parallel: int = 1
+        parallel: int = 1,
     ) -> Tuple[int, int]:
         """Resize multiple images."""
         success_count = 0
@@ -177,8 +186,7 @@ class ImageResizer:
                 print(f"Processing {input_path.name} -> {output_path.name}")
 
             success = self.resize_image(
-                input_path, output_path, width, height,
-                strategy, quality, watermark
+                input_path, output_path, width, height, strategy, quality, watermark
             )
 
             return input_path, success
@@ -207,14 +215,14 @@ class ImageResizer:
 
 def collect_images(paths: List[Path], recursive: bool = False) -> List[Path]:
     """Collect image files from paths."""
-    image_exts = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.tif'}
+    image_exts = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif"}
     images = []
 
     for path in paths:
         if path.is_file() and path.suffix.lower() in image_exts:
             images.append(path)
         elif path.is_dir():
-            pattern = '**/*' if recursive else '*'
+            pattern = "**/*" if recursive else "*"
             for img_path in path.glob(pattern):
                 if img_path.is_file() and img_path.suffix.lower() in image_exts:
                     images.append(img_path)
@@ -225,73 +233,50 @@ def collect_images(paths: List[Path], recursive: bool = False) -> List[Path]:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Batch image resizing with multiple strategies.'
+        description="Batch image resizing with multiple strategies."
     )
     parser.add_argument(
-        'inputs',
-        nargs='+',
-        type=Path,
-        help='Input image(s) or directory'
+        "inputs", nargs="+", type=Path, help="Input image(s) or directory"
     )
     parser.add_argument(
-        '-o', '--output',
-        type=Path,
-        required=True,
-        help='Output directory'
+        "-o", "--output", type=Path, required=True, help="Output directory"
+    )
+    parser.add_argument("-w", "--width", type=int, help="Target width in pixels")
+    parser.add_argument(
+        "-h", "--height", type=int, dest="img_height", help="Target height in pixels"
     )
     parser.add_argument(
-        '-w', '--width',
-        type=int,
-        help='Target width in pixels'
+        "-s",
+        "--strategy",
+        choices=["fit", "fill", "cover", "exact", "thumbnail"],
+        default="fit",
+        help="Resize strategy (default: fit)",
     )
     parser.add_argument(
-        '-h', '--height',
-        type=int,
-        dest='img_height',
-        help='Target height in pixels'
-    )
-    parser.add_argument(
-        '-s', '--strategy',
-        choices=['fit', 'fill', 'cover', 'exact', 'thumbnail'],
-        default='fit',
-        help='Resize strategy (default: fit)'
-    )
-    parser.add_argument(
-        '-q', '--quality',
+        "-q",
+        "--quality",
         type=int,
         default=85,
-        help='Output quality 0-100 (default: 85)'
+        help="Output quality 0-100 (default: 85)",
+    )
+    parser.add_argument("-f", "--format", help="Output format (e.g., jpg, png, webp)")
+    parser.add_argument(
+        "-wm", "--watermark", type=Path, help="Watermark image to overlay"
     )
     parser.add_argument(
-        '-f', '--format',
-        help='Output format (e.g., jpg, png, webp)'
-    )
-    parser.add_argument(
-        '-wm', '--watermark',
-        type=Path,
-        help='Watermark image to overlay'
-    )
-    parser.add_argument(
-        '-p', '--parallel',
+        "-p",
+        "--parallel",
         type=int,
         default=1,
-        help='Number of parallel processes (default: 1)'
+        help="Number of parallel processes (default: 1)",
     )
     parser.add_argument(
-        '-r', '--recursive',
-        action='store_true',
-        help='Process directories recursively'
+        "-r", "--recursive", action="store_true", help="Process directories recursively"
     )
     parser.add_argument(
-        '-n', '--dry-run',
-        action='store_true',
-        help='Show commands without executing'
+        "-n", "--dry-run", action="store_true", help="Show commands without executing"
     )
-    parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='Verbose output'
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -331,12 +316,12 @@ def main():
         args.quality,
         args.format,
         args.watermark,
-        args.parallel
+        args.parallel,
     )
 
     print(f"\nResults: {success} succeeded, {fail} failed")
     sys.exit(0 if fail == 0 else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

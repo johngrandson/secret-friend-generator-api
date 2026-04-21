@@ -18,8 +18,7 @@ class TestNextJSInitializer:
     def test_init_with_defaults(self, tmp_path):
         """Test initialization with default parameters."""
         initializer = NextJSInitializer(
-            name="test-app",
-            directory=tmp_path / "test-app"
+            name="test-app", directory=tmp_path / "test-app"
         )
 
         assert initializer.name == "test-app"
@@ -34,10 +33,7 @@ class TestNextJSInitializer:
         valid_names = ["my-app", "my_app", "myapp123", "test-app-1"]
 
         for name in valid_names:
-            initializer = NextJSInitializer(
-                name=name,
-                directory=tmp_path / name
-            )
+            initializer = NextJSInitializer(name=name, directory=tmp_path / name)
             initializer.validate_name()  # Should not raise
 
     def test_validate_name_invalid(self, tmp_path):
@@ -51,8 +47,7 @@ class TestNextJSInitializer:
 
         for name, expected_error, reason in invalid_cases:
             initializer = NextJSInitializer(
-                name=name,
-                directory=tmp_path / (name or "empty")
+                name=name, directory=tmp_path / (name or "empty")
             )
 
             with pytest.raises(expected_error):
@@ -63,10 +58,7 @@ class TestNextJSInitializer:
         existing_dir = tmp_path / "existing"
         existing_dir.mkdir()
 
-        initializer = NextJSInitializer(
-            name="test-app",
-            directory=existing_dir
-        )
+        initializer = NextJSInitializer(name="test-app", directory=existing_dir)
 
         with pytest.raises(FileExistsError):
             initializer.check_directory()
@@ -75,9 +67,7 @@ class TestNextJSInitializer:
         """Test directory structure creation with App Router."""
         project_dir = tmp_path / "test-app"
         initializer = NextJSInitializer(
-            name="test-app",
-            directory=project_dir,
-            app_router=True
+            name="test-app", directory=project_dir, app_router=True
         )
 
         initializer.create_directory_structure()
@@ -97,9 +87,7 @@ class TestNextJSInitializer:
         """Test directory structure with src/ directory."""
         project_dir = tmp_path / "test-app"
         initializer = NextJSInitializer(
-            name="test-app",
-            directory=project_dir,
-            src_dir=True
+            name="test-app", directory=project_dir, src_dir=True
         )
 
         initializer.create_directory_structure()
@@ -116,7 +104,7 @@ class TestNextJSInitializer:
             directory=tmp_path / "test-app",
             typescript=True,
             tailwind=True,
-            eslint=True
+            eslint=True,
         )
 
         package_json = initializer._get_package_json()
@@ -153,7 +141,7 @@ class TestNextJSInitializer:
             name="test-app",
             directory=tmp_path / "test-app",
             typescript=True,
-            import_alias="@/*"
+            import_alias="@/*",
         )
 
         tsconfig = initializer._get_tsconfig()
@@ -167,9 +155,7 @@ class TestNextJSInitializer:
     def test_layout_content_typescript(self, tmp_path):
         """Test layout.tsx content generation."""
         initializer = NextJSInitializer(
-            name="test-app",
-            directory=tmp_path / "test-app",
-            typescript=True
+            name="test-app", directory=tmp_path / "test-app", typescript=True
         )
 
         content = initializer._get_layout_content()
@@ -177,14 +163,12 @@ class TestNextJSInitializer:
         assert "import './globals.css'" in content
         assert "export const metadata" in content
         assert "children: React.ReactNode" in content
-        assert "<html lang=\"en\">" in content
+        assert '<html lang="en">' in content
 
     def test_layout_content_javascript(self, tmp_path):
         """Test layout.jsx content generation."""
         initializer = NextJSInitializer(
-            name="test-app",
-            directory=tmp_path / "test-app",
-            typescript=False
+            name="test-app", directory=tmp_path / "test-app", typescript=False
         )
 
         content = initializer._get_layout_content()
@@ -199,7 +183,7 @@ class TestNextJSInitializer:
             name="test-app",
             directory=tmp_path / "test-app",
             typescript=True,
-            tailwind=True
+            tailwind=True,
         )
 
         config = initializer._get_tailwind_config()
@@ -214,7 +198,7 @@ class TestNextJSInitializer:
             name="test-app",
             directory=tmp_path / "test-app",
             typescript=False,
-            tailwind=True
+            tailwind=True,
         )
 
         config = initializer._get_tailwind_config()
@@ -225,8 +209,7 @@ class TestNextJSInitializer:
     def test_gitignore_generation(self, tmp_path):
         """Test .gitignore generation."""
         initializer = NextJSInitializer(
-            name="test-app",
-            directory=tmp_path / "test-app"
+            name="test-app", directory=tmp_path / "test-app"
         )
 
         gitignore = initializer._get_gitignore()
@@ -239,8 +222,7 @@ class TestNextJSInitializer:
     def test_readme_generation(self, tmp_path):
         """Test README.md generation."""
         initializer = NextJSInitializer(
-            name="test-app",
-            directory=tmp_path / "test-app"
+            name="test-app", directory=tmp_path / "test-app"
         )
 
         readme = initializer._get_readme()
@@ -257,7 +239,7 @@ class TestNextJSInitializer:
             directory=project_dir,
             typescript=True,
             tailwind=True,
-            eslint=True
+            eslint=True,
         )
 
         initializer.create_directory_structure()
@@ -286,7 +268,7 @@ class TestNextJSInitializer:
             directory=project_dir,
             typescript=True,
             app_router=True,
-            tailwind=True
+            tailwind=True,
         )
 
         initializer.initialize()
@@ -309,7 +291,7 @@ class TestNextJSInitializer:
         initializer = NextJSInitializer(
             name="test-app",
             directory=project_dir,
-            app_router=False  # Use Pages Router
+            app_router=False,  # Use Pages Router
         )
 
         initializer.create_directory_structure()

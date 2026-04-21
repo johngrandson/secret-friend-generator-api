@@ -18,6 +18,7 @@ from typing import Optional, Tuple
 @dataclass
 class VideoInfo:
     """Video file information."""
+
     path: Path
     duration: float
     width: int
@@ -41,10 +42,10 @@ class VideoOptimizer:
         """Check if FFmpeg is available."""
         try:
             subprocess.run(
-                ['ffmpeg', '-version'],
+                ["ffmpeg", "-version"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                check=True
+                check=True,
             )
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
@@ -54,12 +55,14 @@ class VideoOptimizer:
         """Extract video information using ffprobe."""
         try:
             cmd = [
-                'ffprobe',
-                '-v', 'quiet',
-                '-print_format', 'json',
-                '-show_format',
-                '-show_streams',
-                str(input_path)
+                "ffprobe",
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
+                "-show_format",
+                "-show_streams",
+                str(input_path),
             ]
 
             result = subprocess.run(cmd, capture_output=True, check=True)
@@ -69,30 +72,36 @@ class VideoOptimizer:
             video_stream = None
             audio_stream = None
 
-            for stream in data['streams']:
-                if stream['codec_type'] == 'video' and not video_stream:
+            for stream in data["streams"]:
+                if stream["codec_type"] == "video" and not video_stream:
                     video_stream = stream
-                elif stream['codec_type'] == 'audio' and not audio_stream:
+                elif stream["codec_type"] == "audio" and not audio_stream:
                     audio_stream = stream
 
             if not video_stream:
                 return None
 
             # Parse frame rate
-            fps_parts = video_stream.get('r_frame_rate', '0/1').split('/')
-            fps = float(fps_parts[0]) / float(fps_parts[1]) if len(fps_parts) == 2 else 0
+            fps_parts = video_stream.get("r_frame_rate", "0/1").split("/")
+            fps = (
+                float(fps_parts[0]) / float(fps_parts[1]) if len(fps_parts) == 2 else 0
+            )
 
             return VideoInfo(
                 path=input_path,
-                duration=float(data['format'].get('duration', 0)),
-                width=int(video_stream.get('width', 0)),
-                height=int(video_stream.get('height', 0)),
-                bitrate=int(data['format'].get('bit_rate', 0)),
+                duration=float(data["format"].get("duration", 0)),
+                width=int(video_stream.get("width", 0)),
+                height=int(video_stream.get("height", 0)),
+                bitrate=int(data["format"].get("bit_rate", 0)),
                 fps=fps,
-                size=int(data['format'].get('size', 0)),
-                codec=video_stream.get('codec_name', 'unknown'),
-                audio_codec=audio_stream.get('codec_name', 'none') if audio_stream else 'none',
-                audio_bitrate=int(audio_stream.get('bit_rate', 0)) if audio_stream else 0
+                size=int(data["format"].get("size", 0)),
+                codec=video_stream.get("codec_name", "unknown"),
+                audio_codec=audio_stream.get("codec_name", "none")
+                if audio_stream
+                else "none",
+                audio_bitrate=int(audio_stream.get("bit_rate", 0))
+                if audio_stream
+                else 0,
             )
 
         except Exception as e:
@@ -104,7 +113,7 @@ class VideoOptimizer:
         width: int,
         height: int,
         max_width: Optional[int],
-        max_height: Optional[int]
+        max_height: Optional[int],
     ) -> Tuple[int, int]:
         """Calculate target resolution maintaining aspect ratio."""
         if not max_width and not max_height:
@@ -144,9 +153,9 @@ class VideoOptimizer:
         max_height: Optional[int] = None,
         target_fps: Optional[float] = None,
         crf: int = 23,
-        audio_bitrate: str = '128k',
-        preset: str = 'medium',
-        two_pass: bool = False
+        audio_bitrate: str = "128k",
+        preset: str = "medium",
+        two_pass: bool = False,
     ) -> bool:
         """Optimize a video file."""
         # Get input video info
@@ -160,7 +169,7 @@ class VideoOptimizer:
             print(f"  Resolution: {info.width}x{info.height}")
             print(f"  FPS: {info.fps:.2f}")
             print(f"  Bitrate: {info.bitrate // 1000} kbps")
-            print(f"  Size: {info.size / (1024*1024):.2f} MB")
+            print(f"  Size: {info.size / (1024 * 1024):.2f} MB")
 
         # Calculate target resolution
         target_width, target_height = self.calculate_target_resolution(
@@ -168,19 +177,19 @@ class VideoOptimizer:
         )
 
         # Build FFmpeg command
-        cmd = ['ffmpeg', '-i', str(input_path)]
+        cmd = ["ffmpeg", "-i", str(input_path)]
 
         # Video filters
         filters = []
         if target_width != info.width or target_height != info.height:
-            filters.append(f'scale={target_width}:{target_height}')
+            filters.append(f"scale={target_width}:{target_height}")
 
         if filters:
-            cmd.extend(['-vf', ','.join(filters)])
+            cmd.extend(["-vf", ",".join(filters)])
 
         # Frame rate adjustment
         if target_fps and target_fps < info.fps:
-            cmd.extend(['-r', str(target_fps)])
+            cmd.extend(["-r", str(target_fps)])
 
         # Video encoding
         if two_pass:
@@ -189,13 +198,18 @@ class VideoOptimizer:
 
             # Pass 1
             pass1_cmd = cmd + [
-                '-c:v', 'libx264',
-                '-preset', preset,
-                '-b:v', str(target_bitrate),
-                '-pass', '1',
-                '-an',
-                '-f', 'null',
-                '/dev/null' if sys.platform != 'win32' else 'NUL'
+                "-c:v",
+                "libx264",
+                "-preset",
+                preset,
+                "-b:v",
+                str(target_bitrate),
+                "-pass",
+                "1",
+                "-an",
+                "-f",
+                "null",
+                "/dev/null" if sys.platform != "win32" else "NUL",
             ]
 
             if self.verbose or self.dry_run:
@@ -203,34 +217,35 @@ class VideoOptimizer:
 
             if not self.dry_run:
                 try:
-                    subprocess.run(pass1_cmd, check=True, capture_output=not self.verbose)
+                    subprocess.run(
+                        pass1_cmd, check=True, capture_output=not self.verbose
+                    )
                 except subprocess.CalledProcessError as e:
                     print(f"Error in pass 1: {e}", file=sys.stderr)
                     return False
 
             # Pass 2
-            cmd.extend([
-                '-c:v', 'libx264',
-                '-preset', preset,
-                '-b:v', str(target_bitrate),
-                '-pass', '2'
-            ])
+            cmd.extend(
+                [
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    preset,
+                    "-b:v",
+                    str(target_bitrate),
+                    "-pass",
+                    "2",
+                ]
+            )
         else:
             # Single-pass CRF encoding
-            cmd.extend([
-                '-c:v', 'libx264',
-                '-preset', preset,
-                '-crf', str(crf)
-            ])
+            cmd.extend(["-c:v", "libx264", "-preset", preset, "-crf", str(crf)])
 
         # Audio encoding
-        cmd.extend([
-            '-c:a', 'aac',
-            '-b:a', audio_bitrate
-        ])
+        cmd.extend(["-c:a", "aac", "-b:a", audio_bitrate])
 
         # Output
-        cmd.extend(['-movflags', '+faststart', '-y', str(output_path)])
+        cmd.extend(["-movflags", "+faststart", "-y", str(output_path)])
 
         if self.verbose or self.dry_run:
             print(f"Command: {' '.join(cmd)}")
@@ -249,7 +264,7 @@ class VideoOptimizer:
                 print(f"  Resolution: {output_info.width}x{output_info.height}")
                 print(f"  FPS: {output_info.fps:.2f}")
                 print(f"  Bitrate: {output_info.bitrate // 1000} kbps")
-                print(f"  Size: {output_info.size / (1024*1024):.2f} MB")
+                print(f"  Size: {output_info.size / (1024 * 1024):.2f} MB")
                 reduction = (1 - output_info.size / info.size) * 100
                 print(f"  Size reduction: {reduction:.1f}%")
 
@@ -264,7 +279,7 @@ class VideoOptimizer:
         finally:
             # Clean up two-pass log files
             if two_pass and not self.dry_run:
-                for log_file in Path('.').glob('ffmpeg2pass-*.log*'):
+                for log_file in Path(".").glob("ffmpeg2pass-*.log*"):
                     log_file.unlink(missing_ok=True)
 
     def compare_videos(self, original: Path, optimized: Path) -> None:
@@ -286,7 +301,9 @@ class VideoOptimizer:
 
         # FPS
         fps_change = opt_info.fps - orig_info.fps
-        print(f"{'FPS':<20} {orig_info.fps:<20.2f} {opt_info.fps:<20.2f} {fps_change:+.2f}")
+        print(
+            f"{'FPS':<20} {orig_info.fps:<20.2f} {opt_info.fps:<20.2f} {fps_change:+.2f}"
+        )
 
         # Bitrate
         orig_br = f"{orig_info.bitrate // 1000} kbps"
@@ -295,8 +312,8 @@ class VideoOptimizer:
         print(f"{'Bitrate':<20} {orig_br:<20} {opt_br:<20} {br_change:+.1f}%")
 
         # Size
-        orig_size = f"{orig_info.size / (1024*1024):.2f} MB"
-        opt_size = f"{opt_info.size / (1024*1024):.2f} MB"
+        orig_size = f"{orig_info.size / (1024 * 1024):.2f} MB"
+        opt_size = f"{opt_info.size / (1024 * 1024):.2f} MB"
         size_reduction = (1 - opt_info.size / orig_info.size) * 100
         print(f"{'Size':<20} {orig_size:<20} {opt_size:<20} {-size_reduction:.1f}%")
 
@@ -304,72 +321,50 @@ class VideoOptimizer:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Video size optimization with quality/size balance.'
+        description="Video size optimization with quality/size balance."
     )
+    parser.add_argument("input", type=Path, help="Input video file")
     parser.add_argument(
-        'input',
-        type=Path,
-        help='Input video file'
+        "-o", "--output", type=Path, required=True, help="Output video file"
     )
+    parser.add_argument("-w", "--max-width", type=int, help="Maximum width in pixels")
+    parser.add_argument("-H", "--max-height", type=int, help="Maximum height in pixels")
+    parser.add_argument("--fps", type=float, help="Target frame rate")
     parser.add_argument(
-        '-o', '--output',
-        type=Path,
-        required=True,
-        help='Output video file'
-    )
-    parser.add_argument(
-        '-w', '--max-width',
-        type=int,
-        help='Maximum width in pixels'
-    )
-    parser.add_argument(
-        '-H', '--max-height',
-        type=int,
-        help='Maximum height in pixels'
-    )
-    parser.add_argument(
-        '--fps',
-        type=float,
-        help='Target frame rate'
-    )
-    parser.add_argument(
-        '--crf',
+        "--crf",
         type=int,
         default=23,
-        help='CRF quality (18-28, lower=better, default: 23)'
+        help="CRF quality (18-28, lower=better, default: 23)",
     )
     parser.add_argument(
-        '--audio-bitrate',
-        default='128k',
-        help='Audio bitrate (default: 128k)'
+        "--audio-bitrate", default="128k", help="Audio bitrate (default: 128k)"
     )
     parser.add_argument(
-        '--preset',
-        choices=['ultrafast', 'superfast', 'veryfast', 'faster', 'fast',
-                 'medium', 'slow', 'slower', 'veryslow'],
-        default='medium',
-        help='Encoding preset (default: medium)'
+        "--preset",
+        choices=[
+            "ultrafast",
+            "superfast",
+            "veryfast",
+            "faster",
+            "fast",
+            "medium",
+            "slow",
+            "slower",
+            "veryslow",
+        ],
+        default="medium",
+        help="Encoding preset (default: medium)",
     )
     parser.add_argument(
-        '--two-pass',
-        action='store_true',
-        help='Use two-pass encoding (better quality)'
+        "--two-pass", action="store_true", help="Use two-pass encoding (better quality)"
     )
     parser.add_argument(
-        '--compare',
-        action='store_true',
-        help='Compare original and optimized videos'
+        "--compare", action="store_true", help="Compare original and optimized videos"
     )
     parser.add_argument(
-        '-n', '--dry-run',
-        action='store_true',
-        help='Show command without executing'
+        "-n", "--dry-run", action="store_true", help="Show command without executing"
     )
-    parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='Verbose output'
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -397,7 +392,7 @@ def main():
         args.crf,
         args.audio_bitrate,
         args.preset,
-        args.two_pass
+        args.two_pass,
     )
 
     if not success:
@@ -410,5 +405,5 @@ def main():
     print(f"\nOptimized video saved to: {args.output}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

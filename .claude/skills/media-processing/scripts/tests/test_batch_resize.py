@@ -40,7 +40,7 @@ class TestImageResizer:
             width=800,
             height=600,
             strategy="fit",
-            quality=85
+            quality=85,
         )
 
         assert "magick" in cmd
@@ -59,7 +59,7 @@ class TestImageResizer:
             width=800,
             height=600,
             strategy="fill",
-            quality=85
+            quality=85,
         )
 
         assert "-resize" in cmd
@@ -76,7 +76,7 @@ class TestImageResizer:
             width=200,
             height=None,
             strategy="thumbnail",
-            quality=85
+            quality=85,
         )
 
         assert "200x200^" in cmd
@@ -93,7 +93,7 @@ class TestImageResizer:
             height=None,
             strategy="fit",
             quality=85,
-            watermark=watermark
+            watermark=watermark,
         )
 
         assert str(watermark) in cmd
@@ -109,7 +109,7 @@ class TestImageResizer:
             width=800,
             height=600,
             strategy="exact",
-            quality=85
+            quality=85,
         )
 
         assert "800x600!" in cmd
@@ -123,7 +123,7 @@ class TestImageResizer:
                 width=800,
                 height=None,
                 strategy="fill",
-                quality=85
+                quality=85,
             )
 
     @patch("subprocess.run")
@@ -137,7 +137,7 @@ class TestImageResizer:
             width=800,
             height=None,
             strategy="fit",
-            quality=85
+            quality=85,
         )
 
         assert result is True
@@ -149,10 +149,7 @@ class TestImageResizer:
         resizer = ImageResizer(dry_run=True)
 
         result = resizer.resize_image(
-            Path("input.jpg"),
-            Path("output.jpg"),
-            width=800,
-            height=None
+            Path("input.jpg"), Path("output.jpg"), width=800, height=None
         )
 
         assert result is True
@@ -164,10 +161,7 @@ class TestImageResizer:
         mock_run.side_effect = Exception("Resize failed")
 
         result = self.resizer.resize_image(
-            Path("input.jpg"),
-            Path("output.jpg"),
-            width=800,
-            height=None
+            Path("input.jpg"), Path("output.jpg"), width=800, height=None
         )
 
         assert result is False
@@ -193,7 +187,7 @@ class TestCollectImages:
 
         images = collect_images([tmp_path])
         assert len(images) == 2
-        assert all(img.suffix.lower() in {'.jpg', '.png'} for img in images)
+        assert all(img.suffix.lower() in {".jpg", ".png"} for img in images)
 
     def test_collect_images_recursive(self, tmp_path):
         """Test recursive image collection."""
@@ -216,7 +210,7 @@ class TestCollectImages:
 
         images = collect_images([tmp_path])
         assert len(images) == 1
-        assert images[0].suffix.lower() == '.jpg'
+        assert images[0].suffix.lower() == ".jpg"
 
     def test_collect_images_multiple_paths(self, tmp_path):
         """Test collecting from multiple paths."""
@@ -244,21 +238,14 @@ class TestBatchResize:
         """Test successful batch resize."""
         mock_resize.return_value = True
 
-        input_images = [
-            tmp_path / "image1.jpg",
-            tmp_path / "image2.jpg"
-        ]
+        input_images = [tmp_path / "image1.jpg", tmp_path / "image2.jpg"]
         for img in input_images:
             img.touch()
 
         output_dir = tmp_path / "output"
 
         success, fail = self.resizer.batch_resize(
-            input_images,
-            output_dir,
-            width=800,
-            height=None,
-            strategy="fit"
+            input_images, output_dir, width=800, height=None, strategy="fit"
         )
 
         assert success == 2
@@ -273,7 +260,7 @@ class TestBatchResize:
         input_images = [
             tmp_path / "image1.jpg",
             tmp_path / "image2.jpg",
-            tmp_path / "image3.jpg"
+            tmp_path / "image3.jpg",
         ]
         for img in input_images:
             img.touch()
@@ -281,10 +268,7 @@ class TestBatchResize:
         output_dir = tmp_path / "output"
 
         success, fail = self.resizer.batch_resize(
-            input_images,
-            output_dir,
-            width=800,
-            height=None
+            input_images, output_dir, width=800, height=None
         )
 
         assert success == 2
@@ -301,11 +285,7 @@ class TestBatchResize:
         output_dir = tmp_path / "output"
 
         self.resizer.batch_resize(
-            input_images,
-            output_dir,
-            width=800,
-            height=None,
-            format_ext="jpg"
+            input_images, output_dir, width=800, height=None, format_ext="jpg"
         )
 
         # Check that resize_image was called with .jpg extension
@@ -328,7 +308,7 @@ class TestResizeStrategies:
             width=800,
             height=600,
             strategy="fit",
-            quality=85
+            quality=85,
         )
 
         # Should have resize without ^ or !
@@ -345,7 +325,7 @@ class TestResizeStrategies:
             width=800,
             height=600,
             strategy="cover",
-            quality=85
+            quality=85,
         )
 
         resize_idx = cmd.index("-resize")
@@ -360,7 +340,7 @@ class TestResizeStrategies:
             width=800,
             height=600,
             strategy="exact",
-            quality=85
+            quality=85,
         )
 
         resize_idx = cmd.index("-resize")

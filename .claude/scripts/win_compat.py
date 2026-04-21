@@ -31,11 +31,12 @@ def ensure_utf8_stdout():
     if _stdout_wrapped:
         return
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         import io
+
         # Only wrap if stdout has a buffer (not already wrapped)
-        if hasattr(sys.stdout, 'buffer'):
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        if hasattr(sys.stdout, "buffer"):
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
     _stdout_wrapped = True
 
@@ -53,5 +54,5 @@ def safe_print(text):
         print(text)
     except UnicodeEncodeError:
         # Fallback: replace unencodable chars
-        encoding = getattr(sys.stdout, 'encoding', 'utf-8') or 'utf-8'
-        print(text.encode(encoding, errors='replace').decode(encoding))
+        encoding = getattr(sys.stdout, "encoding", "utf-8") or "utf-8"
+        print(text.encode(encoding, errors="replace").decode(encoding))

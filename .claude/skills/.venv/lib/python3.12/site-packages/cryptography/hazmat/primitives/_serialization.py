@@ -104,13 +104,9 @@ class KeySerializationEncryptionBuilder:
             _key_cert_algorithm=self._key_cert_algorithm,
         )
 
-    def hmac_hash(
-        self, algorithm: HashAlgorithm
-    ) -> KeySerializationEncryptionBuilder:
+    def hmac_hash(self, algorithm: HashAlgorithm) -> KeySerializationEncryptionBuilder:
         if self._format is not PrivateFormat.PKCS12:
-            raise TypeError(
-                "hmac_hash only supported with PrivateFormat.PKCS12"
-            )
+            raise TypeError("hmac_hash only supported with PrivateFormat.PKCS12")
 
         if self._hmac_hash is not None:
             raise ValueError("hmac_hash already set")
@@ -121,9 +117,7 @@ class KeySerializationEncryptionBuilder:
             _key_cert_algorithm=self._key_cert_algorithm,
         )
 
-    def key_cert_algorithm(
-        self, algorithm: PBES
-    ) -> KeySerializationEncryptionBuilder:
+    def key_cert_algorithm(self, algorithm: PBES) -> KeySerializationEncryptionBuilder:
         if self._format is not PrivateFormat.PKCS12:
             raise TypeError(
                 "key_cert_algorithm only supported with PrivateFormat.PKCS12"

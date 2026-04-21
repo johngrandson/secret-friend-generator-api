@@ -29,14 +29,16 @@ class TestCompressionEvaluatorEdgeCases:
     def valid_json_file(self, tmp_path):
         """Create valid JSON file."""
         f = tmp_path / "valid.json"
-        f.write_text('{"messages": [{"role": "user", "content": "hello"}]}', encoding='utf-8')
+        f.write_text(
+            '{"messages": [{"role": "user", "content": "hello"}]}', encoding="utf-8"
+        )
         return str(f)
 
     @pytest.fixture
     def valid_text_file(self, tmp_path):
         """Create valid text file."""
         f = tmp_path / "compressed.txt"
-        f.write_text("Summary of conversation", encoding='utf-8')
+        f.write_text("Summary of conversation", encoding="utf-8")
         return str(f)
 
     def run_script(self, *args, timeout=30):
@@ -47,7 +49,9 @@ class TestCompressionEvaluatorEdgeCases:
 
     def test_missing_file_exits_1(self, tmp_path):
         """Test exit code 1 when file not found."""
-        result = self.run_script("evaluate", "/nonexistent/file.json", str(tmp_path / "c.txt"))
+        result = self.run_script(
+            "evaluate", "/nonexistent/file.json", str(tmp_path / "c.txt")
+        )
         assert result.returncode == 1
         assert "File not found" in result.stderr
 
@@ -61,7 +65,7 @@ class TestCompressionEvaluatorEdgeCases:
     def test_invalid_json_exits_1(self, tmp_path, valid_text_file):
         """Test exit code 1 when JSON is invalid."""
         bad_json = tmp_path / "bad.json"
-        bad_json.write_text("{invalid json content", encoding='utf-8')
+        bad_json.write_text("{invalid json content", encoding="utf-8")
 
         result = self.run_script("evaluate", str(bad_json), valid_text_file)
         assert result.returncode == 1
@@ -84,7 +88,7 @@ class TestCompressionEvaluatorEdgeCases:
     def test_generate_probes_invalid_json(self, tmp_path):
         """Test generate-probes with invalid JSON."""
         bad = tmp_path / "bad.json"
-        bad.write_text("not valid json {{{", encoding='utf-8')
+        bad.write_text("not valid json {{{", encoding="utf-8")
 
         result = self.run_script("generate-probes", str(bad))
         assert result.returncode == 1
@@ -101,25 +105,30 @@ class TestCompressionEvaluatorEdgeCases:
         """Test UTF-8 encoding with special characters."""
         utf8_file = tmp_path / "utf8.json"
         content = {"messages": [{"role": "user", "content": "日本語テスト émojis 🎉"}]}
-        utf8_file.write_text(json.dumps(content), encoding='utf-8')
+        utf8_file.write_text(json.dumps(content), encoding="utf-8")
 
         compressed = tmp_path / "compressed.txt"
-        compressed.write_text("Summary with 日本語 and émojis 🎉", encoding='utf-8')
+        compressed.write_text("Summary with 日本語 and émojis 🎉", encoding="utf-8")
 
         result = self.run_script("evaluate", str(utf8_file), str(compressed))
         assert result.returncode == 0
 
-    @pytest.mark.skipif(os.name == 'nt', reason="Permission test not reliable on Windows")
+    @pytest.mark.skipif(
+        os.name == "nt", reason="Permission test not reliable on Windows"
+    )
     def test_permission_denied(self, tmp_path):
         """Test permission denied error."""
         protected = tmp_path / "protected.json"
-        protected.write_text('{"messages": []}', encoding='utf-8')
+        protected.write_text('{"messages": []}', encoding="utf-8")
         os.chmod(protected, 0o000)
 
         try:
             result = self.run_script("generate-probes", str(protected))
             assert result.returncode == 1
-            assert "Permission denied" in result.stderr or "permission" in result.stderr.lower()
+            assert (
+                "Permission denied" in result.stderr
+                or "permission" in result.stderr.lower()
+            )
         finally:
             os.chmod(protected, stat.S_IRUSR | stat.S_IWUSR)
 
@@ -134,10 +143,10 @@ class TestContextAnalyzerEdgeCases:
         content = {
             "messages": [
                 {"role": "user", "content": "implement feature X"},
-                {"role": "assistant", "content": "I'll help with that"}
+                {"role": "assistant", "content": "I'll help with that"},
             ]
         }
-        f.write_text(json.dumps(content), encoding='utf-8')
+        f.write_text(json.dumps(content), encoding="utf-8")
         return str(f)
 
     def run_script(self, *args, timeout=30):
@@ -155,7 +164,7 @@ class TestContextAnalyzerEdgeCases:
     def test_invalid_json_exits_1(self, tmp_path):
         """Test exit code 1 when JSON is invalid."""
         bad = tmp_path / "bad.json"
-        bad.write_text("not json", encoding='utf-8')
+        bad.write_text("not json", encoding="utf-8")
 
         result = self.run_script("analyze", str(bad))
         assert result.returncode == 1
@@ -174,10 +183,10 @@ class TestContextAnalyzerEdgeCases:
         content = {
             "messages": [
                 {"role": "user", "content": "日本語で説明してください"},
-                {"role": "assistant", "content": "はい、説明します。émojis: 🎉🚀"}
+                {"role": "assistant", "content": "はい、説明します。émojis: 🎉🚀"},
             ]
         }
-        utf8_file.write_text(json.dumps(content, ensure_ascii=False), encoding='utf-8')
+        utf8_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
 
         result = self.run_script("analyze", str(utf8_file))
         assert result.returncode == 0
@@ -185,7 +194,7 @@ class TestContextAnalyzerEdgeCases:
     def test_empty_messages_array(self, tmp_path):
         """Test handling of empty messages array."""
         f = tmp_path / "empty.json"
-        f.write_text('{"messages": []}', encoding='utf-8')
+        f.write_text('{"messages": []}', encoding="utf-8")
 
         result = self.run_script("analyze", str(f))
         assert result.returncode == 0
@@ -195,30 +204,37 @@ class TestContextAnalyzerEdgeCases:
         f = tmp_path / "direct.json"
         content = [
             {"role": "user", "content": "hello"},
-            {"role": "assistant", "content": "hi"}
+            {"role": "assistant", "content": "hi"},
         ]
-        f.write_text(json.dumps(content), encoding='utf-8')
+        f.write_text(json.dumps(content), encoding="utf-8")
 
         result = self.run_script("analyze", str(f))
         assert result.returncode == 0
 
-    @pytest.mark.skipif(os.name == 'nt', reason="Permission test not reliable on Windows")
+    @pytest.mark.skipif(
+        os.name == "nt", reason="Permission test not reliable on Windows"
+    )
     def test_permission_denied(self, tmp_path):
         """Test permission denied error."""
         protected = tmp_path / "protected.json"
-        protected.write_text('{"messages": []}', encoding='utf-8')
+        protected.write_text('{"messages": []}', encoding="utf-8")
         os.chmod(protected, 0o000)
 
         try:
             result = self.run_script("analyze", str(protected))
             assert result.returncode == 1
-            assert "Permission denied" in result.stderr or "permission" in result.stderr.lower()
+            assert (
+                "Permission denied" in result.stderr
+                or "permission" in result.stderr.lower()
+            )
         finally:
             os.chmod(protected, stat.S_IRUSR | stat.S_IWUSR)
 
     def test_with_keywords_filter(self, valid_context_file):
         """Test analyze with keywords filter."""
-        result = self.run_script("analyze", valid_context_file, "--keywords", "feature,implement")
+        result = self.run_script(
+            "analyze", valid_context_file, "--keywords", "feature,implement"
+        )
         assert result.returncode == 0
 
     def test_with_limit(self, valid_context_file):

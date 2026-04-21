@@ -232,36 +232,61 @@ ALL_EXAMPLES = [
     {"category": "webgl", "file": "webgl_video_kinect.html"},
     {"category": "webgl", "file": "webgl_video_panorama_equirectangular.html"},
     {"category": "webgl", "file": "webgl_watch.html"},
-
     # webgl / postprocessing category (27 examples)
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_3dlut.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_advanced.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_afterimage.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_backgrounds.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_transition.html"},
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_advanced.html",
+    },
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_afterimage.html",
+    },
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_backgrounds.html",
+    },
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_transition.html",
+    },
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_dof.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_dof2.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_fxaa.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_glitch.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_godrays.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_gtao.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_rgb_halftone.html"},
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_rgb_halftone.html",
+    },
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_masking.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_material_ao.html"},
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_material_ao.html",
+    },
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_ssaa.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_outline.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_pixel.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_procedural.html"},
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_procedural.html",
+    },
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_sao.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_smaa.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_sobel.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_ssao.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_ssr.html"},
     {"category": "webgl / postprocessing", "file": "webgl_postprocessing_taa.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_unreal_bloom.html"},
-    {"category": "webgl / postprocessing", "file": "webgl_postprocessing_unreal_bloom_selective.html"},
-
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_unreal_bloom.html",
+    },
+    {
+        "category": "webgl / postprocessing",
+        "file": "webgl_postprocessing_unreal_bloom_selective.html",
+    },
     # webgl / advanced category (48 examples)
     {"category": "webgl / advanced", "file": "webgl_clipculldistance.html"},
     {"category": "webgl / advanced", "file": "webgl_custom_attributes.html"},
@@ -291,7 +316,6 @@ ALL_EXAMPLES = [
     {"category": "webgl / advanced", "file": "webgl_ubo.html"},
     {"category": "webgl / advanced", "file": "webgl_ubo_arrays.html"},
     {"category": "webgl / advanced", "file": "webgl_worker_offscreencanvas.html"},
-
     # webgpu (wip) category (190 examples)
     {"category": "webgpu (wip)", "file": "webgpu_audio_processing.html"},
     {"category": "webgpu (wip)", "file": "webgpu_backdrop.html"},
@@ -442,7 +466,10 @@ ALL_EXAMPLES = [
     {"category": "webgpu (wip)", "file": "webgpu_tonemapping.html"},
     {"category": "webgpu (wip)", "file": "webgpu_tsl_angular_slicing.html"},
     {"category": "webgpu (wip)", "file": "webgpu_tsl_coffee_smoke.html"},
-    {"category": "webgpu (wip)", "file": "webgpu_tsl_compute_attractors_particles.html"},
+    {
+        "category": "webgpu (wip)",
+        "file": "webgpu_tsl_compute_attractors_particles.html",
+    },
     {"category": "webgpu (wip)", "file": "webgpu_tsl_earth.html"},
     {"category": "webgpu (wip)", "file": "webgpu_tsl_editor.html"},
     {"category": "webgpu (wip)", "file": "webgpu_tsl_galaxy.html"},
@@ -466,13 +493,11 @@ ALL_EXAMPLES = [
     {"category": "webgpu (wip)", "file": "webgpu_xr_rollercoaster.html"},
     {"category": "webgpu (wip)", "file": "webgpu_xr_cubes.html"},
     {"category": "webgpu (wip)", "file": "webgpu_xr_native_layers.html"},
-
     # webaudio category (4 examples)
     {"category": "webaudio", "file": "webaudio_orientation.html"},
     {"category": "webaudio", "file": "webaudio_sandbox.html"},
     {"category": "webaudio", "file": "webaudio_timing.html"},
     {"category": "webaudio", "file": "webaudio_visualizer.html"},
-
     # webxr category (26 examples)
     {"category": "webxr", "file": "webxr_ar_camera_assisted.html"},
     {"category": "webxr", "file": "webxr_ar_cones.html"},
@@ -499,10 +524,8 @@ ALL_EXAMPLES = [
     {"category": "webxr", "file": "webxr_xr_haptics.html"},
     {"category": "webxr", "file": "webxr_xr_paint.html"},
     {"category": "webxr", "file": "webxr_xr_sculpt.html"},
-
     # games category (1 example)
     {"category": "games", "file": "games_fps.html"},
-
     # physics category (13 examples)
     {"category": "physics", "file": "physics_ammo_break.html"},
     {"category": "physics", "file": "physics_ammo_cloth.html"},
@@ -517,7 +540,6 @@ ALL_EXAMPLES = [
     {"category": "physics", "file": "physics_rapier_character_controller.html"},
     {"category": "physics", "file": "physics_rapier_vehicle_controller.html"},
     {"category": "physics", "file": "physics_rapier_terrain.html"},
-
     # misc category (20 examples)
     {"category": "misc", "file": "misc_animation_groups.html"},
     {"category": "misc", "file": "misc_animation_keys.html"},
@@ -539,10 +561,8 @@ ALL_EXAMPLES = [
     {"category": "misc", "file": "misc_exporter_exr.html"},
     {"category": "misc", "file": "misc_exporter_ktx2.html"},
     {"category": "misc", "file": "misc_raycaster_helper.html"},
-
     # css2d category (1 example)
     {"category": "css2d", "file": "css2d_label.html"},
-
     # css3d category (6 examples)
     {"category": "css3d", "file": "css3d_molecules.html"},
     {"category": "css3d", "file": "css3d_orthographic.html"},
@@ -550,11 +570,9 @@ ALL_EXAMPLES = [
     {"category": "css3d", "file": "css3d_sandbox.html"},
     {"category": "css3d", "file": "css3d_sprites.html"},
     {"category": "css3d", "file": "css3d_youtube.html"},
-
     # svg category (2 examples)
     {"category": "svg", "file": "svg_lines.html"},
     {"category": "svg", "file": "svg_sandbox.html"},
-
     # tests category (2 examples)
     {"category": "tests", "file": "webgl_furnace_test.html"},
     {"category": "tests", "file": "misc_uv_tests.html"},
@@ -563,16 +581,16 @@ ALL_EXAMPLES = [
 
 def extract_keywords_from_file(filename):
     """Extract keywords from filename"""
-    base = filename.replace('.html', '')
-    parts = base.split('_')
-    return ', '.join([p for p in parts if len(p) > 1])
+    base = filename.replace(".html", "")
+    parts = base.split("_")
+    return ", ".join([p for p in parts if len(p) > 1])
 
 
 def extract_name_from_file(filename):
     """Extract display name from filename"""
-    base = filename.replace('.html', '')
-    parts = base.split('_')[1:]  # Remove prefix like 'webgl'
-    return ' / '.join(parts)
+    base = filename.replace(".html", "")
+    parts = base.split("_")[1:]  # Remove prefix like 'webgl'
+    return " / ".join(parts)
 
 
 def generate_tracking_csv():
@@ -581,19 +599,33 @@ def generate_tracking_csv():
 
     rows = []
     for i, ex in enumerate(ALL_EXAMPLES, 1):
-        rows.append({
-            'ID': i,
-            'Category': ex['category'],
-            'Name': extract_name_from_file(ex['file']),
-            'File': ex['file'],
-            'URL': f"https://threejs.org/examples/{ex['file']}",
-            'Keywords': extract_keywords_from_file(ex['file']),
-            'Status': 'pending',
-            'Extracted_At': ''
-        })
+        rows.append(
+            {
+                "ID": i,
+                "Category": ex["category"],
+                "Name": extract_name_from_file(ex["file"]),
+                "File": ex["file"],
+                "URL": f"https://threejs.org/examples/{ex['file']}",
+                "Keywords": extract_keywords_from_file(ex["file"]),
+                "Status": "pending",
+                "Extracted_At": "",
+            }
+        )
 
-    with open(tracking_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=['ID', 'Category', 'Name', 'File', 'URL', 'Keywords', 'Status', 'Extracted_At'])
+    with open(tracking_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "ID",
+                "Category",
+                "Name",
+                "File",
+                "URL",
+                "Keywords",
+                "Status",
+                "Extracted_At",
+            ],
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -608,59 +640,78 @@ def generate_examples_csv():
 
     rows = []
     for i, ex in enumerate(ALL_EXAMPLES, 1):
-        name = extract_name_from_file(ex['file'])
-        keywords = extract_keywords_from_file(ex['file'])
+        name = extract_name_from_file(ex["file"])
+        keywords = extract_keywords_from_file(ex["file"])
 
         # Determine complexity based on category
         complexity = "medium"
-        if "advanced" in ex['category'] or "gpgpu" in ex['file'] or "compute" in ex['file']:
+        if (
+            "advanced" in ex["category"]
+            or "gpgpu" in ex["file"]
+            or "compute" in ex["file"]
+        ):
             complexity = "high"
-        elif "basic" in ex['file'] or ex['category'] in ['css2d', 'css3d', 'svg']:
+        elif "basic" in ex["file"] or ex["category"] in ["css2d", "css3d", "svg"]:
             complexity = "low"
 
         # Generate use cases based on keywords
         use_cases = []
-        file_lower = ex['file'].lower()
-        if 'animation' in file_lower:
-            use_cases.append('character animation')
-        if 'loader' in file_lower:
-            use_cases.append('model loading')
-        if 'material' in file_lower:
-            use_cases.append('material effects')
-        if 'postprocessing' in file_lower:
-            use_cases.append('visual effects')
-        if 'shadow' in file_lower:
-            use_cases.append('realistic lighting')
-        if 'physics' in file_lower:
-            use_cases.append('physics simulation')
-        if 'xr' in file_lower or 'vr' in file_lower or 'ar' in file_lower:
-            use_cases.append('VR/AR experience')
-        if 'interactive' in file_lower or 'raycaster' in file_lower:
-            use_cases.append('user interaction')
-        if 'particle' in file_lower or 'points' in file_lower:
-            use_cases.append('particle effects')
-        if 'terrain' in file_lower or 'geometry' in file_lower:
-            use_cases.append('procedural generation')
+        file_lower = ex["file"].lower()
+        if "animation" in file_lower:
+            use_cases.append("character animation")
+        if "loader" in file_lower:
+            use_cases.append("model loading")
+        if "material" in file_lower:
+            use_cases.append("material effects")
+        if "postprocessing" in file_lower:
+            use_cases.append("visual effects")
+        if "shadow" in file_lower:
+            use_cases.append("realistic lighting")
+        if "physics" in file_lower:
+            use_cases.append("physics simulation")
+        if "xr" in file_lower or "vr" in file_lower or "ar" in file_lower:
+            use_cases.append("VR/AR experience")
+        if "interactive" in file_lower or "raycaster" in file_lower:
+            use_cases.append("user interaction")
+        if "particle" in file_lower or "points" in file_lower:
+            use_cases.append("particle effects")
+        if "terrain" in file_lower or "geometry" in file_lower:
+            use_cases.append("procedural generation")
         if not use_cases:
-            use_cases.append('3D visualization')
+            use_cases.append("3D visualization")
 
         # Generate description
         desc = f"Three.js {ex['category']} example demonstrating {name.replace(' / ', ', ')}"
 
-        rows.append({
-            'ID': i,
-            'Category': ex['category'],
-            'Name': name,
-            'File': ex['file'],
-            'URL': f"https://threejs.org/examples/{ex['file']}",
-            'Keywords': keywords,
-            'Complexity': complexity,
-            'Use Cases': '; '.join(use_cases),
-            'Description': desc
-        })
+        rows.append(
+            {
+                "ID": i,
+                "Category": ex["category"],
+                "Name": name,
+                "File": ex["file"],
+                "URL": f"https://threejs.org/examples/{ex['file']}",
+                "Keywords": keywords,
+                "Complexity": complexity,
+                "Use Cases": "; ".join(use_cases),
+                "Description": desc,
+            }
+        )
 
-    with open(examples_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=['ID', 'Category', 'Name', 'File', 'URL', 'Keywords', 'Complexity', 'Use Cases', 'Description'])
+    with open(examples_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "ID",
+                "Category",
+                "Name",
+                "File",
+                "URL",
+                "Keywords",
+                "Complexity",
+                "Use Cases",
+                "Description",
+            ],
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -675,7 +726,7 @@ if __name__ == "__main__":
     # Count by category
     categories = {}
     for ex in ALL_EXAMPLES:
-        cat = ex['category']
+        cat = ex["category"]
         categories[cat] = categories.get(cat, 0) + 1
 
     print("\nExamples by category:")

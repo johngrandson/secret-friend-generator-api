@@ -23,6 +23,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 
+
 def _parse_env_file_fallback(path) -> Dict[str, str]:
     """
     Pure-Python fallback .env parser when python-dotenv is not installed.
@@ -42,20 +43,21 @@ def _parse_env_file_fallback(path) -> Dict[str, str]:
     """
     env_vars = {}
     try:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             for line in f:
                 line = line.strip()
                 # Skip empty lines and comments
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     continue
                 # Parse KEY=value
-                if '=' in line:
-                    key, value = line.split('=', 1)
+                if "=" in line:
+                    key, value = line.split("=", 1)
                     key = key.strip()
                     value = value.strip()
                     # Remove surrounding quotes
-                    if (value.startswith('"') and value.endswith('"')) or \
-                       (value.startswith("'") and value.endswith("'")):
+                    if (value.startswith('"') and value.endswith('"')) or (
+                        value.startswith("'") and value.endswith("'")
+                    ):
                         value = value[1:-1]
                     env_vars[key] = value
     except Exception:
@@ -76,7 +78,7 @@ def find_project_root() -> Optional[Path]:
 
     # Check current directory and all parents
     for directory in [current] + list(current.parents):
-        if (directory / '.git').exists() or (directory / '.claude').exists():
+        if (directory / ".git").exists() or (directory / ".claude").exists():
             return directory
 
     return None
@@ -103,37 +105,31 @@ def get_env_file_paths(skill: Optional[str] = None) -> List[Tuple[str, Path]]:
     # Priority 2-4: Project-level configs (if project root found)
     if project_root:
         if skill:
-            paths.append((
-                f"Project skill-specific ({skill})",
-                project_root / '.claude' / 'skills' / skill / '.env'
-            ))
+            paths.append(
+                (
+                    f"Project skill-specific ({skill})",
+                    project_root / ".claude" / "skills" / skill / ".env",
+                )
+            )
 
-        paths.append((
-            "Project skills shared",
-            project_root / '.claude' / 'skills' / '.env'
-        ))
+        paths.append(
+            ("Project skills shared", project_root / ".claude" / "skills" / ".env")
+        )
 
-        paths.append((
-            "Project global",
-            project_root / '.claude' / '.env'
-        ))
+        paths.append(("Project global", project_root / ".claude" / ".env"))
 
     # Priority 5-7: User-level configs
     if skill:
-        paths.append((
-            f"User skill-specific ({skill})",
-            home / '.claude' / 'skills' / skill / '.env'
-        ))
+        paths.append(
+            (
+                f"User skill-specific ({skill})",
+                home / ".claude" / "skills" / skill / ".env",
+            )
+        )
 
-    paths.append((
-        "User skills shared",
-        home / '.claude' / 'skills' / '.env'
-    ))
+    paths.append(("User skills shared", home / ".claude" / "skills" / ".env"))
 
-    paths.append((
-        "User global",
-        home / '.claude' / '.env'
-    ))
+    paths.append(("User global", home / ".claude" / ".env"))
 
     return paths
 
@@ -142,7 +138,7 @@ def resolve_env(
     var_name: str,
     skill: Optional[str] = None,
     default: Optional[str] = None,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> Optional[str]:
     """
     Resolve environment variable following Claude Code hierarchy.
@@ -204,7 +200,10 @@ def resolve_env(
         print(f"    Not found (file missing):", file=sys.stderr)
         for f in missing_files:
             print(f"      - {f}", file=sys.stderr)
-    print(f"    Tip: Add {var_name}=<value> to one of the .env files above", file=sys.stderr)
+    print(
+        f"    Tip: Add {var_name}=<value> to one of the .env files above",
+        file=sys.stderr,
+    )
 
     if default:
         if verbose:
@@ -268,7 +267,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Resolve environment variables following Claude Code hierarchy',
+        description="Resolve environment variables following Claude Code hierarchy",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -283,16 +282,30 @@ Examples:
 
   # Show hierarchy
   %(prog)s --show-hierarchy --skill ai-multimodal
-        """
+        """,
     )
 
-    parser.add_argument('var_name', nargs='?', help='Environment variable name to resolve')
-    parser.add_argument('--skill', help='Skill name for skill-specific resolution')
-    parser.add_argument('--default', help='Default value if not found')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Show resolution details')
-    parser.add_argument('--find-all', action='store_true', help='Find all locations where variable is defined')
-    parser.add_argument('--show-hierarchy', action='store_true', help='Show resolution hierarchy')
-    parser.add_argument('--export', action='store_true', help='Output in export format for shell sourcing')
+    parser.add_argument(
+        "var_name", nargs="?", help="Environment variable name to resolve"
+    )
+    parser.add_argument("--skill", help="Skill name for skill-specific resolution")
+    parser.add_argument("--default", help="Default value if not found")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show resolution details"
+    )
+    parser.add_argument(
+        "--find-all",
+        action="store_true",
+        help="Find all locations where variable is defined",
+    )
+    parser.add_argument(
+        "--show-hierarchy", action="store_true", help="Show resolution hierarchy"
+    )
+    parser.add_argument(
+        "--export",
+        action="store_true",
+        help="Output in export format for shell sourcing",
+    )
 
     args = parser.parse_args()
 
@@ -311,14 +324,18 @@ Examples:
             print("=" * 60)
 
             for i, (description, value, path) in enumerate(results, start=1):
-                priority = i if i == 1 else i + 1  # Account for process.env being priority 1
+                priority = (
+                    i if i == 1 else i + 1
+                )  # Account for process.env being priority 1
                 print(f"\n{priority}. {description}")
                 if path:
                     print(f"   Path: {path}")
                 print(f"   Value: {value[:50]}{'...' if len(value) > 50 else ''}")
 
             print("\n" + "=" * 60)
-            print(f"✓ Resolved value (highest priority): {results[0][1][:50]}{'...' if len(results[0][1]) > 50 else ''}")
+            print(
+                f"✓ Resolved value (highest priority): {results[0][1][:50]}{'...' if len(results[0][1]) > 50 else ''}"
+            )
         else:
             print(f"❌ Variable '{args.var_name}' not found in any location")
             sys.exit(1)
@@ -337,5 +354,5 @@ Examples:
             sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -20,9 +20,9 @@ def url_to_path(url: str) -> str:
     """
     Convert a file: URL to a path.
     """
-    assert url.startswith(
-        "file:"
-    ), f"You can only turn file: urls into filenames (not {url!r})"
+    assert url.startswith("file:"), (
+        f"You can only turn file: urls into filenames (not {url!r})"
+    )
 
     _, netloc, path, _, _ = urllib.parse.urlsplit(url)
 

@@ -18,38 +18,116 @@ CSV_CONFIG = {
     "use-case": {
         "file": "use-cases.csv",
         "search_cols": ["Use Case", "Category", "Keywords", "Best Platforms"],
-        "output_cols": ["Use Case", "Category", "Keywords", "Prompt Template", "Key Elements", "Best Platforms", "Aspect Ratios", "Tips", "Example"]
+        "output_cols": [
+            "Use Case",
+            "Category",
+            "Keywords",
+            "Prompt Template",
+            "Key Elements",
+            "Best Platforms",
+            "Aspect Ratios",
+            "Tips",
+            "Example",
+        ],
     },
     "style": {
         "file": "styles.csv",
-        "search_cols": ["Style Name", "Category", "Keywords", "Description", "Best For"],
-        "output_cols": ["Style Name", "Category", "Description", "Key Characteristics", "Color Palette", "Best For", "Platforms", "Prompt Keywords"]
+        "search_cols": [
+            "Style Name",
+            "Category",
+            "Keywords",
+            "Description",
+            "Best For",
+        ],
+        "output_cols": [
+            "Style Name",
+            "Category",
+            "Description",
+            "Key Characteristics",
+            "Color Palette",
+            "Best For",
+            "Platforms",
+            "Prompt Keywords",
+        ],
     },
     "platform": {
         "file": "platforms.csv",
         "search_cols": ["Platform", "Type", "Keywords", "Strengths"],
-        "output_cols": ["Platform", "Type", "Prompt Style", "Key Parameters", "Strengths", "Limitations", "Aspect Ratios", "Best Practices"]
+        "output_cols": [
+            "Platform",
+            "Type",
+            "Prompt Style",
+            "Key Parameters",
+            "Strengths",
+            "Limitations",
+            "Aspect Ratios",
+            "Best Practices",
+        ],
     },
     "technique": {
         "file": "techniques.csv",
-        "search_cols": ["Technique", "Category", "Keywords", "Description", "When to Use"],
-        "output_cols": ["Technique", "Category", "Description", "When to Use", "Syntax Example", "Platforms", "Tips"]
+        "search_cols": [
+            "Technique",
+            "Category",
+            "Keywords",
+            "Description",
+            "When to Use",
+        ],
+        "output_cols": [
+            "Technique",
+            "Category",
+            "Description",
+            "When to Use",
+            "Syntax Example",
+            "Platforms",
+            "Tips",
+        ],
     },
     "lighting": {
         "file": "lighting.csv",
-        "search_cols": ["Lighting Type", "Category", "Keywords", "Description", "Mood", "Best For"],
-        "output_cols": ["Lighting Type", "Category", "Description", "Mood", "Best For", "Prompt Keywords", "Technical Notes"]
+        "search_cols": [
+            "Lighting Type",
+            "Category",
+            "Keywords",
+            "Description",
+            "Mood",
+            "Best For",
+        ],
+        "output_cols": [
+            "Lighting Type",
+            "Category",
+            "Description",
+            "Mood",
+            "Best For",
+            "Prompt Keywords",
+            "Technical Notes",
+        ],
     },
     "template": {
         "file": "nano-banana-templates.csv",
         "search_cols": ["Category", "Template Name", "Keywords"],
-        "output_cols": ["Category", "Template Name", "Keywords", "Prompt Template", "Aspect Ratio", "Tips"]
+        "output_cols": [
+            "Category",
+            "Template Name",
+            "Keywords",
+            "Prompt Template",
+            "Aspect Ratio",
+            "Tips",
+        ],
     },
     "awesome": {
         "file": "awesome-prompts.csv",
         "search_cols": ["title", "description", "prompt"],
-        "output_cols": ["id", "title", "category", "description", "prompt", "author", "source"]
-    }
+        "output_cols": [
+            "id",
+            "title",
+            "category",
+            "description",
+            "prompt",
+            "author",
+            "source",
+        ],
+    },
 }
 
 
@@ -69,7 +147,7 @@ class BM25:
 
     def tokenize(self, text):
         """Lowercase, split, remove punctuation, filter short words"""
-        text = re.sub(r'[^\w\s]', ' ', str(text).lower())
+        text = re.sub(r"[^\w\s]", " ", str(text).lower())
         return [w for w in text.split() if len(w) > 2]
 
     def fit(self, documents):
@@ -108,7 +186,9 @@ class BM25:
                     tf = term_freqs[token]
                     idf = self.idf[token]
                     numerator = tf * (self.k1 + 1)
-                    denominator = tf + self.k1 * (1 - self.b + self.b * doc_len / self.avgdl)
+                    denominator = tf + self.k1 * (
+                        1 - self.b + self.b * doc_len / self.avgdl
+                    )
                     score += idf * numerator / denominator
 
             scores.append((idx, score))
@@ -119,7 +199,7 @@ class BM25:
 # ============ SEARCH FUNCTIONS ============
 def _load_csv(filepath):
     """Load CSV and return list of dicts"""
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -153,14 +233,92 @@ def detect_domain(query):
     query_lower = query.lower()
 
     domain_keywords = {
-        "use-case": ["avatar", "profile", "thumbnail", "poster", "social", "youtube", "instagram", "marketing", "product", "e-commerce", "infographic", "comic", "game", "app", "web", "header", "banner"],
-        "style": ["style", "aesthetic", "photorealistic", "anime", "manga", "3d", "render", "illustration", "pixel", "watercolor", "oil", "cyberpunk", "vaporwave", "minimalist", "vintage", "retro"],
-        "platform": ["midjourney", "dalle", "dall-e", "stable diffusion", "flux", "nano banana", "gemini", "imagen", "ideogram", "leonardo", "firefly", "platform", "tool"],
-        "technique": ["prompt", "technique", "weight", "emphasis", "negative", "json", "structured", "iteration", "reference", "identity", "multi-panel", "search grounding"],
-        "lighting": ["lighting", "light", "shadow", "golden hour", "blue hour", "rembrandt", "butterfly", "neon", "volumetric", "softbox", "rim light", "studio"]
+        "use-case": [
+            "avatar",
+            "profile",
+            "thumbnail",
+            "poster",
+            "social",
+            "youtube",
+            "instagram",
+            "marketing",
+            "product",
+            "e-commerce",
+            "infographic",
+            "comic",
+            "game",
+            "app",
+            "web",
+            "header",
+            "banner",
+        ],
+        "style": [
+            "style",
+            "aesthetic",
+            "photorealistic",
+            "anime",
+            "manga",
+            "3d",
+            "render",
+            "illustration",
+            "pixel",
+            "watercolor",
+            "oil",
+            "cyberpunk",
+            "vaporwave",
+            "minimalist",
+            "vintage",
+            "retro",
+        ],
+        "platform": [
+            "midjourney",
+            "dalle",
+            "dall-e",
+            "stable diffusion",
+            "flux",
+            "nano banana",
+            "gemini",
+            "imagen",
+            "ideogram",
+            "leonardo",
+            "firefly",
+            "platform",
+            "tool",
+        ],
+        "technique": [
+            "prompt",
+            "technique",
+            "weight",
+            "emphasis",
+            "negative",
+            "json",
+            "structured",
+            "iteration",
+            "reference",
+            "identity",
+            "multi-panel",
+            "search grounding",
+        ],
+        "lighting": [
+            "lighting",
+            "light",
+            "shadow",
+            "golden hour",
+            "blue hour",
+            "rembrandt",
+            "butterfly",
+            "neon",
+            "volumetric",
+            "softbox",
+            "rim light",
+            "studio",
+        ],
     }
 
-    scores = {domain: sum(1 for kw in keywords if kw in query_lower) for domain, keywords in domain_keywords.items()}
+    scores = {
+        domain: sum(1 for kw in keywords if kw in query_lower)
+        for domain, keywords in domain_keywords.items()
+    }
     best = max(scores, key=scores.get)
     return best if scores[best] > 0 else "style"
 
@@ -176,14 +334,16 @@ def search(query, domain=None, max_results=MAX_RESULTS):
     if not filepath.exists():
         return {"error": f"File not found: {filepath}", "domain": domain}
 
-    results = _search_csv(filepath, config["search_cols"], config["output_cols"], query, max_results)
+    results = _search_csv(
+        filepath, config["search_cols"], config["output_cols"], query, max_results
+    )
 
     return {
         "domain": domain,
         "query": query,
         "file": config["file"],
         "count": len(results),
-        "results": results
+        "results": results,
     }
 
 

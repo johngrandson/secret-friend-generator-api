@@ -49,7 +49,7 @@ class Bazaar(VersionControl):
         elif verbosity == 1:
             flags = []
         else:
-            flags = [f"-{'v'*verbosity}"]
+            flags = [f"-{'v' * verbosity}"]
         cmd_args = make_command(
             "checkout", "--lightweight", *flags, rev_options.to_args(), url, dest
         )

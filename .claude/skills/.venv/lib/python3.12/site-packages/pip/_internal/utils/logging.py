@@ -210,9 +210,9 @@ class RichPipStreamHandler(RichHandler):
         if getattr(record, "rich", False):
             assert isinstance(record.args, tuple)
             (rich_renderable,) = record.args
-            assert isinstance(
-                rich_renderable, (ConsoleRenderable, RichCast, str)
-            ), f"{rich_renderable} is not rich-console-renderable"
+            assert isinstance(rich_renderable, (ConsoleRenderable, RichCast, str)), (
+                f"{rich_renderable} is not rich-console-renderable"
+            )
 
             renderable: RenderableType = IndentedRenderable(
                 rich_renderable, indent=get_indentation()

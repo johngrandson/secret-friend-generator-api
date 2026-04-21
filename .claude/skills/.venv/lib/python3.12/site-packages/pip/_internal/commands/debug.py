@@ -96,8 +96,7 @@ def show_actual_vendor_versions(vendor_txt_versions: dict[str, str]) -> None:
             actual_version = expected_version
         elif parse_version(actual_version) != parse_version(expected_version):
             extra_message = (
-                " (CONFLICT: vendor.txt suggests version should"
-                f" be {expected_version})"
+                f" (CONFLICT: vendor.txt suggests version should be {expected_version})"
             )
         logger.info("%s==%s%s", module_name, actual_version, extra_message)
 

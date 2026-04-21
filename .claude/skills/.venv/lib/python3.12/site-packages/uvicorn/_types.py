@@ -227,7 +227,9 @@ class LifespanShutdownFailedEvent(TypedDict):
     message: str
 
 
-WebSocketEvent = WebSocketReceiveEvent | WebSocketDisconnectEvent | WebSocketConnectEvent
+WebSocketEvent = (
+    WebSocketReceiveEvent | WebSocketDisconnectEvent | WebSocketConnectEvent
+)
 
 
 ASGIReceiveEvent = (
@@ -266,9 +268,13 @@ ASGISendCallable = Callable[[ASGISendEvent], Awaitable[None]]
 class ASGI2Protocol(Protocol):
     def __init__(self, scope: Scope) -> None: ...  # pragma: no cover
 
-    async def __call__(self, receive: ASGIReceiveCallable, send: ASGISendCallable) -> None: ...  # pragma: no cover
+    async def __call__(
+        self, receive: ASGIReceiveCallable, send: ASGISendCallable
+    ) -> None: ...  # pragma: no cover
 
 
 ASGI2Application = type[ASGI2Protocol]
-ASGI3Application = Callable[[Scope, ASGIReceiveCallable, ASGISendCallable], Awaitable[None]]
+ASGI3Application = Callable[
+    [Scope, ASGIReceiveCallable, ASGISendCallable], Awaitable[None]
+]
 ASGIApplication = ASGI2Application | ASGI3Application

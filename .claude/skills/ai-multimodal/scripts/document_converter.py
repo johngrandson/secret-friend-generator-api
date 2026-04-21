@@ -47,7 +47,7 @@ def find_api_key() -> Optional[str]:
     4. .claude/.env (Claude global config)
     """
     # Priority 1: Already in process.env (highest)
-    api_key = os.getenv('GEMINI_API_KEY')
+    api_key = os.getenv("GEMINI_API_KEY")
     if api_key:
         return api_key
 
@@ -56,30 +56,30 @@ def find_api_key() -> Optional[str]:
         # Determine base paths
         script_dir = Path(__file__).parent
         skill_dir = script_dir.parent  # .claude/skills/ai-multimodal
-        skills_dir = skill_dir.parent   # .claude/skills
+        skills_dir = skill_dir.parent  # .claude/skills
         claude_dir = skills_dir.parent  # .claude
 
         # Priority 2: Skill-specific .env
-        env_file = skill_dir / '.env'
+        env_file = skill_dir / ".env"
         if env_file.exists():
             load_dotenv(env_file)
-            api_key = os.getenv('GEMINI_API_KEY')
+            api_key = os.getenv("GEMINI_API_KEY")
             if api_key:
                 return api_key
 
         # Priority 3: Shared skills .env
-        env_file = skills_dir / '.env'
+        env_file = skills_dir / ".env"
         if env_file.exists():
             load_dotenv(env_file)
-            api_key = os.getenv('GEMINI_API_KEY')
+            api_key = os.getenv("GEMINI_API_KEY")
             if api_key:
                 return api_key
 
         # Priority 4: Claude global .env
-        env_file = claude_dir / '.env'
+        env_file = claude_dir / ".env"
         if env_file.exists():
             load_dotenv(env_file)
-            api_key = os.getenv('GEMINI_API_KEY')
+            api_key = os.getenv("GEMINI_API_KEY")
             if api_key:
                 return api_key
 
@@ -92,7 +92,7 @@ def find_project_root() -> Path:
 
     # Look for .git or .claude directory
     for parent in [script_dir] + list(script_dir.parents):
-        if (parent / '.git').exists() or (parent / '.claude').exists():
+        if (parent / ".git").exists() or (parent / ".claude").exists():
             return parent
 
     return script_dir
@@ -104,26 +104,26 @@ def get_mime_type(file_path: str) -> str:
 
     mime_types = {
         # Documents
-        '.pdf': 'application/pdf',
-        '.txt': 'text/plain',
-        '.html': 'text/html',
-        '.htm': 'text/html',
-        '.md': 'text/markdown',
-        '.csv': 'text/csv',
+        ".pdf": "application/pdf",
+        ".txt": "text/plain",
+        ".html": "text/html",
+        ".htm": "text/html",
+        ".md": "text/markdown",
+        ".csv": "text/csv",
         # Images
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.webp': 'image/webp',
-        '.heic': 'image/heic',
-        '.heif': 'image/heif',
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".heic": "image/heic",
+        ".heif": "image/heif",
         # Office (need to be uploaded as binary)
-        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     }
 
-    return mime_types.get(ext, 'application/octet-stream')
+    return mime_types.get(ext, "application/octet-stream")
 
 
 def upload_file(client: genai.Client, file_path: str, verbose: bool = False) -> Any:
@@ -136,17 +136,17 @@ def upload_file(client: genai.Client, file_path: str, verbose: bool = False) -> 
     # Wait for processing if needed
     max_wait = 300  # 5 minutes
     elapsed = 0
-    while myfile.state.name == 'PROCESSING' and elapsed < max_wait:
+    while myfile.state.name == "PROCESSING" and elapsed < max_wait:
         time.sleep(2)
         myfile = client.files.get(name=myfile.name)
         elapsed += 2
         if verbose and elapsed % 10 == 0:
             print(f"  Processing... {elapsed}s")
 
-    if myfile.state.name == 'FAILED':
+    if myfile.state.name == "FAILED":
         raise ValueError(f"File processing failed: {file_path}")
 
-    if myfile.state.name == 'PROCESSING':
+    if myfile.state.name == "PROCESSING":
         raise TimeoutError(f"Processing timeout after {max_wait}s: {file_path}")
 
     if verbose:
@@ -158,10 +158,10 @@ def upload_file(client: genai.Client, file_path: str, verbose: bool = False) -> 
 def convert_to_markdown(
     client: genai.Client,
     file_path: str,
-    model: str = 'gemini-2.5-flash',
+    model: str = "gemini-2.5-flash",
     custom_prompt: Optional[str] = None,
     verbose: bool = False,
-    max_retries: int = 3
+    max_retries: int = 3,
 ) -> Dict[str, Any]:
     """Convert a document to markdown using Gemini."""
 
@@ -192,39 +192,36 @@ Output only the markdown content without any preamble or explanation."""
                 myfile = upload_file(client, str(file_path), verbose)
                 content = [prompt, myfile]
             else:
-                with open(file_path, 'rb') as f:
+                with open(file_path, "rb") as f:
                     file_bytes = f.read()
 
                 mime_type = get_mime_type(str(file_path))
                 content = [
                     prompt,
-                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
                 ]
 
             # Generate markdown
-            response = client.models.generate_content(
-                model=model,
-                contents=content
-            )
+            response = client.models.generate_content(model=model, contents=content)
 
-            markdown_content = response.text if hasattr(response, 'text') else ''
+            markdown_content = response.text if hasattr(response, "text") else ""
 
             return {
-                'file': str(file_path),
-                'status': 'success',
-                'markdown': markdown_content
+                "file": str(file_path),
+                "status": "success",
+                "markdown": markdown_content,
             }
 
         except Exception as e:
             if attempt == max_retries - 1:
                 return {
-                    'file': str(file_path),
-                    'status': 'error',
-                    'error': str(e),
-                    'markdown': None
+                    "file": str(file_path),
+                    "status": "error",
+                    "error": str(e),
+                    "markdown": None,
                 }
 
-            wait_time = 2 ** attempt
+            wait_time = 2**attempt
             if verbose:
                 print(f"  Retry {attempt + 1} after {wait_time}s: {e}")
             time.sleep(wait_time)
@@ -234,9 +231,9 @@ def batch_convert(
     files: List[str],
     output_file: Optional[str] = None,
     auto_name: bool = False,
-    model: str = 'gemini-2.5-flash',
+    model: str = "gemini-2.5-flash",
     custom_prompt: Optional[str] = None,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> List[Dict[str, Any]]:
     """Batch convert multiple files to markdown."""
 
@@ -253,7 +250,7 @@ def batch_convert(
     # Determine output path
     if not output_file:
         project_root = find_project_root()
-        output_dir = project_root / 'docs' / 'assets'
+        output_dir = project_root / "docs" / "assets"
 
         if auto_name and len(files) == 1:
             # Auto-generate meaningful filename from input
@@ -261,7 +258,7 @@ def batch_convert(
             base_name = input_path.stem
             output_file = str(output_dir / f"{base_name}-extraction.md")
         else:
-            output_file = str(output_dir / 'document-extraction.md')
+            output_file = str(output_dir / "document-extraction.md")
 
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -276,17 +273,17 @@ def batch_convert(
             file_path=file_path,
             model=model,
             custom_prompt=custom_prompt,
-            verbose=verbose
+            verbose=verbose,
         )
 
         results.append(result)
 
         if verbose:
-            status = result.get('status', 'unknown')
+            status = result.get("status", "unknown")
             print(f"  Status: {status}")
 
     # Save combined markdown
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("# Document Extraction Results\n\n")
         f.write(f"Converted {len(files)} document(s) to markdown.\n\n")
         f.write("---\n\n")
@@ -294,18 +291,20 @@ def batch_convert(
         for result in results:
             f.write(f"## {Path(result['file']).name}\n\n")
 
-            if result['status'] == 'success' and result.get('markdown'):
-                f.write(result['markdown'])
+            if result["status"] == "success" and result.get("markdown"):
+                f.write(result["markdown"])
                 f.write("\n\n")
-            elif result['status'] == 'success':
-                f.write("**Note**: Conversion succeeded but no content was returned.\n\n")
+            elif result["status"] == "success":
+                f.write(
+                    "**Note**: Conversion succeeded but no content was returned.\n\n"
+                )
             else:
                 f.write(f"**Error**: {result.get('error', 'Unknown error')}\n\n")
 
             f.write("---\n\n")
 
     if verbose or True:  # Always show output location
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print(f"Converted: {len(results)} file(s)")
         print(f"Success: {sum(1 for r in results if r['status'] == 'success')}")
         print(f"Failed: {sum(1 for r in results if r['status'] == 'error')}")
@@ -316,7 +315,7 @@ def batch_convert(
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Convert documents to Markdown using Gemini API',
+        description="Convert documents to Markdown using Gemini API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -346,21 +345,30 @@ Supported formats:
   - Text formats (TXT, HTML, Markdown, CSV)
 
 Default output: <project-root>/docs/assets/document-extraction.md
-        """
+        """,
     )
 
-    parser.add_argument('--input', '-i', nargs='+', required=True,
-                       help='Input file(s) to convert')
-    parser.add_argument('--output', '-o',
-                       help='Output markdown file (default: docs/assets/document-extraction.md)')
-    parser.add_argument('--auto-name', '-a', action='store_true',
-                       help='Auto-generate meaningful output filename from input (e.g., document.pdf -> document-extraction.md)')
-    parser.add_argument('--model', default='gemini-2.5-flash',
-                       help='Gemini model to use (default: gemini-2.5-flash)')
-    parser.add_argument('--prompt', '-p',
-                       help='Custom prompt for conversion')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                       help='Verbose output')
+    parser.add_argument(
+        "--input", "-i", nargs="+", required=True, help="Input file(s) to convert"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        help="Output markdown file (default: docs/assets/document-extraction.md)",
+    )
+    parser.add_argument(
+        "--auto-name",
+        "-a",
+        action="store_true",
+        help="Auto-generate meaningful output filename from input (e.g., document.pdf -> document-extraction.md)",
+    )
+    parser.add_argument(
+        "--model",
+        default="gemini-2.5-flash",
+        help="Gemini model to use (default: gemini-2.5-flash)",
+    )
+    parser.add_argument("--prompt", "-p", help="Custom prompt for conversion")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -373,6 +381,7 @@ Default output: <project-root>/docs/assets/document-extraction.md
         else:
             # Try glob pattern
             import glob
+
             matched = glob.glob(file_pattern)
             files.extend([f for f in matched if Path(f).is_file()])
 
@@ -387,9 +396,9 @@ Default output: <project-root>/docs/assets/document-extraction.md
         auto_name=args.auto_name,
         model=args.model,
         custom_prompt=args.prompt,
-        verbose=args.verbose
+        verbose=args.verbose,
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

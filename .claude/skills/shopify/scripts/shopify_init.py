@@ -18,6 +18,7 @@ from dataclasses import dataclass
 @dataclass
 class EnvConfig:
     """Environment configuration container."""
+
     shopify_api_key: Optional[str] = None
     shopify_api_secret: Optional[str] = None
     shop_domain: Optional[str] = None
@@ -43,11 +44,11 @@ class EnvLoader:
             return env_vars
 
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        key, value = line.split('=', 1)
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
                         env_vars[key.strip()] = value.strip().strip('"').strip("'")
         except Exception as e:
             print(f"Warning: Failed to load {filepath}: {e}")
@@ -70,17 +71,17 @@ class EnvLoader:
         paths = []
 
         # skill/.env
-        skill_env = skill_dir / '.env'
+        skill_env = skill_dir / ".env"
         if skill_env.exists():
             paths.append(skill_env)
 
         # skills/.env
-        skills_env = skill_dir.parent / '.env'
+        skills_env = skill_dir.parent / ".env"
         if skills_env.exists():
             paths.append(skills_env)
 
         # .claude/.env
-        claude_env = skill_dir.parent.parent / '.env'
+        claude_env = skill_dir.parent.parent / ".env"
         if claude_env.exists():
             paths.append(claude_env)
 
@@ -104,24 +105,24 @@ class EnvLoader:
         # Load from .env files (reverse priority order)
         for env_path in reversed(EnvLoader.get_env_paths(skill_dir)):
             env_vars = EnvLoader.load_env_file(env_path)
-            if 'SHOPIFY_API_KEY' in env_vars:
-                config.shopify_api_key = env_vars['SHOPIFY_API_KEY']
-            if 'SHOPIFY_API_SECRET' in env_vars:
-                config.shopify_api_secret = env_vars['SHOPIFY_API_SECRET']
-            if 'SHOP_DOMAIN' in env_vars:
-                config.shop_domain = env_vars['SHOP_DOMAIN']
-            if 'SCOPES' in env_vars:
-                config.scopes = env_vars['SCOPES']
+            if "SHOPIFY_API_KEY" in env_vars:
+                config.shopify_api_key = env_vars["SHOPIFY_API_KEY"]
+            if "SHOPIFY_API_SECRET" in env_vars:
+                config.shopify_api_secret = env_vars["SHOPIFY_API_SECRET"]
+            if "SHOP_DOMAIN" in env_vars:
+                config.shop_domain = env_vars["SHOP_DOMAIN"]
+            if "SCOPES" in env_vars:
+                config.scopes = env_vars["SCOPES"]
 
         # Override with process environment (highest priority)
-        if 'SHOPIFY_API_KEY' in os.environ:
-            config.shopify_api_key = os.environ['SHOPIFY_API_KEY']
-        if 'SHOPIFY_API_SECRET' in os.environ:
-            config.shopify_api_secret = os.environ['SHOPIFY_API_SECRET']
-        if 'SHOP_DOMAIN' in os.environ:
-            config.shop_domain = os.environ['SHOP_DOMAIN']
-        if 'SCOPES' in os.environ:
-            config.scopes = os.environ['SCOPES']
+        if "SHOPIFY_API_KEY" in os.environ:
+            config.shopify_api_key = os.environ["SHOPIFY_API_KEY"]
+        if "SHOPIFY_API_SECRET" in os.environ:
+            config.shopify_api_secret = os.environ["SHOPIFY_API_SECRET"]
+        if "SHOP_DOMAIN" in os.environ:
+            config.shop_domain = os.environ["SHOP_DOMAIN"]
+        if "SCOPES" in os.environ:
+            config.scopes = os.environ["SCOPES"]
 
         return config
 
@@ -152,7 +153,7 @@ class ShopifyInitializer:
         if default:
             message = f"{message} [{default}]"
         user_input = input(f"{message}: ").strip()
-        return user_input if user_input else (default or '')
+        return user_input if user_input else (default or "")
 
     def select_option(self, message: str, options: List[str]) -> str:
         """
@@ -187,10 +188,7 @@ class ShopifyInitializer:
         """
         try:
             result = subprocess.run(
-                ['shopify', 'version'],
-                capture_output=True,
-                text=True,
-                timeout=5
+                ["shopify", "version"], capture_output=True, text=True, timeout=5
             )
             return result.returncode == 0
         except (subprocess.SubprocessError, FileNotFoundError):
@@ -207,13 +205,13 @@ class ShopifyInitializer:
         """
         config_content = f"""# Shopify App Configuration
 name = "{app_name}"
-client_id = "{self.config.shopify_api_key or 'YOUR_API_KEY'}"
+client_id = "{self.config.shopify_api_key or "YOUR_API_KEY"}"
 application_url = "https://your-app.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-dev_store_url = "{self.config.shop_domain or 'your-store.myshopify.com'}"
+dev_store_url = "{self.config.shop_domain or "your-store.myshopify.com"}"
 
 [access_scopes]
 scopes = "{scopes}"
@@ -230,11 +228,13 @@ customer_data_request_url = "/webhooks/gdpr/data-request"
 customer_deletion_url = "/webhooks/gdpr/customer-deletion"
 shop_deletion_url = "/webhooks/gdpr/shop-deletion"
 """
-        config_path = project_dir / 'shopify.app.toml'
-        config_path.write_text(config_content, encoding='utf-8')
+        config_path = project_dir / "shopify.app.toml"
+        config_path.write_text(config_content, encoding="utf-8")
         print(f"✓ Created {config_path}")
 
-    def create_extension_config(self, project_dir: Path, extension_name: str, extension_type: str) -> None:
+    def create_extension_config(
+        self, project_dir: Path, extension_name: str, extension_type: str
+    ) -> None:
         """
         Create shopify.extension.toml configuration file.
 
@@ -244,31 +244,33 @@ shop_deletion_url = "/webhooks/gdpr/shop-deletion"
             extension_type: Extension type
         """
         target_map = {
-            'checkout': 'purchase.checkout.block.render',
-            'admin_action': 'admin.product-details.action.render',
-            'admin_block': 'admin.product-details.block.render',
-            'pos': 'pos.home.tile.render'
+            "checkout": "purchase.checkout.block.render",
+            "admin_action": "admin.product-details.action.render",
+            "admin_block": "admin.product-details.block.render",
+            "pos": "pos.home.tile.render",
         }
 
         config_content = f"""name = "{extension_name}"
 type = "ui_extension"
-handle = "{extension_name.lower().replace(' ', '-')}"
+handle = "{extension_name.lower().replace(" ", "-")}"
 
 [extension_points]
 api_version = "2025-01"
 
 [[extension_points.targets]]
-target = "{target_map.get(extension_type, 'purchase.checkout.block.render')}"
+target = "{target_map.get(extension_type, "purchase.checkout.block.render")}"
 
 [capabilities]
 network_access = true
 api_access = true
 """
-        config_path = project_dir / 'shopify.extension.toml'
-        config_path.write_text(config_content, encoding='utf-8')
+        config_path = project_dir / "shopify.extension.toml"
+        config_path.write_text(config_content, encoding="utf-8")
         print(f"✓ Created {config_path}")
 
-    def create_readme(self, project_dir: Path, project_type: str, project_name: str) -> None:
+    def create_readme(
+        self, project_dir: Path, project_type: str, project_name: str
+    ) -> None:
         """
         Create README.md file.
 
@@ -303,8 +305,8 @@ shopify {project_type} deploy
 - [Shopify Documentation](https://shopify.dev/docs)
 - [Shopify CLI](https://shopify.dev/docs/api/shopify-cli)
 """
-        readme_path = project_dir / 'README.md'
-        readme_path.write_text(content, encoding='utf-8')
+        readme_path = project_dir / "README.md"
+        readme_path.write_text(content, encoding="utf-8")
         print(f"✓ Created {readme_path}")
 
     def init_app(self) -> None:
@@ -312,7 +314,9 @@ shopify {project_type} deploy
         print("\n=== Shopify App Initialization ===\n")
 
         app_name = self.prompt("App name", "my-shopify-app")
-        scopes = self.prompt("Access scopes", self.config.scopes or "read_products,write_products")
+        scopes = self.prompt(
+            "Access scopes", self.config.scopes or "read_products,write_products"
+        )
 
         project_dir = Path.cwd() / app_name
         project_dir.mkdir(exist_ok=True)
@@ -324,14 +328,13 @@ shopify {project_type} deploy
 
         # Create basic package.json
         package_json = {
-            "name": app_name.lower().replace(' ', '-'),
+            "name": app_name.lower().replace(" ", "-"),
             "version": "1.0.0",
-            "scripts": {
-                "dev": "shopify app dev",
-                "deploy": "shopify app deploy"
-            }
+            "scripts": {"dev": "shopify app dev", "deploy": "shopify app deploy"},
         }
-        (project_dir / 'package.json').write_text(json.dumps(package_json, indent=2), encoding='utf-8')
+        (project_dir / "package.json").write_text(
+            json.dumps(package_json, indent=2), encoding="utf-8"
+        )
         print(f"✓ Created package.json")
 
         print(f"\n✓ App '{app_name}' initialized successfully!")
@@ -344,7 +347,7 @@ shopify {project_type} deploy
         """Initialize Shopify extension project."""
         print("\n=== Shopify Extension Initialization ===\n")
 
-        extension_types = ['checkout', 'admin_action', 'admin_block', 'pos']
+        extension_types = ["checkout", "admin_action", "admin_block", "pos"]
         extension_type = self.select_option("Select extension type", extension_types)
 
         extension_name = self.prompt("Extension name", "my-extension")
@@ -385,15 +388,15 @@ shopify {project_type} deploy
             sys.exit(1)
 
         # Select project type
-        project_types = ['app', 'extension', 'theme']
+        project_types = ["app", "extension", "theme"]
         project_type = self.select_option("Select project type", project_types)
 
         # Initialize based on type
-        if project_type == 'app':
+        if project_type == "app":
             self.init_app()
-        elif project_type == 'extension':
+        elif project_type == "extension":
             self.init_extension()
-        elif project_type == 'theme':
+        elif project_type == "theme":
             self.init_theme()
 
 
@@ -419,5 +422,5 @@ def main() -> None:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

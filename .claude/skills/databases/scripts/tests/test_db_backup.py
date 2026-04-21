@@ -32,7 +32,7 @@ def sample_backup_info():
         timestamp=datetime.now(),
         size_bytes=1024000,
         compressed=True,
-        verified=True
+        verified=True,
     )
 
 
@@ -47,7 +47,7 @@ class TestBackupInfo:
             database_name="mydb",
             timestamp=datetime.now(),
             size_bytes=1024,
-            compressed=False
+            compressed=False,
         )
 
         assert info.filename == "backup.dump"
@@ -68,17 +68,14 @@ class TestBackupManager:
         assert manager.db_type == "mongodb"
         assert Path(temp_backup_dir).exists()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_backup_mongodb(self, mock_run, temp_backup_dir):
         """Test MongoDB backup creation."""
         mock_run.return_value = Mock(returncode=0, stderr="")
 
         manager = BackupManager("mongodb", temp_backup_dir)
         backup_info = manager.create_backup(
-            "mongodb://localhost",
-            "testdb",
-            compress=False,
-            verify=False
+            "mongodb://localhost", "testdb", compress=False, verify=False
         )
 
         assert backup_info is not None
@@ -86,21 +83,18 @@ class TestBackupManager:
         assert backup_info.database_name == "testdb"
         mock_run.assert_called_once()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_backup_postgres(self, mock_run, temp_backup_dir):
         """Test PostgreSQL backup creation."""
         mock_run.return_value = Mock(returncode=0, stderr="")
 
         manager = BackupManager("postgres", temp_backup_dir)
 
-        with patch('builtins.open', create=True) as mock_open:
+        with patch("builtins.open", create=True) as mock_open:
             mock_open.return_value.__enter__.return_value = MagicMock()
 
             backup_info = manager.create_backup(
-                "postgresql://localhost/testdb",
-                "testdb",
-                compress=False,
-                verify=False
+                "postgresql://localhost/testdb", "testdb", compress=False, verify=False
             )
 
             assert backup_info is not None
@@ -111,29 +105,24 @@ class TestBackupManager:
         """Test PostgreSQL backup without database name."""
         manager = BackupManager("postgres", temp_backup_dir)
         backup_info = manager.create_backup(
-            "postgresql://localhost",
-            database=None,
-            compress=False,
-            verify=False
+            "postgresql://localhost", database=None, compress=False, verify=False
         )
 
         assert backup_info is None
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_backup_with_compression(self, mock_run, temp_backup_dir):
         """Test backup with compression."""
         mock_run.return_value = Mock(returncode=0, stderr="")
 
         manager = BackupManager("mongodb", temp_backup_dir)
 
-        with patch('shutil.make_archive') as mock_archive, \
-             patch('shutil.rmtree') as mock_rmtree:
-
+        with (
+            patch("shutil.make_archive") as mock_archive,
+            patch("shutil.rmtree") as mock_rmtree,
+        ):
             backup_info = manager.create_backup(
-                "mongodb://localhost",
-                "testdb",
-                compress=True,
-                verify=False
+                "mongodb://localhost", "testdb", compress=True, verify=False
             )
 
             assert backup_info is not None
@@ -172,7 +161,7 @@ class TestBackupManager:
         assert backups[0].filename == sample_backup_info.filename
         assert backups[0].database_name == "testdb"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_restore_mongodb(self, mock_run, temp_backup_dir):
         """Test MongoDB restore."""
         mock_run.return_value = Mock(returncode=0, stderr="")
@@ -183,15 +172,12 @@ class TestBackupManager:
         backup_file = Path(temp_backup_dir) / "test_backup.dump"
         backup_file.touch()
 
-        result = manager.restore_backup(
-            "test_backup.dump",
-            "mongodb://localhost"
-        )
+        result = manager.restore_backup("test_backup.dump", "mongodb://localhost")
 
         assert result is True
         mock_run.assert_called_once()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_restore_postgres(self, mock_run, temp_backup_dir):
         """Test PostgreSQL restore."""
         mock_run.return_value = Mock(returncode=0, stderr="")
@@ -202,12 +188,11 @@ class TestBackupManager:
         backup_file = Path(temp_backup_dir) / "test_backup.sql"
         backup_file.write_text("SELECT 1;")
 
-        with patch('builtins.open', create=True) as mock_open:
+        with patch("builtins.open", create=True) as mock_open:
             mock_open.return_value.__enter__.return_value = MagicMock()
 
             result = manager.restore_backup(
-                "test_backup.sql",
-                "postgresql://localhost/testdb"
+                "test_backup.sql", "postgresql://localhost/testdb"
             )
 
             assert result is True
@@ -216,10 +201,7 @@ class TestBackupManager:
         """Test restore with non-existent backup file."""
         manager = BackupManager("mongodb", temp_backup_dir)
 
-        result = manager.restore_backup(
-            "nonexistent.dump",
-            "mongodb://localhost"
-        )
+        result = manager.restore_backup("nonexistent.dump", "mongodb://localhost")
 
         assert result is False
 
@@ -232,9 +214,7 @@ class TestBackupManager:
         backup_file.touch()
 
         result = manager.restore_backup(
-            "test_backup.dump",
-            "mongodb://localhost",
-            dry_run=True
+            "test_backup.dump", "mongodb://localhost", dry_run=True
         )
 
         assert result is True

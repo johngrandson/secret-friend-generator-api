@@ -24,9 +24,12 @@ def load_file(path: str, as_json: bool = True):
     try:
         size_mb = os.path.getsize(path) / (1024 * 1024)
         if size_mb > MAX_FILE_SIZE_MB:
-            print(f"Error: File too large ({size_mb:.1f}MB). Max {MAX_FILE_SIZE_MB}MB", file=sys.stderr)
+            print(
+                f"Error: File too large ({size_mb:.1f}MB). Max {MAX_FILE_SIZE_MB}MB",
+                file=sys.stderr,
+            )
             sys.exit(1)
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f) if as_json else f.read()
     except FileNotFoundError:
         print(f"Error: File not found: {path}", file=sys.stderr)
@@ -40,10 +43,10 @@ def load_file(path: str, as_json: bool = True):
 
 
 class ProbeType(Enum):
-    RECALL = "recall"           # Factual retention
-    ARTIFACT = "artifact"       # File tracking
+    RECALL = "recall"  # Factual retention
+    ARTIFACT = "artifact"  # File tracking
     CONTINUATION = "continuation"  # Task planning
-    DECISION = "decision"       # Reasoning chains
+    DECISION = "decision"  # Reasoning chains
 
 
 @dataclass
@@ -78,7 +81,7 @@ DIMENSIONS = {
     "artifact_trail": {"weight": 0.20, "description": "File tracking"},
     "completeness": {"weight": 0.20, "description": "Coverage and depth"},
     "continuity": {"weight": 0.15, "description": "Work continuation"},
-    "instruction_following": {"weight": 0.10, "description": "Constraint adherence"}
+    "instruction_following": {"weight": 0.10, "description": "Constraint adherence"},
 }
 
 
@@ -95,7 +98,7 @@ def extract_facts(messages: list) -> list:
         (r"next step[s]?[:\s]+([^.]+)", "next_step"),
         (r"decided to\s+([^.]+)", "decision"),
         (r"implemented\s+([^.]+)", "implementation"),
-        (r"found that\s+([^.]+)", "finding")
+        (r"found that\s+([^.]+)", "finding"),
     ]
 
     for msg in messages:
@@ -112,7 +115,7 @@ def extract_files(messages: list) -> list:
     files = []
     patterns = [
         r"(?:created|modified|updated|edited|read)\s+[`'\"]?([a-zA-Z0-9_/.-]+\.[a-zA-Z]+)[`'\"]?",
-        r"file[:\s]+[`'\"]?([a-zA-Z0-9_/.-]+\.[a-zA-Z]+)[`'\"]?"
+        r"file[:\s]+[`'\"]?([a-zA-Z0-9_/.-]+\.[a-zA-Z]+)[`'\"]?",
     ]
 
     for msg in messages:
@@ -129,7 +132,7 @@ def extract_decisions(messages: list) -> list:
     patterns = [
         r"chose\s+([^.]+)\s+(?:because|since|over)",
         r"decided\s+(?:to\s+)?([^.]+)",
-        r"went with\s+([^.]+)"
+        r"went with\s+([^.]+)",
     ]
 
     for msg in messages:
@@ -147,36 +150,44 @@ def generate_probes(messages: list) -> list:
     # Recall probes from facts
     facts = extract_facts(messages)
     for fact in facts[:3]:  # Limit to 3 recall probes
-        probes.append(Probe(
-            type=ProbeType.RECALL,
-            question=f"What was the {fact['type'].replace('_', ' ')}?",
-            ground_truth=fact["content"]
-        ))
+        probes.append(
+            Probe(
+                type=ProbeType.RECALL,
+                question=f"What was the {fact['type'].replace('_', ' ')}?",
+                ground_truth=fact["content"],
+            )
+        )
 
     # Artifact probes from files
     files = extract_files(messages)
     if files:
-        probes.append(Probe(
-            type=ProbeType.ARTIFACT,
-            question="Which files have been modified or created?",
-            ground_truth=", ".join(files)
-        ))
+        probes.append(
+            Probe(
+                type=ProbeType.ARTIFACT,
+                question="Which files have been modified or created?",
+                ground_truth=", ".join(files),
+            )
+        )
 
     # Continuation probe
-    probes.append(Probe(
-        type=ProbeType.CONTINUATION,
-        question="What should be done next?",
-        ground_truth="[Extracted from context]"  # Would need LLM to generate
-    ))
+    probes.append(
+        Probe(
+            type=ProbeType.CONTINUATION,
+            question="What should be done next?",
+            ground_truth="[Extracted from context]",  # Would need LLM to generate
+        )
+    )
 
     # Decision probes
     decisions = extract_decisions(messages)
     for decision in decisions[:2]:  # Limit to 2 decision probes
-        probes.append(Probe(
-            type=ProbeType.DECISION,
-            question=f"Why was the decision made to {decision[:50]}...?",
-            ground_truth=decision
-        ))
+        probes.append(
+            Probe(
+                type=ProbeType.DECISION,
+                question=f"Why was the decision made to {decision[:50]}...?",
+                ground_truth=decision,
+            )
+        )
 
     return probes
 
@@ -202,7 +213,7 @@ def evaluate_response(probe: Probe, response: str) -> dict:
     # Adjust based on probe type
     if probe.type == ProbeType.ARTIFACT:
         # Check file mentions
-        files_mentioned = len(re.findall(r'\.[a-z]+', response_lower))
+        files_mentioned = len(re.findall(r"\.[a-z]+", response_lower))
         scores["artifact_trail"] = min(1.0, base_score + files_mentioned * 0.1)
         scores["accuracy"] = base_score
     elif probe.type == ProbeType.RECALL:
@@ -227,8 +238,9 @@ def calculate_compression_ratio(original: str, compressed: str) -> float:
     return 1.0 - (compressed_tokens / original_tokens)
 
 
-def evaluate_compression(original_messages: list, compressed_text: str,
-                         probes: Optional[list] = None) -> EvaluationReport:
+def evaluate_compression(
+    original_messages: list, compressed_text: str, probes: Optional[list] = None
+) -> EvaluationReport:
     """
     Evaluate compression quality.
 
@@ -258,12 +270,14 @@ def evaluate_compression(original_messages: list, compressed_text: str,
         scores = evaluate_response(probe, compressed_text)
 
         overall = sum(scores.values()) / len(scores) if scores else 0
-        probe_results.append(ProbeResult(
-            probe=probe,
-            response="[Would be LLM response]",
-            scores=scores,
-            overall_score=overall
-        ))
+        probe_results.append(
+            ProbeResult(
+                probe=probe,
+                response="[Would be LLM response]",
+                scores=scores,
+                overall_score=overall,
+            )
+        )
 
         # Aggregate by dimension
         for dim, score in scores.items():
@@ -286,18 +300,22 @@ def evaluate_compression(original_messages: list, compressed_text: str,
     if compression_ratio > 0.99:
         recommendations.append("Very high compression. Risk of information loss.")
     if avg_dimensions.get("artifact_trail", 1) < 0.5:
-        recommendations.append("Artifact tracking weak. Add explicit file section to summary.")
+        recommendations.append(
+            "Artifact tracking weak. Add explicit file section to summary."
+        )
     if avg_dimensions.get("continuity", 1) < 0.5:
         recommendations.append("Continuity low. Add 'Next Steps' section to summary.")
     if quality_score < 0.6:
-        recommendations.append("Quality below threshold. Consider less aggressive compression.")
+        recommendations.append(
+            "Quality below threshold. Consider less aggressive compression."
+        )
 
     return EvaluationReport(
         compression_ratio=compression_ratio,
         quality_score=quality_score,
         dimension_scores=avg_dimensions,
         probe_results=probe_results,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
 
@@ -308,27 +326,40 @@ def main():
     # Evaluate command
     eval_parser = subparsers.add_parser("evaluate", help="Evaluate compression quality")
     eval_parser.add_argument("original_file", help="JSON file with original messages")
-    eval_parser.add_argument("compressed_file", help="Text file with compressed summary")
+    eval_parser.add_argument(
+        "compressed_file", help="Text file with compressed summary"
+    )
 
     # Generate probes command
-    probe_parser = subparsers.add_parser("generate-probes", help="Generate evaluation probes")
+    probe_parser = subparsers.add_parser(
+        "generate-probes", help="Generate evaluation probes"
+    )
     probe_parser.add_argument("context_file", help="JSON file with context messages")
 
     args = parser.parse_args()
 
     if args.command == "evaluate":
         original = load_file(args.original_file, as_json=True)
-        messages = original if isinstance(original, list) else original.get("messages", [])
+        messages = (
+            original if isinstance(original, list) else original.get("messages", [])
+        )
         compressed = load_file(args.compressed_file, as_json=False)
 
         report = evaluate_compression(messages, compressed)
-        print(json.dumps({
-            "compression_ratio": f"{report.compression_ratio:.1%}",
-            "quality_score": f"{report.quality_score:.2f}",
-            "dimension_scores": {k: f"{v:.2f}" for k, v in report.dimension_scores.items()},
-            "probe_count": len(report.probe_results),
-            "recommendations": report.recommendations
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "compression_ratio": f"{report.compression_ratio:.1%}",
+                    "quality_score": f"{report.quality_score:.2f}",
+                    "dimension_scores": {
+                        k: f"{v:.2f}" for k, v in report.dimension_scores.items()
+                    },
+                    "probe_count": len(report.probe_results),
+                    "recommendations": report.recommendations,
+                },
+                indent=2,
+            )
+        )
 
     elif args.command == "generate-probes":
         data = load_file(args.context_file, as_json=True)
@@ -337,11 +368,13 @@ def main():
         probes = generate_probes(messages)
         output = []
         for probe in probes:
-            output.append({
-                "type": probe.type.value,
-                "question": probe.question,
-                "ground_truth": probe.ground_truth
-            })
+            output.append(
+                {
+                    "type": probe.type.value,
+                    "question": probe.question,
+                    "ground_truth": probe.ground_truth,
+                }
+            )
         print(json.dumps(output, indent=2))
 
 
