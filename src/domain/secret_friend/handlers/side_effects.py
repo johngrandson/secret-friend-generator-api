@@ -2,7 +2,7 @@
 
 import logging
 
-from src.domain.secret_friend.schemas import SecretFriendRead
+from src.domain.secret_friend.entities import SecretFriend
 from src.domain.secret_friend.signals import (
     secret_friend_assigned,
     secret_friend_deleted,
@@ -14,7 +14,11 @@ log = logging.getLogger(__name__)
 
 @isolated
 def _on_secret_friend_assigned(
-    sender: type, *, assignment: SecretFriendRead, group_id: int, **kwargs: object
+    sender: type,
+    *,
+    assignment: SecretFriend,
+    group_id: int,
+    **kwargs: object,
 ) -> None:
     log.info(
         "lifecycle: secret friend assigned — id=%s group_id=%s",

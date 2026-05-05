@@ -1,3 +1,5 @@
+"""SecretFriend API DTOs — Pydantic only at the edge."""
+
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
@@ -13,13 +15,14 @@ class SecretFriendLink(BaseModel):
         gift_giver_id = data.get("gift_giver_id")
         gift_receiver_id = data.get("gift_receiver_id")
         if gift_giver_id is not None and gift_giver_id == gift_receiver_id:
-            raise ValueError("Gift giver and gift receiver cannot be the same person.")
+            raise ValueError(
+                "Gift giver and gift receiver cannot be the same person."
+            )
         return data
 
 
 class SecretFriendRead(BaseModel):
     model_config = {"from_attributes": True}
-
     id: int
     gift_giver_id: int
     gift_receiver_id: int

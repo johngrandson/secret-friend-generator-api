@@ -1,14 +1,16 @@
+"""Participant SQLAlchemy ORM — driven adapter, kept out of domain layer."""
+
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.infrastructure.persistence import Base
-from src.domain.participant.schemas import ParticipantStatus
+from src.domain.participant.value_objects import ParticipantStatus
+from src.infrastructure.persistence.base import Base
 
 
-class Participant(Base):
+class ParticipantORM(Base):
     __tablename__ = "participants"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -33,16 +35,16 @@ class Participant(Base):
     group_id: Mapped[int] = mapped_column(
         ForeignKey("groups.id"), nullable=False, index=True
     )
-    group: Mapped["Group"] = relationship(back_populates="participants")
+    group: Mapped["GroupORM"] = relationship(back_populates="participants")
 
-    gift_giver: Mapped["SecretFriend | None"] = relationship(
-        foreign_keys="SecretFriend.gift_giver_id",
+    gift_giver: Mapped["SecretFriendORM | None"] = relationship(
+        foreign_keys="SecretFriendORM.gift_giver_id",
         back_populates="giver",
         uselist=False,
         cascade="all, delete-orphan",
     )
-    gift_receiver: Mapped["SecretFriend | None"] = relationship(
-        foreign_keys="SecretFriend.gift_receiver_id",
+    gift_receiver: Mapped["SecretFriendORM | None"] = relationship(
+        foreign_keys="SecretFriendORM.gift_receiver_id",
         back_populates="receiver",
         uselist=False,
         cascade="all, delete",

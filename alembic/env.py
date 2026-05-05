@@ -8,10 +8,12 @@ from alembic import context
 from src.shared.config import settings
 from src.infrastructure.persistence import Base
 
-# Import all models so Alembic can detect them
-from src.domain.group.model import Group  # noqa: F401
-from src.domain.participant.model import Participant  # noqa: F401
-from src.domain.secret_friend.model import SecretFriend  # noqa: F401
+# Import all ORM models so Alembic can detect them
+from src.infrastructure.persistence.models import (  # noqa: F401
+    GroupORM,
+    ParticipantORM,
+    SecretFriendORM,
+)
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

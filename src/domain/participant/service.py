@@ -1,67 +1,63 @@
+"""Participant use cases — depend on Protocol, operate on domain entities."""
+
 from sqlalchemy.orm import Session
 
-from src.domain.participant.repository import ParticipantRepository
-from src.domain.participant.schemas import (
-    ParticipantCreate,
-    ParticipantList,
-    ParticipantRead,
-    ParticipantUpdate,
-)
+from src.domain.participant.entities import Participant
+from src.domain.participant.repositories import IParticipantRepository
 from src.domain.participant.signals import (
     participant_created,
     participant_deleted,
     participant_updated,
 )
+from src.domain.participant.value_objects import ParticipantStatus
 from src.infrastructure.persistence import transaction
 
 
 class ParticipantService:
-    @staticmethod
-    def create(participant: ParticipantCreate, db_session: Session) -> ParticipantRead:
-        with transaction(db_session):
-            result = ParticipantRepository.create(
-                participant=participant, db_session=db_session
-            )
-            validated = ParticipantRead.model_validate(result)
-            participant_created.send(ParticipantService, participant=validated)
-            return validated
+    def __init__(self, repo: IParticipantRepository, db: Session) -> None:
+        self._repo = repo
+        self._db = db
 
-    @staticmethod
-    def get_all(db_session: Session) -> ParticipantList:
-        participants = ParticipantRepository.get_all(db_session=db_session)
-        items = [ParticipantRead.model_validate(p) for p in participants]
-        return ParticipantList(participants=items)
+    def create(self, *, name: str, group_id: int) -> Participant:
+        with transaction(self._db):
+            entity = self._repo.create(Participant(name=name, group_id=group_id))
+            participant_created.send(self.__class__, participant=entity)
+            return entity
 
-    @staticmethod
-    def get_by_group_id(group_id: int, db_session: Session) -> list[ParticipantRead]:
-        participants = ParticipantRepository.get_by_group_id(
-            group_id=group_id, db_session=db_session
-        )
-        return [ParticipantRead.model_validate(p) for p in participants]
+    def get_all(self) -> list[Participant]:
+        return self._repo.get_all()
 
-    @staticmethod
-    def get_by_id(participant_id: int, db_session: Session) -> ParticipantRead:
-        result = ParticipantRepository.get_by_id(
-            participant_id=participant_id, db_session=db_session
-        )
-        return ParticipantRead.model_validate(result)
+    def get_by_id(self, participant_id: int) -> Participant:
+        return self._repo.get_by_id(participant_id)
 
-    @staticmethod
-    def delete(participant_id: int, db_session: Session) -> None:
-        with transaction(db_session):
-            ParticipantRepository.delete(
-                participant_id=participant_id, db_session=db_session
-            )
-            participant_deleted.send(ParticipantService, participant_id=participant_id)
+    def get_by_group_id(self, group_id: int) -> list[Participant]:
+        return self._repo.get_by_group_id(group_id)
 
-    @staticmethod
     def update(
-        participant_id: int, payload: ParticipantUpdate, db_session: Session
-    ) -> ParticipantRead:
-        with transaction(db_session):
-            result = ParticipantRepository.update(
-                participant_id=participant_id, payload=payload, db_session=db_session
+        self,
+        participant_id: int,
+        *,
+        name: str | None = None,
+        gift_hint: str | None = None,
+        status: ParticipantStatus | None = None,
+    ) -> Participant:
+        fields = {
+            k: v
+            for k, v in {
+                "name": name,
+                "gift_hint": gift_hint,
+                "status": status,
+            }.items()
+            if v is not None
+        }
+        with transaction(self._db):
+            entity = self._repo.update(participant_id, **fields)
+            participant_updated.send(self.__class__, participant=entity)
+            return entity
+
+    def delete(self, participant_id: int) -> None:
+        with transaction(self._db):
+            self._repo.delete(participant_id)
+            participant_deleted.send(
+                self.__class__, participant_id=participant_id
             )
-            validated = ParticipantRead.model_validate(result)
-            participant_updated.send(ParticipantService, participant=validated)
-            return validated
