@@ -20,7 +20,12 @@ src/
 ├── shared/                  # Primitivas cross-context (puro Python)
 │   ├── aggregate_root.py    # AggregateRoot
 │   ├── events.py            # DomainEvent
-│   └── event_publisher.py   # IEventPublisher (Protocol)
+│   ├── event_publisher.py   # IEventPublisher (Protocol)
+│   └── agentic/             # Kernel agentic — Protocols + utilities
+│       ├── retry.py         # classify_failure / compute_delay / RetryConfig
+│       ├── gate.py          # Gate ABC / GateRunner / GateOutcome
+│       ├── agent_runner.py  # IAgentRunner Protocol + TurnResult
+│       └── workspace.py     # IWorkspaceManager Protocol + Workspace VO
 │
 ├── contexts/
 │   ├── identity/            # Bounded Context: identidade de usuários

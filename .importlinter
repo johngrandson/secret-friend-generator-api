@@ -96,6 +96,21 @@ forbidden_modules =
     src.contexts
     src.infrastructure
 
+[importlinter:contract:shared-agentic-purity]
+name = shared.agentic kernel stays pure (no contexts/infra/pydantic/sqlalchemy)
+type = forbidden
+source_modules =
+    src.shared.agentic
+forbidden_modules =
+    src.contexts
+    src.infrastructure
+    pydantic
+    pydantic_settings
+    sqlalchemy
+    fastapi
+    dependency_injector
+    httpx
+
 [importlinter:contract:bounded-contexts-isolation]
 name = Bounded contexts don't import from each other
 type = independence

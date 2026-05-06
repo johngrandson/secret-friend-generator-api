@@ -9,9 +9,15 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
+    from src.contexts.symphony.domain.agent_session.repository import (
+        IAgentSessionRepository,
+    )
+    from src.contexts.symphony.domain.plan.repository import IPlanRepository
+    from src.contexts.symphony.domain.pull_request.repository import (
+        IPullRequestRepository,
+    )
     from src.contexts.symphony.domain.run.repository import IRunRepository
     from src.contexts.symphony.domain.spec.repository import ISpecRepository
-    from src.contexts.symphony.domain.plan.repository import IPlanRepository
 
 
 @runtime_checkable
@@ -29,6 +35,8 @@ class ISymphonyUnitOfWork(Protocol):
     runs: "IRunRepository"
     specs: "ISpecRepository"
     plans: "IPlanRepository"
+    agent_sessions: "IAgentSessionRepository"
+    pull_requests: "IPullRequestRepository"
 
     async def __aenter__(self) -> "ISymphonyUnitOfWork": ...
 

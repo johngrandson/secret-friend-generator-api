@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from src.shared.agentic.agent_runner import TokenUsage
 from src.shared.events import DomainEvent
 
 
@@ -21,6 +22,23 @@ class RunStatusChanged(DomainEvent):
     run_id: UUID
     from_status: str
     to_status: str
+
+
+@dataclass(frozen=True)
+class RunExecuted(DomainEvent):
+    """Raised after the agent's execution turn completes for a Run."""
+
+    run_id: UUID
+    session_id: UUID
+    usage: TokenUsage
+
+
+@dataclass(frozen=True)
+class GatesCompleted(DomainEvent):
+    """Raised after the gate runner finishes for a Run."""
+
+    run_id: UUID
+    all_passed: bool
 
 
 @dataclass(frozen=True)

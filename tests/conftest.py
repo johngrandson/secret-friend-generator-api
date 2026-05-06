@@ -55,14 +55,17 @@ class FakeIdentityUoW:
 class FakeSymphonyUoW:
     """Fake ISymphonyUnitOfWork for symphony use case unit tests.
 
-    Exposes `runs`, `specs`, and `plans` as AsyncMock repos and tracks
-    commit/rollback calls via `uow.committed` and `uow.rolled_back`.
+    Exposes `runs`, `specs`, `plans`, `agent_sessions`, `pull_requests`
+    as AsyncMock repos and tracks commit/rollback calls via
+    `uow.committed` and `uow.rolled_back`.
     """
 
     def __init__(self) -> None:
         self.runs = AsyncMock()
         self.specs = AsyncMock()
         self.plans = AsyncMock()
+        self.agent_sessions = AsyncMock()
+        self.pull_requests = AsyncMock()
         self.committed = False
         self.rolled_back = False
 
