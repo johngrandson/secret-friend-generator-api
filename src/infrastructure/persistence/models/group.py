@@ -1,14 +1,16 @@
+"""Group SQLAlchemy ORM — driven adapter, kept out of domain layer."""
+
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.infrastructure.persistence import Base
-from src.domain.group.schemas import CategoryEnum
+from src.domain.group.value_objects import CategoryEnum
+from src.infrastructure.persistence.base import Base
 
 
-class Group(Base):
+class GroupORM(Base):
     __tablename__ = "groups"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -29,6 +31,6 @@ class Group(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    participants: Mapped[list["Participant"]] = relationship(
+    participants: Mapped[list["ParticipantORM"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
     )

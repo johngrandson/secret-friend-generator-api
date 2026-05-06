@@ -1,67 +1,61 @@
-from sqlalchemy.orm import Session
+"""Participant use cases — depend on Protocols only, no infrastructure imports."""
 
-from src.domain.participant.repository import ParticipantRepository
-from src.domain.participant.schemas import (
-    ParticipantCreate,
-    ParticipantList,
-    ParticipantRead,
-    ParticipantUpdate,
-)
+from src.domain.participant.entities import Participant
+from src.domain.participant.repositories import IParticipantRepository
 from src.domain.participant.signals import (
     participant_created,
     participant_deleted,
     participant_updated,
 )
-from src.infrastructure.persistence import transaction
+from src.domain.participant.value_objects import ParticipantStatus
+from src.domain.shared.unit_of_work import UnitOfWork
 
 
 class ParticipantService:
-    @staticmethod
-    def create(participant: ParticipantCreate, db_session: Session) -> ParticipantRead:
-        with transaction(db_session):
-            result = ParticipantRepository.create(
-                participant=participant, db_session=db_session
+    def __init__(
+        self, repo: IParticipantRepository, uow: UnitOfWork
+    ) -> None:
+        self._repo = repo
+        self._uow = uow
+
+    def create(self, *, name: str, group_id: int) -> Participant:
+        with self._uow.atomic():
+            entity = self._repo.create(
+                Participant(name=name, group_id=group_id)
             )
-            validated = ParticipantRead.model_validate(result)
-            participant_created.send(ParticipantService, participant=validated)
-            return validated
+            participant_created.send(self.__class__, participant=entity)
+            return entity
 
-    @staticmethod
-    def get_all(db_session: Session) -> ParticipantList:
-        participants = ParticipantRepository.get_all(db_session=db_session)
-        items = [ParticipantRead.model_validate(p) for p in participants]
-        return ParticipantList(participants=items)
+    def get_all(self) -> list[Participant]:
+        return self._repo.get_all()
 
-    @staticmethod
-    def get_by_group_id(group_id: int, db_session: Session) -> list[ParticipantRead]:
-        participants = ParticipantRepository.get_by_group_id(
-            group_id=group_id, db_session=db_session
-        )
-        return [ParticipantRead.model_validate(p) for p in participants]
+    def get_by_id(self, participant_id: int) -> Participant:
+        return self._repo.get_by_id(participant_id)
 
-    @staticmethod
-    def get_by_id(participant_id: int, db_session: Session) -> ParticipantRead:
-        result = ParticipantRepository.get_by_id(
-            participant_id=participant_id, db_session=db_session
-        )
-        return ParticipantRead.model_validate(result)
+    def get_by_group_id(self, group_id: int) -> list[Participant]:
+        return self._repo.get_by_group_id(group_id)
 
-    @staticmethod
-    def delete(participant_id: int, db_session: Session) -> None:
-        with transaction(db_session):
-            ParticipantRepository.delete(
-                participant_id=participant_id, db_session=db_session
-            )
-            participant_deleted.send(ParticipantService, participant_id=participant_id)
-
-    @staticmethod
     def update(
-        participant_id: int, payload: ParticipantUpdate, db_session: Session
-    ) -> ParticipantRead:
-        with transaction(db_session):
-            result = ParticipantRepository.update(
-                participant_id=participant_id, payload=payload, db_session=db_session
+        self,
+        participant_id: int,
+        *,
+        name: str | None = None,
+        gift_hint: str | None = None,
+        status: ParticipantStatus | None = None,
+    ) -> Participant:
+        with self._uow.atomic():
+            entity = self._repo.update(
+                participant_id,
+                name=name,
+                gift_hint=gift_hint,
+                status=status,
             )
-            validated = ParticipantRead.model_validate(result)
-            participant_updated.send(ParticipantService, participant=validated)
-            return validated
+            participant_updated.send(self.__class__, participant=entity)
+            return entity
+
+    def delete(self, participant_id: int) -> None:
+        with self._uow.atomic():
+            self._repo.delete(participant_id)
+            participant_deleted.send(
+                self.__class__, participant_id=participant_id
+            )

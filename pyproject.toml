@@ -7,7 +7,7 @@ fixable = ["F", "E"]
 [tool.ruff.per-file-ignores]
 # SQLAlchemy uses string forward references in Mapped[] for cross-model relationships.
 # These are resolved at runtime by the ORM registry, not by Python's name resolution.
-"src/domain/*/model.py" = ["F821"]
+"src/infrastructure/persistence/models/*.py" = ["F821"]
 
 [tool.poetry]
 name = "app"
@@ -81,7 +81,7 @@ ignore_missing_imports = true
 # Quoted names like Mapped["Participant"] cannot be imported (circular), so name-defined
 # is a permanent false positive — not fixable without restructuring all models.
 [[tool.mypy.overrides]]
-module = "src.domain.*.model"
+module = "src.infrastructure.persistence.models.*"
 disable_error_code = ["name-defined"]
 
 # LangChain @tool decorator returns StructuredTool at runtime but mypy infers

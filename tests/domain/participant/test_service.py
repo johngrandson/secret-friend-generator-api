@@ -1,128 +1,108 @@
+"""Service-level tests for ParticipantService — signal emission + rollback."""
+
 import pytest
 from sqlalchemy.orm import Session
 
 from src.domain.participant.service import ParticipantService
-from src.domain.participant.schemas import (
-    ParticipantCreate,
-    ParticipantList,
-    ParticipantRead,
-    ParticipantUpdate,
-    ParticipantStatus,
+from src.domain.participant.signals import (
+    participant_created,
+    participant_deleted,
+    participant_updated,
 )
-from src.shared.exceptions import NotFoundError
+from src.domain.participant.value_objects import ParticipantStatus
+from src.infrastructure.persistence.unit_of_work import SqlAlchemyUnitOfWork
+from src.infrastructure.repositories.participant_repository import (
+    PostgresParticipantRepository,
+)
 
 
-def test_create_returns_participant_read_schema(db_session: Session, group_fixture):
+def _service(db: Session) -> ParticipantService:
+    return ParticipantService(
+        repo=PostgresParticipantRepository(db),
+        uow=SqlAlchemyUnitOfWork(db),
+    )
+
+
+def test_create_fires_participant_created_signal(
+    db_session: Session, group_fixture
+) -> None:
+    received: list[dict] = []
+
+    def handler(sender: object, **kw: object) -> None:
+        received.append(kw)
+
     group = group_fixture()
-    result = ParticipantService.create(
-        ParticipantCreate(name="Alice", group_id=group.id), db_session
-    )
-    assert isinstance(result, ParticipantRead)
+    participant_created.connect(handler)
+    try:
+        entity = _service(db_session).create(name="Alice", group_id=group.id)
+        assert len(received) == 1
+        assert received[0]["participant"].id == entity.id
+    finally:
+        participant_created.disconnect(handler)
 
 
-def test_create_participant_sets_correct_name(db_session: Session, group_fixture):
+def test_create_signal_not_fired_when_repo_raises(
+    db_session: Session,
+    group_fixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    received: list[dict] = []
+
+    def handler(sender: object, **kw: object) -> None:
+        received.append(kw)
+
+    participant_created.connect(handler)
+    service = _service(db_session)
+
+    def boom(_: object) -> None:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(service._repo, "create", boom)
+    try:
+        with pytest.raises(RuntimeError, match="boom"):
+            service.create(name="Bob", group_id=group_fixture().id)
+        assert received == []
+    finally:
+        participant_created.disconnect(handler)
+
+
+def test_update_fires_participant_updated_signal(
+    db_session: Session, group_fixture
+) -> None:
+    received: list[dict] = []
+
+    def handler(sender: object, **kw: object) -> None:
+        received.append(kw)
+
+    service = _service(db_session)
     group = group_fixture()
-    result = ParticipantService.create(
-        ParticipantCreate(name="Bob", group_id=group.id), db_session
-    )
-    assert result.name == "Bob"
+    entity = service.create(name="Carol", group_id=group.id)
+
+    participant_updated.connect(handler)
+    try:
+        service.update(entity.id, status=ParticipantStatus.REVEALED)
+        assert len(received) == 1
+        assert received[0]["participant"].status == ParticipantStatus.REVEALED
+    finally:
+        participant_updated.disconnect(handler)
 
 
-def test_create_participant_with_invalid_group_raises_not_found(db_session: Session):
-    with pytest.raises(NotFoundError):
-        ParticipantService.create(
-            ParticipantCreate(name="Ghost", group_id=99999), db_session
-        )
+def test_delete_fires_participant_deleted_signal(
+    db_session: Session, group_fixture
+) -> None:
+    received: list[dict] = []
 
+    def handler(sender: object, **kw: object) -> None:
+        received.append(kw)
 
-def test_get_all_returns_participant_list_schema(db_session: Session):
-    result = ParticipantService.get_all(db_session)
-    assert isinstance(result, ParticipantList)
-
-
-def test_get_all_includes_created_participants(db_session: Session, group_fixture):
-    before = len(ParticipantService.get_all(db_session).participants)
+    service = _service(db_session)
     group = group_fixture()
-    ParticipantService.create(
-        ParticipantCreate(name="P1", group_id=group.id), db_session
-    )
-    ParticipantService.create(
-        ParticipantCreate(name="P2", group_id=group.id), db_session
-    )
-    result = ParticipantService.get_all(db_session)
-    assert len(result.participants) == before + 2
+    entity = service.create(name="Dave", group_id=group.id)
 
-
-def test_get_by_group_id_returns_list_for_group(db_session: Session, group_fixture):
-    group = group_fixture()
-    ParticipantService.create(
-        ParticipantCreate(name="PA", group_id=group.id), db_session
-    )
-    result = ParticipantService.get_by_group_id(
-        group_id=group.id, db_session=db_session
-    )
-    assert len(result) == 1
-    assert isinstance(result[0], ParticipantRead)
-
-
-def test_get_by_group_id_empty_for_unknown_group(db_session: Session):
-    result = ParticipantService.get_by_group_id(group_id=99999, db_session=db_session)
-    assert result == []
-
-
-def test_get_by_id_returns_correct_participant(db_session: Session, group_fixture):
-    group = group_fixture()
-    created = ParticipantService.create(
-        ParticipantCreate(name="FindMe", group_id=group.id), db_session
-    )
-    fetched = ParticipantService.get_by_id(
-        participant_id=created.id, db_session=db_session
-    )
-    assert fetched.id == created.id
-    assert isinstance(fetched, ParticipantRead)
-
-
-def test_get_by_id_nonexistent_raises_not_found(db_session: Session):
-    with pytest.raises(NotFoundError):
-        ParticipantService.get_by_id(participant_id=99999, db_session=db_session)
-
-
-def test_update_returns_participant_read_schema(db_session: Session, group_fixture):
-    group = group_fixture()
-    created = ParticipantService.create(
-        ParticipantCreate(name="Original", group_id=group.id), db_session
-    )
-    result = ParticipantService.update(
-        participant_id=created.id,
-        payload=ParticipantUpdate(name="Updated"),
-        db_session=db_session,
-    )
-    assert isinstance(result, ParticipantRead)
-    assert result.name == "Updated"
-
-
-def test_update_status_to_revealed(db_session: Session, group_fixture):
-    group = group_fixture()
-    created = ParticipantService.create(
-        ParticipantCreate(name="Revealer", group_id=group.id), db_session
-    )
-    result = ParticipantService.update(
-        participant_id=created.id,
-        payload=ParticipantUpdate(status=ParticipantStatus.REVEALED),
-        db_session=db_session,
-    )
-    assert result.status == ParticipantStatus.REVEALED
-
-
-def test_update_nonexistent_participant_raises_not_found(db_session: Session):
-    with pytest.raises(NotFoundError):
-        ParticipantService.update(
-            participant_id=99999,
-            payload=ParticipantUpdate(name="Nobody"),
-            db_session=db_session,
-        )
-
-
-def test_delete_participant_not_found_raises(db_session: Session):
-    with pytest.raises(NotFoundError):
-        ParticipantService.delete(participant_id=99999, db_session=db_session)
+    participant_deleted.connect(handler)
+    try:
+        service.delete(entity.id)
+        assert len(received) == 1
+        assert received[0]["participant_id"] == entity.id
+    finally:
+        participant_deleted.disconnect(handler)

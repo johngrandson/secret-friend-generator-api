@@ -2,7 +2,7 @@
 
 import logging
 
-from src.domain.participant.schemas import ParticipantRead
+from src.domain.participant.entities import Participant
 from src.domain.participant.signals import (
     participant_created,
     participant_deleted,
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 @isolated
 def _on_participant_created(
-    sender: type, *, participant: ParticipantRead, **kwargs: object
+    sender: type, *, participant: Participant, **kwargs: object
 ) -> None:
     log.info(
         "lifecycle: participant created — id=%s group_id=%s",
@@ -26,7 +26,7 @@ def _on_participant_created(
 
 @isolated
 def _on_participant_updated(
-    sender: type, *, participant: ParticipantRead, **kwargs: object
+    sender: type, *, participant: Participant, **kwargs: object
 ) -> None:
     log.info(
         "lifecycle: participant updated — id=%s status=%s",

@@ -1,19 +1,16 @@
+"""Participant API DTOs — Pydantic only at the edge."""
+
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, model_validator
 
-
-class ParticipantStatus(str, Enum):
-    PENDING = "PENDING"
-    REVEALED = "REVEALED"
+from src.domain.participant.value_objects import ParticipantStatus
 
 
 class ParticipantBase(BaseModel):
-    """Minimal schema used by GroupRead to avoid circular imports."""
+    """Minimal projection used by GroupRead to avoid circular imports."""
 
     model_config = {"from_attributes": True}
-
     id: int
     name: str
 
@@ -25,7 +22,6 @@ class ParticipantCreate(BaseModel):
 
 class ParticipantRead(BaseModel):
     model_config = {"from_attributes": True}
-
     id: int
     name: str
     group_id: int
@@ -47,6 +43,6 @@ class ParticipantUpdate(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def at_least_one_field(cls, data: object) -> object:
-        if isinstance(data, dict) and not any(data.values()):
+        if isinstance(data, dict) and all(v is None for v in data.values()):
             raise ValueError("At least one field must be provided")
         return data

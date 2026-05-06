@@ -1,12 +1,14 @@
+"""SecretFriend SQLAlchemy ORM — driven adapter, kept out of domain layer."""
+
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.infrastructure.persistence import Base
+from src.infrastructure.persistence.base import Base
 
 
-class SecretFriend(Base):
+class SecretFriendORM(Base):
     __tablename__ = "secret_friends"
     __table_args__ = (
         UniqueConstraint(
@@ -24,7 +26,7 @@ class SecretFriend(Base):
     gift_giver_id: Mapped[int] = mapped_column(
         ForeignKey("participants.id"), nullable=False, index=True
     )
-    giver: Mapped["Participant | None"] = relationship(
+    giver: Mapped["ParticipantORM | None"] = relationship(
         foreign_keys=[gift_giver_id],
         back_populates="gift_giver",
     )
@@ -32,7 +34,7 @@ class SecretFriend(Base):
     gift_receiver_id: Mapped[int] = mapped_column(
         ForeignKey("participants.id"), nullable=False, index=True
     )
-    receiver: Mapped["Participant | None"] = relationship(
+    receiver: Mapped["ParticipantORM | None"] = relationship(
         foreign_keys=[gift_receiver_id],
         back_populates="gift_receiver",
     )

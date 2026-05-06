@@ -1,50 +1,65 @@
-from sqlalchemy.orm import Session
+"""Group use cases — depend on Protocols only, no infrastructure imports."""
 
-from src.domain.group.repository import GroupRepository
-from src.domain.group.schemas import GroupCreate, GroupList, GroupRead, GroupUpdate
+from src.domain.group.entities import Group
+from src.domain.group.repositories import IGroupRepository
 from src.domain.group.signals import group_created, group_deleted, group_updated
-from src.infrastructure.persistence import transaction
+from src.domain.group.value_objects import CategoryEnum
+from src.domain.shared.unit_of_work import UnitOfWork
+from src.shared.hashing import generate_group_token
 
 
 class GroupService:
-    @staticmethod
-    def create(group: GroupCreate, db_session: Session) -> GroupRead:
-        with transaction(db_session):
-            result = GroupRepository.create(group=group, db_session=db_session)
-            validated = GroupRead.model_validate(result)
-            group_created.send(GroupService, group=validated)
-            return validated
+    def __init__(self, repo: IGroupRepository, uow: UnitOfWork) -> None:
+        self._repo = repo
+        self._uow = uow
 
-    @staticmethod
-    def update(group_id: int, payload: GroupUpdate, db_session: Session) -> GroupRead:
-        with transaction(db_session):
-            result = GroupRepository.update(
-                group_id=group_id, payload=payload, db_session=db_session
+    def create(
+        self,
+        *,
+        name: str,
+        description: str,
+        category: CategoryEnum = CategoryEnum.santa,
+    ) -> Group:
+        with self._uow.atomic():
+            entity = self._repo.create(
+                Group(
+                    name=name,
+                    description=description,
+                    category=category,
+                    link_url=generate_group_token(),
+                )
             )
-            validated = GroupRead.model_validate(result)
-            group_updated.send(GroupService, group=validated)
-            return validated
+            group_created.send(self.__class__, group=entity)
+            return entity
 
-    @staticmethod
-    def delete(group_id: int, db_session: Session) -> None:
-        with transaction(db_session):
-            GroupRepository.delete(group_id=group_id, db_session=db_session)
-            group_deleted.send(GroupService, group_id=group_id)
+    def get_all(self) -> list[Group]:
+        return self._repo.get_all()
 
-    @staticmethod
-    def get_all(db_session: Session) -> GroupList:
-        groups = GroupRepository.get_all(db_session=db_session)
-        items = [GroupRead.model_validate(g) for g in groups]
-        return GroupList(groups=items)
+    def get_by_id(self, group_id: int) -> Group:
+        return self._repo.get_by_id(group_id)
 
-    @staticmethod
-    def get_by_id(group_id: int, db_session: Session) -> GroupRead:
-        result = GroupRepository.get_by_id(group_id=group_id, db_session=db_session)
-        return GroupRead.model_validate(result)
+    def get_by_link_url(self, link_url: str) -> Group:
+        return self._repo.get_by_link_url(link_url)
 
-    @staticmethod
-    def get_by_link_url(link_url: str, db_session: Session) -> GroupRead:
-        result = GroupRepository.get_by_link_url(
-            link_url=link_url, db_session=db_session
-        )
-        return GroupRead.model_validate(result)
+    def update(
+        self,
+        group_id: int,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        category: CategoryEnum | None = None,
+    ) -> Group:
+        with self._uow.atomic():
+            entity = self._repo.update(
+                group_id,
+                name=name,
+                description=description,
+                category=category,
+            )
+            group_updated.send(self.__class__, group=entity)
+            return entity
+
+    def delete(self, group_id: int) -> None:
+        with self._uow.atomic():
+            self._repo.delete(group_id)
+            group_deleted.send(self.__class__, group_id=group_id)
