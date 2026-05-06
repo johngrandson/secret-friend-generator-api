@@ -1,8 +1,9 @@
 # Python AI Starter — Clean Architecture
 
-A production-ready Python starter using strict Clean Architecture / Hexagonal / DDD patterns.
-The canonical domain example is a **User** aggregate with full CRUD, demonstrating how to add
-any new domain object to the same layered structure.
+A production-ready Python starter using strict Clean Architecture / Hexagonal / DDD
+with **vertical-slicing per bounded context**, Unit of Work, and domain events.
+The canonical bounded contexts are `identity` (User CRUD) and `symphony` (Run/Spec/Plan),
+demonstrating how to extend the pattern to any new domain.
 
 ## Architecture
 
@@ -19,11 +20,10 @@ any new domain object to the same layered structure.
 ```
 
 **Dependency rule**: inner layers never import from outer layers.
-`src/domain/` has zero imports from `fastapi`, `sqlalchemy`, `pydantic`, or any framework.
+`src/contexts/*/domain/` has zero imports from `fastapi`, `sqlalchemy`, `pydantic`,
+or any framework. Enforced automatically by `poetry run lint-imports` (CI: `test-arch`).
 
-- **Architecture rules**: see [`docs/architecture.md`](docs/architecture.md) for the full
-  layer boundary guide. Rules are enforced automatically by `poetry run lint-imports`
-  (CI: job `test-arch`).
+Full layer guide: [`docs/architecture.md`](docs/architecture.md).
 
 ## Stack
 
@@ -34,54 +34,52 @@ any new domain object to the same layered structure.
 | DB driver (prod) | asyncpg (PostgreSQL) |
 | DB driver (test) | aiosqlite (SQLite in-memory) |
 | Migrations | Alembic (async engine) |
-| Dependency injection | dependency-injector — `Container` owns engine/session-factory/use-case factories; sessions stay per-request via FastAPI `Depends(get_session)` |
+| Dependency injection | dependency-injector — Container per bounded context, sessions per-request via FastAPI `Depends`, transactions via UoW |
 | Settings | pydantic-settings |
 | Testing | pytest + pytest-asyncio + httpx |
 | Lint / format | ruff |
 | Type checking | mypy |
-| Architecture enforcement | import-linter (`poetry run lint-imports`) |
+| Architecture enforcement | import-linter (`poetry run lint-imports`) — 7 contracts |
 
 ## Project structure
 
 ```
 src/
-├── main.py                                      # FastAPI factory + lifespan
-├── domain/user/
-│   ├── entity.py                                # User aggregate root (dataclass)
-│   ├── email.py                                 # Email value object (frozen dataclass)
-│   └── repository.py                            # IUserRepository (Protocol — output port)
-├── use_cases/user/
-│   ├── create.py
-│   ├── get.py
-│   ├── list.py
-│   ├── update.py
-│   └── delete.py
-├── adapters/
-│   ├── http/user/
-│   │   ├── _router.py                           # APIRouter definition
-│   │   ├── schemas.py                           # Pydantic input schemas
-│   │   ├── serializers.py                       # entity → dict
-│   │   ├── deps.py                              # FastAPI Depends wiring
-│   │   └── routes/{create,get,list,update,delete}.py
-│   └── persistence/user/
-│       ├── model.py                             # SQLAlchemy UserModel
-│       ├── mapper.py                            # entity ↔ model conversion
-│       └── repository.py                        # SQLAlchemyUserRepository
-└── infrastructure/
-    ├── config.py                                # pydantic-settings Settings
-    ├── container.py                             # DI Container (engine, session factory, use cases)
-    └── database.py                              # get_session (per-request) + init_db
+├── main.py                              # FastAPI factory + lifespan
+├── shared/                             # Cross-context primitives (pure Python)
+│   ├── aggregate_root.py               # AggregateRoot (collect_event / pull_events)
+│   ├── events.py                       # DomainEvent base dataclass
+│   └── event_publisher.py             # IEventPublisher Protocol (output port)
+├── infrastructure/
+│   ├── config.py                       # pydantic-settings Settings
+│   ├── database.py                     # get_session (per-request) + init_db
+│   ├── containers/{core,identity,symphony,root}.py  # DI containers
+│   └── adapters/
+│       ├── events/in_memory_publisher.py
+│       └── persistence/{base,registry}.py
+└── contexts/
+    ├── identity/                        # Bounded Context: user identity
+    │   ├── domain/{unit_of_work,user/{entity,email,events,repository}}.py
+    │   ├── use_cases/user/{dto,create,get,list,update,delete}.py
+    │   └── adapters/
+    │       ├── http/user/{router,schemas,serializers,deps,routes/*}.py
+    │       └── persistence/{unit_of_work,user/{model,mapper,repository}}.py
+    └── symphony/                        # Bounded Context: runs, specs, plans
+        ├── domain/{unit_of_work,run/*,spec/*,plan/*,backlog/*}.py
+        ├── use_cases/{run,spec,plan}/*.py
+        └── adapters/
+            ├── http/{run,spec,plan,backlog}/__init__.py  # placeholders
+            └── persistence/{unit_of_work,run/*,spec/*,plan/*}.py
 
 tests/
-├── conftest.py                                  # SQLite engine + client fixtures
-├── architecture/
-│   └── test_dependency_rule.py                  # AST-based layer purity checks
+├── conftest.py                          # SQLite engine, Fake UoW, FakePublisher fixtures
+├── architecture/test_dependency_rule.py # AST layer purity checks
 ├── unit/
 │   ├── domain/user/{test_email,test_entity}.py
-│   └── use_cases/user/test_{create,get,list,update,delete}.py
-└── integration/user/
-    ├── test_repository.py                       # repo against SQLite
-    └── test_endpoints.py                        # full HTTP via httpx AsyncClient
+│   └── use_cases/{identity,symphony}/  # use case unit tests with Fake UoW
+└── integration/
+    ├── identity/{test_repository,test_endpoints,test_event_publication}.py
+    └── symphony/
 ```
 
 ## Local setup
@@ -115,6 +113,10 @@ poetry run start
 
 ## API endpoints
 
+Only `identity` HTTP routes are wired. Symphony aggregates (Run, Spec, Plan) have
+domain, use-case, and persistence layers implemented — HTTP routes are placeholders
+awaiting wiring.
+
 | Method | Path | Description |
 |---|---|---|
 | POST | `/users/` | Create user (201) |
@@ -133,18 +135,17 @@ poetry run pytest -q
 poetry run pytest --cov=src --cov-report=term-missing
 ```
 
-## Lint and type checking
+## Lint, type checking, and architecture enforcement
 
 ```bash
 poetry run ruff check src tests
 poetry run mypy src
 
-# Architecture enforcement (layer boundary contracts)
+# Architecture enforcement (layer boundary contracts — 7 contracts)
 poetry run lint-imports
 ```
 
-## How to add a new aggregate
+## How to extend
 
-See [`docs/how-to-add-aggregate.md`](docs/how-to-add-aggregate.md) for a complete
-end-to-end walkthrough (domain → use cases → persistence adapter → HTTP adapter →
-container wiring → tests).
+- **Add an aggregate inside an existing context** → [`docs/how-to-add-aggregate.md`](docs/how-to-add-aggregate.md)
+- **Add a new bounded context** → [`docs/how-to-add-bounded-context.md`](docs/how-to-add-bounded-context.md)

@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 
 from src.infrastructure.config import settings
-from src.adapters.persistence.base import Base  # noqa: F401 — shared registry
-import src.adapters.persistence.user.model  # noqa: F401 — registers UserModel
+from src.infrastructure.adapters.persistence.base import Base
+import src.infrastructure.adapters.persistence.registry  # noqa: F401 — triggers model registration
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
@@ -51,4 +51,5 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     import asyncio
+
     asyncio.run(run_migrations_online())

@@ -3,20 +3,31 @@ root_packages =
     src
 include_external_packages = True
 
-[importlinter:contract:layered-architecture]
-name = Layers point inward only
+[importlinter:contract:contexts-respect-layers-identity]
+name = Within identity context, layers point inward
 type = layers
 layers =
-    src.adapters
-    src.use_cases
-    src.domain
+    src.contexts.identity.adapters
+    src.contexts.identity.use_cases
+    src.contexts.identity.domain
+exhaustive = false
+
+[importlinter:contract:contexts-respect-layers-symphony]
+name = Within symphony context, layers point inward
+type = layers
+layers =
+    src.contexts.symphony.adapters
+    src.contexts.symphony.use_cases
+    src.contexts.symphony.domain
 exhaustive = false
 
 [importlinter:contract:domain-purity]
 name = Domain layer has no framework imports
 type = forbidden
 source_modules =
-    src.domain
+    src.shared
+    src.contexts.identity.domain
+    src.contexts.symphony.domain
 forbidden_modules =
     fastapi
     sqlalchemy
@@ -29,7 +40,8 @@ forbidden_modules =
 name = Use cases have no framework or adapter/infra imports
 type = forbidden
 source_modules =
-    src.use_cases
+    src.contexts.identity.use_cases
+    src.contexts.symphony.use_cases
 forbidden_modules =
     fastapi
     sqlalchemy
@@ -37,11 +49,77 @@ forbidden_modules =
     pydantic_settings
     dependency_injector
     httpx
-    src.adapters
+    src.contexts.identity.adapters
+    src.contexts.symphony.adapters
     src.infrastructure
 
+[importlinter:contract:adapters-isolation]
+name = Adapter sub-trees don't depend on each other
+type = independence
+modules =
+    src.contexts.identity.adapters.http
+    src.contexts.identity.adapters.persistence
+    src.contexts.symphony.adapters.http
+    src.contexts.symphony.adapters.persistence
+    src.infrastructure.adapters.events
+ignore_imports =
+    src.contexts.identity.adapters.http.user.deps -> src.contexts.identity.adapters.persistence.unit_of_work
+    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.containers
+    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.run.deps -> src.contexts.symphony.adapters.persistence.unit_of_work
+    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.spec.deps -> src.contexts.symphony.adapters.persistence.unit_of_work
+    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.plan.deps -> src.contexts.symphony.adapters.persistence.unit_of_work
+    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.database
+unmatched_ignore_imports_alerting = warn
+
+[importlinter:contract:domain-shared-purity]
+name = Shared layer has no framework or outer-layer imports
+type = forbidden
+source_modules =
+    src.shared
+forbidden_modules =
+    fastapi
+    sqlalchemy
+    pydantic
+    pydantic_settings
+    dependency_injector
+    httpx
+    src.contexts
+    src.infrastructure
+
+[importlinter:contract:bounded-contexts-isolation]
+name = Bounded contexts don't import from each other
+type = independence
+modules =
+    src.contexts.identity
+    src.contexts.symphony
+# The identity HTTP DI-seam (deps.py) legitimately imports src.infrastructure
+# (containers + database), which is the composition root that in turn wires
+# symphony. These are not direct cross-context imports — the infrastructure
+# layer is the intentional integration point. Whitelist these transitive paths.
+ignore_imports =
+    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.containers
+    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.database
+unmatched_ignore_imports_alerting = warn
+
 # NOTE: The "adapters-not-importing-infra" contract is intentionally omitted.
-# src/adapters/http/user/deps.py imports Container from src.infrastructure.container
-# to wire Provide[Container.<uc>.provider] — this is the designated DI seam point.
-# Forbidding that import would break the chosen dependency-injector pattern.
-# The three contracts above already enforce all meaningful architectural boundaries.
+# src/contexts/*/adapters/http/*/deps.py are the designated DI seams:
+# they wire the UoW adapter and event publishers into HTTP use-case factories.
+# That import path is by design. The adapters-isolation contract uses
+# ignore_imports to whitelist these intentional seam crossings (direct + via
+# infrastructure composition root) while still enforcing isolation everywhere else.

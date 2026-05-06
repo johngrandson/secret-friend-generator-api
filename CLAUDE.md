@@ -86,15 +86,9 @@ We keep all important docs in `./docs` folder and keep updating them, structure 
 
 ```
 ./docs
-├── architecture.md
-├── how-to-add-aggregate.md
-├── project-overview-pdr.md
-├── code-standards.md
-├── codebase-summary.md
-├── design-guidelines.md
-├── deployment-guide.md
-├── system-architecture.md
-└── project-roadmap.md
+├── architecture.md              # canonical layer & dependency rules
+├── how-to-add-aggregate.md      # recipe: add aggregate inside a context
+└── how-to-add-bounded-context.md # recipe: add new bounded context
 ```
 
 **IMPORTANT:** *MUST READ* and *MUST COMPLY* all *INSTRUCTIONS* in project `./CLAUDE.md`, especially *WORKFLOWS* section is *CRITICALLY IMPORTANT*, this rule is *MANDATORY. NON-NEGOTIABLE. NO EXCEPTIONS. MUST REMEMBER AT ALL TIMES!!!*

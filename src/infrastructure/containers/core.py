@@ -8,7 +8,9 @@ never has to redeclare them.
 from dependency_injector import containers, providers
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.adapters.events.in_memory_publisher import InMemoryEventPublisher
+from src.infrastructure.adapters.events.in_memory_publisher import (
+    InMemoryEventPublisher,
+)
 from src.infrastructure.config import get_settings
 
 

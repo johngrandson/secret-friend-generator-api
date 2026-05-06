@@ -30,21 +30,15 @@ Keep all important docs in `./docs` folder:
 
 ```
 ./docs
-├── architecture.md
-├── how-to-add-aggregate.md
-├── project-overview-pdr.md
-├── code-standards.md
-├── codebase-summary.md
-├── design-guidelines.md
-└── system-architecture.md
+├── architecture.md              # canonical layer & dependency rules
+├── how-to-add-aggregate.md      # recipe: add aggregate inside a context
+└── how-to-add-bounded-context.md # recipe: add new bounded context
 ```
 
 ## External Files
 
-Reference external instruction files in `opencode.json`:
-
 ```json
 {
-  "instructions": ["docs/*.md", ".opencode/agents/*.md"]
+  "instructions": ["docs/*.md"]
 }
 ```

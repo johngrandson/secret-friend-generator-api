@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/app"
     ENV: str = "development"
+    LINEAR_API_KEY: str | None = None
+    LINEAR_PROJECT_SLUG: str | None = None
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

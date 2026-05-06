@@ -3,11 +3,31 @@ exclude = ["env", "migrations"]
 line-length = 88
 
 [tool.ruff.lint]
-select = ["F", "E", "W"]
-fixable = ["F", "E"]
+select = [
+    "F",    # pyflakes
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "B",    # flake8-bugbear (likely-bug patterns)
+    "TID",  # flake8-tidy-imports (ban relative imports)
+    "UP",   # pyupgrade (modern Python idioms)
+    "SIM",  # flake8-simplify (refactor hints)
+]
+fixable = ["F", "E", "UP", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]
+# B008: Depends()/Query() as default args is the FastAPI + dependency-injector idiom;
+# the call is intentionally evaluated once at import time to build the DI graph.
+"src/adapters/http/user/deps.py" = ["B008"]
+"src/contexts/identity/adapters/http/user/deps.py" = ["B008"]
+"src/contexts/symphony/adapters/http/run/deps.py" = ["B008"]
+"src/contexts/symphony/adapters/http/spec/deps.py" = ["B008"]
+"src/contexts/symphony/adapters/http/plan/deps.py" = ["B008"]
+"src/contexts/symphony/adapters/http/spec/routes/list_for_run.py" = ["B008"]
+"src/contexts/symphony/adapters/http/plan/routes/list_for_run.py" = ["B008"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
 
 [tool.poetry]
 name = "app"
@@ -41,6 +61,9 @@ import-linter = ">=2.0"
 [tool.poetry.scripts]
 start = "bin.run:start"
 
+[tool.poetry.group.dev.dependencies]
+pytest-cov = "^7.1.0"
+
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
@@ -50,6 +73,34 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+concurrency = ["thread", "greenlet"]
+omit = [
+    "src/main.py",
+    "src/infrastructure/containers/*",
+    "src/*/adapters/http/*/router.py",
+    "src/*/adapters/http/*/__init__.py",
+    "src/*/__init__.py",
+    # Protocol files — type contracts, no runtime code (only imported under TYPE_CHECKING)
+    "src/contexts/*/domain/*/repository.py",
+    "src/contexts/*/domain/*/adapter.py",
+    "src/contexts/*/domain/unit_of_work.py",
+    "src/shared/event_publisher.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 1
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "\\.\\.\\.",
+]
 
 [build-system]
 requires = ["poetry-core"]

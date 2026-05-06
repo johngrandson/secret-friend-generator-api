@@ -1,0 +1,35 @@
+query TerminalIssuesSince($filter: IssueFilter!, $first: Int!, $after: String) {
+  issues(filter: $filter, first: $first, after: $after) {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      id
+      identifier
+      title
+      description
+      priority
+      state {
+        name
+      }
+      branchName
+      url
+      labels(first: 50) {
+        nodes {
+          name
+        }
+      }
+      inverseRelations(first: 50) {
+        nodes {
+          type
+          issue {
+            identifier
+          }
+        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+}

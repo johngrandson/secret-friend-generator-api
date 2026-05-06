@@ -1,0 +1,29 @@
+query IssueByIdentifier($identifier: String!) {
+  issue(id: $identifier) {
+    id
+    identifier
+    title
+    description
+    priority
+    state {
+      name
+    }
+    branchName
+    url
+    labels(first: 50) {
+      nodes {
+        name
+      }
+    }
+    inverseRelations(first: 50) {
+      nodes {
+        type
+        issue {
+          identifier
+        }
+      }
+    }
+    createdAt
+    updatedAt
+  }
+}
