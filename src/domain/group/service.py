@@ -1,19 +1,17 @@
-"""Group use cases — depend on Protocol, operate on domain entities."""
-
-from sqlalchemy.orm import Session
+"""Group use cases — depend on Protocols only, no infrastructure imports."""
 
 from src.domain.group.entities import Group
 from src.domain.group.repositories import IGroupRepository
 from src.domain.group.signals import group_created, group_deleted, group_updated
 from src.domain.group.value_objects import CategoryEnum
-from src.infrastructure.persistence import transaction
+from src.domain.shared.unit_of_work import UnitOfWork
 from src.shared.hashing import generate_group_token
 
 
 class GroupService:
-    def __init__(self, repo: IGroupRepository, db: Session) -> None:
+    def __init__(self, repo: IGroupRepository, uow: UnitOfWork) -> None:
         self._repo = repo
-        self._db = db
+        self._uow = uow
 
     def create(
         self,
@@ -22,7 +20,7 @@ class GroupService:
         description: str,
         category: CategoryEnum = CategoryEnum.santa,
     ) -> Group:
-        with transaction(self._db):
+        with self._uow.atomic():
             entity = self._repo.create(
                 Group(
                     name=name,
@@ -51,21 +49,17 @@ class GroupService:
         description: str | None = None,
         category: CategoryEnum | None = None,
     ) -> Group:
-        fields = {
-            k: v
-            for k, v in {
-                "name": name,
-                "description": description,
-                "category": category,
-            }.items()
-            if v is not None
-        }
-        with transaction(self._db):
-            entity = self._repo.update(group_id, **fields)
+        with self._uow.atomic():
+            entity = self._repo.update(
+                group_id,
+                name=name,
+                description=description,
+                category=category,
+            )
             group_updated.send(self.__class__, group=entity)
             return entity
 
     def delete(self, group_id: int) -> None:
-        with transaction(self._db):
+        with self._uow.atomic():
             self._repo.delete(group_id)
             group_deleted.send(self.__class__, group_id=group_id)

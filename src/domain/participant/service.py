@@ -1,6 +1,4 @@
-"""Participant use cases — depend on Protocol, operate on domain entities."""
-
-from sqlalchemy.orm import Session
+"""Participant use cases — depend on Protocols only, no infrastructure imports."""
 
 from src.domain.participant.entities import Participant
 from src.domain.participant.repositories import IParticipantRepository
@@ -10,17 +8,21 @@ from src.domain.participant.signals import (
     participant_updated,
 )
 from src.domain.participant.value_objects import ParticipantStatus
-from src.infrastructure.persistence import transaction
+from src.domain.shared.unit_of_work import UnitOfWork
 
 
 class ParticipantService:
-    def __init__(self, repo: IParticipantRepository, db: Session) -> None:
+    def __init__(
+        self, repo: IParticipantRepository, uow: UnitOfWork
+    ) -> None:
         self._repo = repo
-        self._db = db
+        self._uow = uow
 
     def create(self, *, name: str, group_id: int) -> Participant:
-        with transaction(self._db):
-            entity = self._repo.create(Participant(name=name, group_id=group_id))
+        with self._uow.atomic():
+            entity = self._repo.create(
+                Participant(name=name, group_id=group_id)
+            )
             participant_created.send(self.__class__, participant=entity)
             return entity
 
@@ -41,22 +43,18 @@ class ParticipantService:
         gift_hint: str | None = None,
         status: ParticipantStatus | None = None,
     ) -> Participant:
-        fields = {
-            k: v
-            for k, v in {
-                "name": name,
-                "gift_hint": gift_hint,
-                "status": status,
-            }.items()
-            if v is not None
-        }
-        with transaction(self._db):
-            entity = self._repo.update(participant_id, **fields)
+        with self._uow.atomic():
+            entity = self._repo.update(
+                participant_id,
+                name=name,
+                gift_hint=gift_hint,
+                status=status,
+            )
             participant_updated.send(self.__class__, participant=entity)
             return entity
 
     def delete(self, participant_id: int) -> None:
-        with transaction(self._db):
+        with self._uow.atomic():
             self._repo.delete(participant_id)
             participant_deleted.send(
                 self.__class__, participant_id=participant_id

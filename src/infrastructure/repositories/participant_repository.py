@@ -1,12 +1,11 @@
 """Postgres adapter for IParticipantRepository — maps ORM ↔ Participant entity."""
 
-from typing import Any
-
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from src.domain.participant.entities import Participant
+from src.domain.participant.value_objects import ParticipantStatus
 from src.infrastructure.persistence.models import (
     GroupORM,
     ParticipantORM,
@@ -87,12 +86,23 @@ class PostgresParticipantRepository:
             raise NotFoundError("Participant not found")
         return _to_entity(orm)
 
-    def update(self, participant_id: int, **fields: Any) -> Participant:
+    def update(
+        self,
+        participant_id: int,
+        *,
+        name: str | None = None,
+        gift_hint: str | None = None,
+        status: ParticipantStatus | None = None,
+    ) -> Participant:
         orm = self._db.get(ParticipantORM, participant_id)
         if orm is None:
             raise NotFoundError("Participant not found")
-        for key, value in fields.items():
-            setattr(orm, key, value)
+        if name is not None:
+            orm.name = name
+        if gift_hint is not None:
+            orm.gift_hint = gift_hint
+        if status is not None:
+            orm.status = status
         try:
             self._db.flush()
             self._db.refresh(orm)

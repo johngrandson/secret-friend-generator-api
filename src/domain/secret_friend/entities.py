@@ -1,4 +1,4 @@
-"""SecretFriend aggregate — pure domain entity with invariant enforcement."""
+"""SecretFriend aggregate — invariant enforced on creation, not on hydration."""
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -13,11 +13,24 @@ class SecretFriend:
         default_factory=lambda: datetime.now(timezone.utc)
     )
 
-    def __post_init__(self) -> None:
-        if self.gift_giver_id == self.gift_receiver_id:
+    @classmethod
+    def create(
+        cls, *, gift_giver_id: int, gift_receiver_id: int
+    ) -> "SecretFriend":
+        """Factory that enforces the giver != receiver invariant.
+
+        Use this for new assignments. Hydration paths (e.g. repo mappers
+        rebuilding a row from the database) construct via the bare
+        constructor so corrupt rows surface as data errors, not validation
+        500s on read.
+        """
+        if gift_giver_id == gift_receiver_id:
             raise ValueError(
                 "Gift giver and gift receiver cannot be the same person."
             )
+        return cls(
+            gift_giver_id=gift_giver_id, gift_receiver_id=gift_receiver_id
+        )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SecretFriend):

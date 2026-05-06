@@ -43,6 +43,6 @@ class ParticipantUpdate(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def at_least_one_field(cls, data: object) -> object:
-        if isinstance(data, dict) and not any(data.values()):
+        if isinstance(data, dict) and all(v is None for v in data.values()):
             raise ValueError("At least one field must be provided")
         return data

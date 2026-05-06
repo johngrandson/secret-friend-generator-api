@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from src.domain.group.entities import Group
+from src.domain.participant.entities import Participant
 from src.infrastructure.persistence import Base, get_db
 from src.infrastructure.persistence.models import (  # noqa: F401  (registers metadata)
     GroupORM,
@@ -18,8 +20,6 @@ from src.infrastructure.repositories.group_repository import (
 from src.infrastructure.repositories.participant_repository import (
     PostgresParticipantRepository,
 )
-from src.domain.group.entities import Group
-from src.domain.participant.entities import Participant
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 

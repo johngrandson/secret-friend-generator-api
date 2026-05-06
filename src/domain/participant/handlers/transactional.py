@@ -1,32 +1,12 @@
-"""Participant transactional handler — cross-domain reaction to assignment.
+"""Participant transactional handlers — currently empty.
 
-Errors propagate, rolling back the transaction.
+The "reveal participant on assignment" flow used to live here as a signal
+handler; it now runs as an explicit `participant_service.update(...)` call
+inside `SecretFriendService.assign()` so the cross-domain coordination is
+visible at the call site instead of hidden behind a signal-with-Session
+payload.
 """
-
-from sqlalchemy.orm import Session
-
-from src.domain.secret_friend.signals import secret_friend_assigned
-
-
-def _reveal_participant_on_assignment(
-    sender: type,
-    *,
-    participant_id: int,
-    db_session: Session,
-    **kwargs: object,
-) -> None:
-    """Mark participant as REVEALED when their secret friend is assigned."""
-    from src.domain.participant.service import ParticipantService
-    from src.domain.participant.value_objects import ParticipantStatus
-    from src.infrastructure.repositories.participant_repository import (
-        PostgresParticipantRepository,
-    )
-
-    repo = PostgresParticipantRepository(db_session)
-    service = ParticipantService(repo=repo, db=db_session)
-    service.update(participant_id, status=ParticipantStatus.REVEALED)
 
 
 def register_transactional() -> None:
-    """Connect participant transactional handlers to their signals."""
-    secret_friend_assigned.connect(_reveal_participant_on_assignment)
+    """No-op: cross-domain coordination is handled inline in SecretFriendService."""
