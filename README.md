@@ -1,93 +1,150 @@
-# Secret Friend Generator API
+# Python AI Starter — Clean Architecture
 
-This project is a Secret Friend Generator API that allows users to create and manage secret friend events.
+A production-ready Python starter using strict Clean Architecture / Hexagonal / DDD patterns.
+The canonical domain example is a **User** aggregate with full CRUD, demonstrating how to add
+any new domain object to the same layered structure.
 
-## Getting Started
+## Architecture
+
+```
++----------------------------------------------+
+|  Infrastructure  (FastAPI, SQLAlchemy, DI)   |  <- outer
++----------------------------------------------+
+|  Adapters        (HTTP routes, Persistence)  |
++----------------------------------------------+
+|  Use Cases       (Application orchestration) |
++----------------------------------------------+
+|  Domain          (Entities, Value Objects)   |  <- inner / pure Python
++----------------------------------------------+
+```
+
+**Dependency rule**: inner layers never import from outer layers.
+`src/domain/` has zero imports from `fastapi`, `sqlalchemy`, `pydantic`, or any framework.
+
+- **Architecture rules**: see [`docs/architecture.md`](docs/architecture.md) for the full
+  layer boundary guide. Rules are enforced automatically by `poetry run lint-imports`
+  (CI: job `test-arch`).
+
+## Stack
+
+| Concern | Library |
+|---|---|
+| Web framework | FastAPI |
+| ORM | SQLAlchemy 2.0 async |
+| DB driver (prod) | asyncpg (PostgreSQL) |
+| DB driver (test) | aiosqlite (SQLite in-memory) |
+| Migrations | Alembic (async engine) |
+| Dependency injection | dependency-injector — `Container` owns engine/session-factory/use-case factories; sessions stay per-request via FastAPI `Depends(get_session)` |
+| Settings | pydantic-settings |
+| Testing | pytest + pytest-asyncio + httpx |
+| Lint / format | ruff |
+| Type checking | mypy |
+| Architecture enforcement | import-linter (`poetry run lint-imports`) |
+
+## Project structure
+
+```
+src/
+├── main.py                                      # FastAPI factory + lifespan
+├── domain/user/
+│   ├── entity.py                                # User aggregate root (dataclass)
+│   ├── email.py                                 # Email value object (frozen dataclass)
+│   └── repository.py                            # IUserRepository (Protocol — output port)
+├── use_cases/user/
+│   ├── create.py
+│   ├── get.py
+│   ├── list.py
+│   ├── update.py
+│   └── delete.py
+├── adapters/
+│   ├── http/user/
+│   │   ├── _router.py                           # APIRouter definition
+│   │   ├── schemas.py                           # Pydantic input schemas
+│   │   ├── serializers.py                       # entity → dict
+│   │   ├── deps.py                              # FastAPI Depends wiring
+│   │   └── routes/{create,get,list,update,delete}.py
+│   └── persistence/user/
+│       ├── model.py                             # SQLAlchemy UserModel
+│       ├── mapper.py                            # entity ↔ model conversion
+│       └── repository.py                        # SQLAlchemyUserRepository
+└── infrastructure/
+    ├── config.py                                # pydantic-settings Settings
+    ├── container.py                             # DI Container (engine, session factory, use cases)
+    └── database.py                              # get_session (per-request) + init_db
+
+tests/
+├── conftest.py                                  # SQLite engine + client fixtures
+├── architecture/
+│   └── test_dependency_rule.py                  # AST-based layer purity checks
+├── unit/
+│   ├── domain/user/{test_email,test_entity}.py
+│   └── use_cases/user/test_{create,get,list,update,delete}.py
+└── integration/user/
+    ├── test_repository.py                       # repo against SQLite
+    └── test_endpoints.py                        # full HTTP via httpx AsyncClient
+```
+
+## Local setup
 
 ### Prerequisites
 
-Make sure you have the following installed on your machine:
+- Python 3.11+
+- Poetry
+- Docker (for PostgreSQL)
 
-- [Python](https://www.python.org/) (version 3.8 or higher)
-- [Poetry](https://python-poetry.org/) (version 1.1.0 or higher)
-
-### Project Setup
-
-Clone the repository:
+### Steps
 
 ```bash
-git clone https://github.com/johngrandson/secret-friend-generator-api.git
-```
-
-Navigate to the project directory:
-
-```bash
-cd secret-friend-generator-api
-```
-
-Load the virtual environment:
-
-```bash
-poetry shell
-```
-
-Install the dependencies:
-
-```bash
+# 1. Install dependencies
 poetry install
-```
 
-### Running the Project
+# 2. Configure environment
+cp .env.example .env
+# Edit DATABASE_URL if needed (default: postgresql+asyncpg://postgres:postgres@localhost:5432/app)
 
-Navigate to the `docker` directory:
+# 3. Start PostgreSQL
+docker compose -f docker/docker-compose.yml up -d postgres
 
-```bash
-cd docker
-```
+# 4. Run migrations
+poetry run alembic upgrade head
 
-Start the services using `docker-compose`:
-
-```bash
-docker-compose up -d
-```
-
-
-Start the development server:
-
-```bash
+# 5. Start the server
 poetry run start
+# API available at http://localhost:8000/docs
 ```
 
-The API will be running at `http://localhost:8000`.
+## API endpoints
 
+| Method | Path | Description |
+|---|---|---|
+| POST | `/users/` | Create user (201) |
+| GET | `/users/` | List users (paginated: limit/offset) |
+| GET | `/users/{id}` | Get user by id (404 if missing) |
+| PATCH | `/users/{id}` | Update name / is_active (404 if missing) |
+| DELETE | `/users/{id}` | Delete user (204 / 404 if missing) |
 
-### Running Tests
-
-To run the tests, use the following command:
+## Running tests
 
 ```bash
-poetry run pytest
+# All tests — unit + integration against SQLite in-memory (no Postgres required)
+poetry run pytest -q
+
+# With coverage
+poetry run pytest --cov=src --cov-report=term-missing
 ```
 
-### API Documentation
+## Lint and type checking
 
-The API documentation is available at `http://localhost:8000/docs` once the server is running.
+```bash
+poetry run ruff check src tests
+poetry run mypy src
 
-### Contributing
+# Architecture enforcement (layer boundary contracts)
+poetry run lint-imports
+```
 
-If you would like to contribute to this project, please follow these steps:
+## How to add a new aggregate
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes.
-4. Commit your changes (`git commit -m 'Add some feature'`).
-5. Push to the branch (`git push origin feature-branch`).
-6. Create a new Pull Request.
-
-### License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-### Contact
-
-If you have any questions or suggestions, feel free to open an issue or contact the project maintainers.
+See [`docs/how-to-add-aggregate.md`](docs/how-to-add-aggregate.md) for a complete
+end-to-end walkthrough (domain → use cases → persistence adapter → HTTP adapter →
+container wiring → tests).

@@ -42,3 +42,12 @@ repos:
         language: system
         types: [python]
         stages: [push]
+
+  - repo: local
+    hooks:
+      - id: lint-imports
+        name: import-linter (architecture rules)
+        entry: poetry run lint-imports
+        language: system
+        types: [python]
+        pass_filenames: false

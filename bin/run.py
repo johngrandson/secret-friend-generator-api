@@ -11,7 +11,7 @@ def start():
     if environment.lower() == "development":
         command = [
             "uvicorn",
-            "src.app_main:app",
+            "src.main:app",
             "--host",
             host,
             "--port",
@@ -27,12 +27,13 @@ def start():
             "uvicorn.workers.UvicornWorker",
             "-b",
             f"{host}:{port}",
-            "src.app_main:app",
+            "src.main:app",
         ]
 
     try:
         print(
-            f"Starting server on {host}:{port} ({'Development' if environment.lower() == 'development' else 'Production'})..."
+            f"Starting server on {host}:{port} "
+            f"({'Development' if environment.lower() == 'development' else 'Production'})..."
         )
         run(command, check=True)
     except Exception as e:

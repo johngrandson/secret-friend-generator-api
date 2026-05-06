@@ -1,100 +1,46 @@
-from unittest.mock import AsyncMock, patch
+"""Shared test fixtures — async SQLite engine, session, and dependency override."""
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
-from fastapi.testclient import TestClient
+from dependency_injector import providers
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from src.infrastructure.persistence import Base, get_db
-from src.domain.group.repository import GroupRepository
-from src.domain.group.schemas import GroupCreate
-from src.domain.participant.repository import ParticipantRepository
-from src.domain.participant.schemas import ParticipantCreate
+from src.adapters.persistence.base import Base
+import src.adapters.persistence.user.model  # noqa: F401 — registers UserModel with Base
+from src.main import create_app
 
-# Import models so Base.metadata knows all tables
-from src.domain.group.model import Group  # noqa: F401
-from src.domain.participant.model import Participant  # noqa: F401
-from src.domain.secret_friend.model import SecretFriend  # noqa: F401
-
-TEST_DATABASE_URL = "sqlite:///:memory:"
+_TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
 
 @pytest.fixture(scope="session")
-def engine():
-    # StaticPool ensures all connections share the same in-memory SQLite
-    # database — required so that tables created here are visible to sessions
-    # opened inside the FastAPI request handlers during integration tests.
-    _engine = create_engine(
-        TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+async def async_engine():
+    engine = create_async_engine(_TEST_DB_URL, echo=False)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield engine
+    await engine.dispose()
+
+
+@pytest.fixture
+async def async_session(async_engine):
+    factory = async_sessionmaker(async_engine, expire_on_commit=False)
+    async with factory() as session:
+        yield session
+        await session.rollback()
+
+
+@pytest.fixture
+async def client(async_engine):
+    """AsyncClient with the container's db_session_factory overridden to use SQLite."""
+    test_session_factory = async_sessionmaker(async_engine, expire_on_commit=False)
+
+    app = create_app()
+    app.container.core.db_session_factory.override(  # type: ignore[attr-defined]
+        providers.Object(test_session_factory)
     )
-    Base.metadata.create_all(_engine)
-    yield _engine
-    Base.metadata.drop_all(_engine)
 
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
-@pytest.fixture(scope="function")
-def db_session(engine) -> Session:
-    """Each test runs in a transaction that is rolled back on teardown."""
-    connection = engine.connect()
-    txn = connection.begin()
-    session = Session(connection)
-    yield session
-    session.close()
-    txn.rollback()
-    connection.close()
-
-
-@pytest.fixture
-def client(engine):
-    """FastAPI test client with a dedicated SQLite session per request.
-
-    The routes live on the `api` sub-application (mounted at /api/v1).
-    dependency_overrides must be applied on `api`, not on the outer `app`.
-    We use TestClient against `api` directly and set base_url so paths like
-    /api/v1/groups still work naturally in tests.
-    """
-    from src.app_main import api
-
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    def override_get_db():
-        db = TestingSessionLocal()
-        try:
-            yield db
-        finally:
-            db.close()
-
-    api.dependency_overrides[get_db] = override_get_db
-    with (
-        patch("src.app_main.init_agents_registry", new_callable=AsyncMock),
-        patch("src.app_main.shutdown_agents", new_callable=AsyncMock),
-        TestClient(api, base_url="http://testserver/api/v1") as c,
-    ):
-        yield c
-    api.dependency_overrides.clear()
-
-
-@pytest.fixture
-def group_fixture(db_session: Session):
-    def _create(**overrides):
-        defaults = {"name": "Test Group", "description": "A test group"}
-        return GroupRepository.create(
-            GroupCreate(**{**defaults, **overrides}), db_session
-        )
-
-    return _create
-
-
-@pytest.fixture
-def participant_fixture(db_session: Session, group_fixture):
-    def _create(group=None, **overrides):
-        group = group or group_fixture()
-        defaults = {"name": "Test Participant", "group_id": group.id}
-        return ParticipantRepository.create(
-            ParticipantCreate(**{**defaults, **overrides}), db_session
-        )
-
-    return _create
+    app.container.core.db_session_factory.reset_override()  # type: ignore[attr-defined]

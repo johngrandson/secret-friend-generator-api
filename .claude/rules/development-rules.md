@@ -4,6 +4,8 @@
 **IMPORTANT:** You ALWAYS follow these principles: **YAGNI (You Aren't Gonna Need It) - KISS (Keep It Simple, Stupid) - DRY (Don't Repeat Yourself)**
 
 ## General
+- **Architecture**: `docs/architecture.md` is the source of truth for layer boundaries.
+  Run `poetry run lint-imports` before committing changes under `src/`.
 - **File Naming**: Use kebab-case for file names with a meaningful name that describes the purpose of the file, doesn't matter if the file name is long, just make sure when LLMs read the file names while using Grep or other tools, they can understand the purpose of the file right away without reading the file content.
 - **File Size Management**: Keep individual code files under 200 lines for optimal context management
   - Split large files into smaller, focused components/modules

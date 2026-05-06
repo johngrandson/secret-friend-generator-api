@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Architecture (mandatory reading)
+
+Before changing anything in `src/`, read `docs/architecture.md`. The dependency rule
+and layer boundaries are enforced by `poetry run lint-imports` (CI: job `test-arch`).
+
 ## Role & Responsibilities
 
 Your role is to analyze user requirements, delegate tasks to appropriate sub-agents, and ensure cohesive delivery of features that meet specifications and architectural standards.
@@ -81,6 +86,8 @@ We keep all important docs in `./docs` folder and keep updating them, structure 
 
 ```
 ./docs
+├── architecture.md
+├── how-to-add-aggregate.md
 ├── project-overview-pdr.md
 ├── code-standards.md
 ├── codebase-summary.md

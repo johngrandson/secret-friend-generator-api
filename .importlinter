@@ -1,0 +1,47 @@
+[importlinter]
+root_packages =
+    src
+include_external_packages = True
+
+[importlinter:contract:layered-architecture]
+name = Layers point inward only
+type = layers
+layers =
+    src.adapters
+    src.use_cases
+    src.domain
+exhaustive = false
+
+[importlinter:contract:domain-purity]
+name = Domain layer has no framework imports
+type = forbidden
+source_modules =
+    src.domain
+forbidden_modules =
+    fastapi
+    sqlalchemy
+    pydantic
+    pydantic_settings
+    dependency_injector
+    httpx
+
+[importlinter:contract:use-cases-purity]
+name = Use cases have no framework or adapter/infra imports
+type = forbidden
+source_modules =
+    src.use_cases
+forbidden_modules =
+    fastapi
+    sqlalchemy
+    pydantic
+    pydantic_settings
+    dependency_injector
+    httpx
+    src.adapters
+    src.infrastructure
+
+# NOTE: The "adapters-not-importing-infra" contract is intentionally omitted.
+# src/adapters/http/user/deps.py imports Container from src.infrastructure.container
+# to wire Provide[Container.<uc>.provider] — this is the designated DI seam point.
+# Forbidding that import would break the chosen dependency-injector pattern.
+# The three contracts above already enforce all meaningful architectural boundaries.

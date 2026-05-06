@@ -5,3 +5,5 @@ env
 plans
 docs/superpowers*
 *_cache*
+.remember
+.venv
