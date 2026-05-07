@@ -7,9 +7,13 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from src.contexts.identity.adapters.http.user import router as user_router
+from src.contexts.symphony.adapters.http.backlog import router as backlog_router
 from src.contexts.symphony.adapters.http.run import router as run_router
 from src.contexts.symphony.adapters.http.spec import router as spec_router
 from src.contexts.symphony.adapters.http.plan import router as plan_router
+from src.contexts.tenancy.adapters.http.organization import (
+    router as organization_router,
+)
 from src.infrastructure.containers import Container, get_container_from_app
 from src.infrastructure.database import init_db
 
@@ -36,6 +40,8 @@ def create_app() -> FastAPI:
     app.include_router(run_router)
     app.include_router(spec_router)
     app.include_router(plan_router)
+    app.include_router(backlog_router)
+    app.include_router(organization_router)
     return app
 
 

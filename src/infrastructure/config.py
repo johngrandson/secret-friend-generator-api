@@ -8,6 +8,13 @@ class Settings(BaseSettings):
     ENV: str = "development"
     LINEAR_API_KEY: str | None = None
     LINEAR_PROJECT_SLUG: str | None = None
+    SYMPHONY_WORKFLOW_PATH: str | None = None
+    """Path to the WORKFLOW.md whose front matter configures the pipeline.
+
+    Optional at boot: the symphony pipeline use cases (Start/Generate/Execute/
+    Gates/OpenPR/Orchestrate/Dispatch) raise at first call when this is unset.
+    Read-only endpoints (GET /runs, GET /specs, etc.) work without it.
+    """
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

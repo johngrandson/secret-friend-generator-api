@@ -99,16 +99,17 @@ Um **bounded context** é uma fronteira explícita dentro da qual um modelo de d
 tem significado coerente. Contextos distintos usam linguagens, entidades e regras
 independentes — e **nunca se importam diretamente**.
 
-O projeto tem dois contextos:
+O projeto tem três contextos:
 
 | Contexto | Raiz em `src/` | Agrega |
 |----------|---------------|--------|
 | `identity` | `src/contexts/identity/` | `User` |
 | `symphony` | `src/contexts/symphony/` | `Run`, `Spec`, `Plan` |
+| `tenancy` | `src/contexts/tenancy/` | `Organization` (Phase 2) |
 
 O contrato `bounded-contexts-isolation` no `.importlinter` aplica essa separação
-automaticamente: `src.contexts.identity` e `src.contexts.symphony` são declarados
-`independence` — qualquer import direto entre eles quebra o build.
+automaticamente: os três contextos são declarados `independence` — qualquer
+import direto entre eles quebra o build.
 
 A única exceção intencional é `deps.py` (driving adapter) importar
 `src.infrastructure.containers`, que é o ponto de costura do DI. Isso não é

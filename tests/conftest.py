@@ -83,6 +83,31 @@ class FakeSymphonyUoW:
         self.rolled_back = True
 
 
+class FakeTenancyUoW:
+    """Fake ITenancyUnitOfWork for tenancy use case unit tests.
+
+    Exposes `organizations` as an AsyncMock repo and tracks commit/rollback
+    via `uow.committed` and `uow.rolled_back`.
+    """
+
+    def __init__(self) -> None:
+        self.organizations = AsyncMock()
+        self.committed = False
+        self.rolled_back = False
+
+    async def __aenter__(self) -> "FakeTenancyUoW":
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        pass
+
+    async def commit(self) -> None:
+        self.committed = True
+
+    async def rollback(self) -> None:
+        self.rolled_back = True
+
+
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
 
@@ -125,6 +150,12 @@ def fake_identity_uow() -> FakeIdentityUoW:
 def fake_symphony_uow() -> FakeSymphonyUoW:
     """Fresh FakeSymphonyUoW per test with mocked `runs`, `specs`, `plans` repos."""
     return FakeSymphonyUoW()
+
+
+@pytest.fixture
+def fake_tenancy_uow() -> FakeTenancyUoW:
+    """Fresh FakeTenancyUoW per test (aggregate repos arrive in Phase 2)."""
+    return FakeTenancyUoW()
 
 
 @pytest.fixture

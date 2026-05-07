@@ -21,6 +21,15 @@ layers =
     src.contexts.symphony.domain
 exhaustive = false
 
+[importlinter:contract:contexts-respect-layers-tenancy]
+name = Within tenancy context, layers point inward
+type = layers
+layers =
+    src.contexts.tenancy.adapters
+    src.contexts.tenancy.use_cases
+    src.contexts.tenancy.domain
+exhaustive = false
+
 [importlinter:contract:domain-purity]
 name = Domain layer has no framework imports
 type = forbidden
@@ -28,6 +37,7 @@ source_modules =
     src.shared
     src.contexts.identity.domain
     src.contexts.symphony.domain
+    src.contexts.tenancy.domain
 forbidden_modules =
     fastapi
     sqlalchemy
@@ -42,6 +52,7 @@ type = forbidden
 source_modules =
     src.contexts.identity.use_cases
     src.contexts.symphony.use_cases
+    src.contexts.tenancy.use_cases
 forbidden_modules =
     fastapi
     sqlalchemy
@@ -51,6 +62,7 @@ forbidden_modules =
     httpx
     src.contexts.identity.adapters
     src.contexts.symphony.adapters
+    src.contexts.tenancy.adapters
     src.infrastructure
 
 [importlinter:contract:adapters-isolation]
@@ -61,6 +73,8 @@ modules =
     src.contexts.identity.adapters.persistence
     src.contexts.symphony.adapters.http
     src.contexts.symphony.adapters.persistence
+    src.contexts.tenancy.adapters.http
+    src.contexts.tenancy.adapters.persistence
     src.infrastructure.adapters.events
 ignore_imports =
     src.contexts.identity.adapters.http.user.deps -> src.contexts.identity.adapters.persistence.unit_of_work
@@ -74,6 +88,20 @@ ignore_imports =
     src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.contexts.symphony.adapters.persistence.unit_of_work
+    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.adapters.workflow.schemas
+    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.run.dispatch_dep -> src.contexts.symphony.adapters.persistence.unit_of_work
+    src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.backlog.deps -> src.infrastructure.containers
+    src.contexts.tenancy.adapters.http.organization.deps -> src.contexts.tenancy.adapters.persistence.unit_of_work
+    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.containers
+    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.database
 unmatched_ignore_imports_alerting = warn
 
 [importlinter:contract:domain-shared-purity]
@@ -112,6 +140,7 @@ type = independence
 modules =
     src.contexts.identity
     src.contexts.symphony
+    src.contexts.tenancy
 # The identity HTTP DI-seam (deps.py) legitimately imports src.infrastructure
 # (containers + database), which is the composition root that in turn wires
 # symphony. These are not direct cross-context imports — the infrastructure
@@ -124,6 +153,13 @@ ignore_imports =
     src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.backlog.deps -> src.infrastructure.containers
+    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.containers
+    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.database
 unmatched_ignore_imports_alerting = warn
 
 # NOTE: The "adapters-not-importing-infra" contract is intentionally omitted.

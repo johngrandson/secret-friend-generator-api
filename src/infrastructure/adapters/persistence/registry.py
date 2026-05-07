@@ -14,3 +14,4 @@ import src.contexts.identity.adapters.persistence.user.model  # noqa: F401 — r
 import src.contexts.symphony.adapters.persistence.run.model  # noqa: F401 — registers RunModel
 import src.contexts.symphony.adapters.persistence.spec.model  # noqa: F401 — registers SpecModel
 import src.contexts.symphony.adapters.persistence.plan.model  # noqa: F401 — registers PlanModel
+import src.contexts.tenancy.adapters.persistence.organization.model  # noqa: F401 — registers OrganizationModel + OrganizationMemberModel

@@ -11,6 +11,7 @@ from dependency_injector import containers, providers
 from src.infrastructure.containers.core import CoreContainer
 from src.infrastructure.containers.identity import IdentityContainer
 from src.infrastructure.containers.symphony import SymphonyContainer
+from src.infrastructure.containers.tenancy import TenancyContainer
 
 
 class Container(containers.DeclarativeContainer):
@@ -18,6 +19,7 @@ class Container(containers.DeclarativeContainer):
         packages=[
             "src.contexts.identity.adapters.http",
             "src.contexts.symphony.adapters.http",
+            "src.contexts.tenancy.adapters.http",
         ],
     )
 
@@ -32,4 +34,9 @@ class Container(containers.DeclarativeContainer):
         SymphonyContainer,
         event_publisher=core.event_publisher,
         config=core.config,
+    )
+
+    tenancy = providers.Container(
+        TenancyContainer,
+        event_publisher=core.event_publisher,
     )
