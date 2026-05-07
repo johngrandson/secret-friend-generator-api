@@ -1,106 +1,92 @@
 """OrchestrateRunUseCase — drive a single Run through the symphony pipeline.
 
-LOAD-BEARING INVARIANT (locked in F5): the orchestrator NEVER iterates
-in-memory between sub-use-cases. Every loop iteration:
+LOAD-BEARING INVARIANT: the orchestrator NEVER iterates in-memory between
+sub-use-cases. Every loop iteration re-reads the Run from persistence so
+sub-use-cases commit independently and crash recovery is automatic.
 
-  1. Opens a fresh UoW context to re-read the Run state from persistence.
-  2. Dispatches the matching sub-use-case based on ``run.status``.
-  3. Sub-use-cases manage their own UoW + commit + publish.
+State machine (status → action):
+  GEN_SPEC        → GenerateSpecUseCase  → SPEC_PENDING
+  SPEC_PENDING    → check latest Spec (approved/rejected/pending)
+  SPEC_APPROVED   → GeneratePlanUseCase  → PLAN_PENDING
+  GEN_PLAN        → GeneratePlanUseCase  (after rejection)
+  PLAN_PENDING    → check latest Plan (approved/rejected/pending)
+  PLAN_APPROVED   → ExecuteRunUseCase    → EXECUTED / RETRY_PENDING
+  RETRY_PENDING   → pause "awaiting_retry"
+  EXECUTED        → RunGatesUseCase      → GATES_PASSED / GATES_FAILED
+  GATES_PASSED    → OpenPRUseCase        → PR_OPEN / DONE
+  GATES_FAILED    → mark Run FAILED
+  PR_OPEN / DONE  → COMPLETED
+  FAILED          → terminal
+  CANCELLED       → terminal
 
-This is what makes the pipeline crash-safe: a process killed mid-orchestration
-resumes from the last committed state.
-
-Pause states (SPEC_PENDING, PLAN_PENDING, RETRY_PENDING) return immediately
-with ``OrchestrateOutcome.PAUSED`` — the caller (HTTP webhook, tick scheduler)
-re-invokes after the relevant external event.
-
-Use case is pure: it depends only on Protocols + sub-use-case Protocols
-+ ``ISymphonyUnitOfWork``. The sub-use-cases themselves remain free of any
-infrastructure import — orchestration just chains them.
+Design pattern: Strategy + Registry, with explicit composition.
+  Handlers are split by behaviour:
+    - handlers.sub_use_case_handlers — wraps each sub-use-case
+    - handlers.verdict_check_handlers — spec/plan approval polling
+    - handlers.terminal_handlers     — pure terminal/passive responses
+  ``_handle_gates_failed`` stays here as the single hybrid case
+  (needs persistence + returns StepResult).
+  ``_dispatch`` maps RunStatus → handler. ``execute()`` runs the loop.
 """
 
-from dataclasses import dataclass
-from enum import StrEnum
-from uuid import UUID
+from collections.abc import Callable, Coroutine
+from typing import Any, Final, TypeAlias
 
-from src.contexts.symphony.domain.backlog.issue import Issue
 from src.contexts.symphony.domain.constants import MAX_ORCHESTRATION_ITERATIONS
+from src.contexts.symphony.domain.run.entity import Run
 from src.contexts.symphony.domain.run.status import RunStatus
 from src.contexts.symphony.domain.unit_of_work import ISymphonyUnitOfWork
+from src.contexts.symphony.use_cases.orchestration.dtos import (
+    OrchestrateOutcome,
+    OrchestrateRunRequest,
+    OrchestrateRunResponse,
+    OrchestrationContext,
+    StepAction,
+    StepResult,
+    build_completed_response,
+    build_failed_response,
+    build_paused_response,
+)
+from src.contexts.symphony.use_cases.orchestration.handlers import (
+    SubUseCaseHandlers,
+    VerdictCheckHandlers,
+    handle_cancelled_terminal,
+    handle_completed,
+    handle_failed_terminal,
+    handle_retry_pending,
+)
+from src.contexts.symphony.use_cases.orchestration.run_persistence_service import (
+    RunPersistenceService,
+)
+from src.contexts.symphony.use_cases.plan.generate import GeneratePlanUseCase
 from src.contexts.symphony.use_cases.run.dto import RunDTO
-from src.contexts.symphony.use_cases.run.execute import (
-    ExecuteRunRequest,
-    ExecuteRunUseCase,
-)
-from src.contexts.symphony.use_cases.run.open_pr import (
-    OpenPRRequest,
-    OpenPRUseCase,
-)
-from src.contexts.symphony.use_cases.run.run_gates import (
-    RunGatesRequest,
-    RunGatesUseCase,
-)
-from src.contexts.symphony.use_cases.plan.generate import (
-    GeneratePlanRequest,
-    GeneratePlanUseCase,
-)
-from src.contexts.symphony.use_cases.spec.generate import (
-    GenerateSpecRequest,
-    GenerateSpecUseCase,
-)
+from src.contexts.symphony.use_cases.run.execute import ExecuteRunUseCase
+from src.contexts.symphony.use_cases.run.open_pr import OpenPRUseCase
+from src.contexts.symphony.use_cases.run.run_gates import RunGatesUseCase
+from src.contexts.symphony.use_cases.spec.generate import GenerateSpecUseCase
 from src.shared.event_publisher import IEventPublisher
 
+# Statuses owned by sub-use-cases as transient states, or entry-point
+# statuses not seen by the dispatch loop.
+_UNREACHABLE_STATUSES: Final[frozenset[RunStatus]] = frozenset(
+    {RunStatus.RECEIVED, RunStatus.EXECUTE, RunStatus.GATES}
+)
 
-class OrchestrateOutcome(StrEnum):
-    """Terminal classes for one orchestrate call. Caller decides next-tick."""
-
-    COMPLETED = "completed"
-    FAILED = "failed"
-    PAUSED = "paused"
+# Type for each handler entry in the dispatch table.
+_StepHandler: TypeAlias = Callable[..., Coroutine[Any, Any, Any]]
 
 
 class UnknownRunStatusError(Exception):
     """Run.status reached an enum value the orchestrator does not handle."""
 
 
-@dataclass
-class OrchestrationContext:
-    """Workflow-derived primitives forwarded to sub-use-cases.
-
-    Caller (F8 wiring or HTTP route) extracts these from
-    ``WorkflowDefinition`` once and forwards verbatim. Keeps the use case
-    free of Pydantic infrastructure imports while still letting it pass
-    workflow-shaped data downstream.
-    """
-
-    issue: Issue
-    execute_prompt_template: str
-    model_name: str
-    harness_config: object
-    pr_branch: str
-    pr_base_branch: str
-    pr_title: str
-    pr_is_draft: bool = True
-    pr_labels: tuple[str, ...] = ()
-
-
-@dataclass
-class OrchestrateRunRequest:
-    run_id: UUID
-    context: OrchestrationContext
-
-
-@dataclass
-class OrchestrateRunResponse:
-    run: RunDTO | None
-    outcome: OrchestrateOutcome
-    final_status: str
-    paused_reason: str | None = None
-    error_message: str | None = None
-
-
 class OrchestrateRunUseCase:
-    """Coordinator: chains the sub-use-cases, re-reading Run state every step."""
+    """Coordinator: chains sub-use-cases, re-reading Run state each step.
+
+    The ``_dispatch`` dict is the state-machine table. Reading it is
+    equivalent to reading the module-level docstring state-machine spec.
+    Handlers are composed from focused modules under ``handlers/``.
+    """
 
     def __init__(
         self,
@@ -113,16 +99,62 @@ class OrchestrateRunUseCase:
         event_publisher: IEventPublisher,
     ) -> None:
         self._uow = uow
-        self._generate_spec = generate_spec_use_case
-        self._generate_plan = generate_plan_use_case
-        self._execute_run = execute_run_use_case
-        self._run_gates = run_gates_use_case
-        self._open_pr = open_pr_use_case
-        self._publisher = event_publisher
+        self._persistence = RunPersistenceService(uow=uow, publisher=event_publisher)
 
-    async def execute(
-        self, request: OrchestrateRunRequest
-    ) -> OrchestrateRunResponse:
+        sub_handlers = SubUseCaseHandlers(
+            generate_spec=generate_spec_use_case,
+            generate_plan=generate_plan_use_case,
+            execute_run=execute_run_use_case,
+            run_gates=run_gates_use_case,
+            open_pr=open_pr_use_case,
+        )
+        verdict_handlers = VerdictCheckHandlers(uow=uow, persistence=self._persistence)
+
+        # Strategy + Registry: one entry per handled RunStatus.
+        # SPEC_APPROVED and GEN_PLAN share the same handler (both generate a plan).
+        self._dispatch: dict[RunStatus, _StepHandler] = {
+            RunStatus.GEN_SPEC: sub_handlers.handle_gen_spec,
+            RunStatus.SPEC_PENDING: verdict_handlers.handle_spec_pending,
+            RunStatus.SPEC_APPROVED: sub_handlers.handle_generate_plan,
+            RunStatus.GEN_PLAN: sub_handlers.handle_generate_plan,
+            RunStatus.PLAN_PENDING: verdict_handlers.handle_plan_pending,
+            RunStatus.PLAN_APPROVED: sub_handlers.handle_execute,
+            RunStatus.RETRY_PENDING: handle_retry_pending,
+            RunStatus.EXECUTED: sub_handlers.handle_run_gates,
+            RunStatus.GATES_PASSED: sub_handlers.handle_open_pr,
+            RunStatus.GATES_FAILED: self._handle_gates_failed,
+            RunStatus.PR_OPEN: handle_completed,
+            RunStatus.DONE: handle_completed,
+            RunStatus.FAILED: handle_failed_terminal,
+            RunStatus.CANCELLED: handle_cancelled_terminal,
+        }
+
+        # Structural guarantee: every RunStatus is dispatched or explicitly
+        # acknowledged as unreachable.
+        _covered = frozenset(self._dispatch) | _UNREACHABLE_STATUSES
+        _missing = frozenset(RunStatus) - _covered
+        if _missing:
+            raise RuntimeError(
+                f"OrchestrateRunUseCase dispatch table is incomplete. "
+                f"Unhandled statuses: {_missing!r}. "
+                "Add a handler or add to _UNREACHABLE_STATUSES."
+            )
+
+    async def _handle_gates_failed(
+        self,
+        run: Run,
+        ctx: OrchestrationContext,  # noqa: ARG002
+    ) -> StepResult:
+        """Hybrid handler: persists FAILED status and returns terminal StepResult."""
+        await self._persistence.mark_failed(run.id, "gates_failed")
+        return StepResult(
+            action=StepAction.FAILED,
+            final_status=RunStatus.FAILED.value,
+            error_message="gates_failed",
+        )
+
+    async def execute(self, request: OrchestrateRunRequest) -> OrchestrateRunResponse:
+        """Drive the Run state machine until pause, completion, or failure."""
         ctx = request.context
         last_run_dto: RunDTO | None = None
 
@@ -137,74 +169,32 @@ class OrchestrateRunUseCase:
                     error_message="Run not found.",
                 )
             last_run_dto = RunDTO.from_entity(run)
-            status = run.status
 
-            if status == RunStatus.GEN_SPEC:
-                await self._generate_spec.execute(
-                    GenerateSpecRequest(run_id=run.id, issue=ctx.issue)
-                )
-            elif status == RunStatus.SPEC_PENDING:
-                return _paused(last_run_dto, "awaiting_spec_approval")
-            elif status == RunStatus.SPEC_APPROVED:
-                await self._generate_plan.execute(
-                    GeneratePlanRequest(run_id=run.id, issue=ctx.issue)
-                )
-            elif status == RunStatus.PLAN_PENDING:
-                return _paused(last_run_dto, "awaiting_plan_approval")
-            elif status == RunStatus.PLAN_APPROVED:
-                await self._execute_run.execute(
-                    ExecuteRunRequest(
-                        run_id=run.id,
-                        issue=ctx.issue,
-                        prompt_template=ctx.execute_prompt_template,
-                        model_name=ctx.model_name,
-                    )
-                )
-            elif status == RunStatus.RETRY_PENDING:
-                return _paused(last_run_dto, "awaiting_retry")
-            elif status == RunStatus.EXECUTED:
-                await self._run_gates.execute(
-                    RunGatesRequest(
-                        run_id=run.id, harness_config=ctx.harness_config
-                    )
-                )
-            elif status == RunStatus.GATES_PASSED:
-                await self._open_pr.execute(
-                    OpenPRRequest(
-                        run_id=run.id,
-                        issue=ctx.issue,
-                        branch=ctx.pr_branch,
-                        base_branch=ctx.pr_base_branch,
-                        title=ctx.pr_title,
-                        is_draft=ctx.pr_is_draft,
-                        labels=ctx.pr_labels,
-                    )
-                )
-            elif status == RunStatus.GATES_FAILED:
-                final = await self._mark_failed(run.id, "gates_failed")
-                return OrchestrateRunResponse(
-                    final,
-                    OrchestrateOutcome.FAILED,
-                    final_status=RunStatus.FAILED.value,
-                    error_message="gates_failed",
-                )
-            elif status in (RunStatus.DONE, RunStatus.PR_OPEN):
-                return OrchestrateRunResponse(
-                    last_run_dto,
-                    OrchestrateOutcome.COMPLETED,
-                    final_status=status.value,
-                )
-            elif status == RunStatus.FAILED:
-                return OrchestrateRunResponse(
-                    last_run_dto,
-                    OrchestrateOutcome.FAILED,
-                    final_status=status.value,
-                    error_message=run.error,
-                )
-            else:
+            handler = self._dispatch.get(run.status)
+            if handler is None:
                 raise UnknownRunStatusError(
-                    f"Orchestrator does not handle status={status!r}"
+                    f"Orchestrator does not handle status={run.status!r}"
                 )
+
+            result = await handler(run, ctx)
+
+            match result.action:
+                case StepAction.CONTINUE:
+                    continue
+                case StepAction.PAUSED:
+                    return build_paused_response(
+                        last_run_dto, result.paused_reason or "unknown"
+                    )
+                case StepAction.COMPLETED:
+                    return build_completed_response(
+                        last_run_dto, result.final_status or run.status.value
+                    )
+                case StepAction.FAILED:
+                    return build_failed_response(
+                        last_run_dto,
+                        result.error_message or "failed",
+                        final_status=result.final_status,
+                    )
 
         return OrchestrateRunResponse(
             last_run_dto,
@@ -212,25 +202,3 @@ class OrchestrateRunUseCase:
             final_status=last_run_dto.status if last_run_dto else "unknown",
             error_message=f"max_iterations_exceeded ({MAX_ORCHESTRATION_ITERATIONS})",
         )
-
-    async def _mark_failed(self, run_id: UUID, reason: str) -> RunDTO | None:
-        async with self._uow:
-            run = await self._uow.runs.find_by_id(run_id)
-            if run is None:
-                return None
-            run.mark_failed(reason)
-            saved = await self._uow.runs.update(run)
-            await self._uow.commit()
-            events = run.pull_events()
-        if events:
-            await self._publisher.publish(events)
-        return RunDTO.from_entity(saved)
-
-
-def _paused(run: RunDTO, reason: str) -> OrchestrateRunResponse:
-    return OrchestrateRunResponse(
-        run,
-        OrchestrateOutcome.PAUSED,
-        final_status=run.status,
-        paused_reason=reason,
-    )
