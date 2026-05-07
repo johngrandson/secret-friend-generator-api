@@ -15,6 +15,17 @@ Ver [architecture.md](./architecture.md) para as regras de camadas e dependênci
 
 Siga a ordem — cada etapa depende da anterior.
 
+> **Reuso de bases**: se o agregado segue um padrão já existente
+> (write-once approval, p.ex.), prefira herdar de uma base do contexto
+> em vez de reimplementar o ciclo de vida. Ex.: `Spec` e `Plan` em
+> `symphony` herdam de
+> `src/contexts/symphony/domain/approval/aggregate.ApprovedAggregate`,
+> sobrescrevem apenas os hooks `_make_approved_event` /
+> `_make_rejected_event` / `_make_created_event` e ficam em ~45 linhas.
+> Antes de implementar `approve` / `reject` do zero, verifique se já
+> existe uma base reutilizável. Validações repetidas (ex.: "campo não
+> pode ser branco") vão para `domain/validators.py` (`ensure_non_blank`).
+
 Ao terminar, rode os gates de verificação:
 
 ```bash

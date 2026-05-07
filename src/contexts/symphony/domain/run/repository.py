@@ -20,6 +20,14 @@ class IRunRepository(Protocol):
 
     """Find runs that are due for retry."""
 
+    async def count_active(self) -> int: ...
+
+    """Count runs whose status is not terminal (DONE / FAILED)."""
+
+    async def list_active_identifiers(self) -> builtins.list[str]: ...
+
+    """Return ``issue_id`` values for all non-terminal runs (dedup helper)."""
+
     async def list(self, limit: int = 20, offset: int = 0) -> builtins.list[Run]: ...
 
     """List runs with pagination."""

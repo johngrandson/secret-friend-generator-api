@@ -12,8 +12,16 @@ class IPullRequestRepository(Protocol):
 
     async def find_by_id(self, pr_id: UUID) -> PullRequest | None: ...
 
+    """Find a pull request by its ID."""
+
     async def find_for_run(self, run_id: UUID) -> PullRequest | None: ...
+
+    """Find the pull request for a given run."""
 
     async def save(self, pr: PullRequest) -> PullRequest: ...
 
+    """Save a new pull request."""
+
     async def update(self, pr: PullRequest) -> PullRequest: ...
+
+    """Update an existing pull request."""

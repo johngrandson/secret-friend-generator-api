@@ -20,6 +20,7 @@ fixable = ["F", "E", "UP", "SIM"]
 # the call is intentionally evaluated once at import time to build the DI graph.
 "src/adapters/http/user/deps.py" = ["B008"]
 "src/contexts/identity/adapters/http/user/deps.py" = ["B008"]
+"src/contexts/symphony/adapters/http/use_case_deps.py" = ["B008"]
 "src/contexts/symphony/adapters/http/run/deps.py" = ["B008"]
 "src/contexts/symphony/adapters/http/spec/deps.py" = ["B008"]
 "src/contexts/symphony/adapters/http/plan/deps.py" = ["B008"]
@@ -49,6 +50,7 @@ pydantic-settings = ">=2.0.0"
 httpx = ">=0.24.1"
 asyncpg = ">=0.29"
 dependency-injector = ">=4.41"
+pyyaml = "^6.0.3"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.4.0"
@@ -63,6 +65,7 @@ start = "bin.run:start"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^7.1.0"
+types-pyyaml = "^6.0.12.20260408"
 
 [tool.mypy]
 python_version = "3.11"

@@ -66,6 +66,7 @@ class FakeSymphonyUoW:
         self.plans = AsyncMock()
         self.agent_sessions = AsyncMock()
         self.pull_requests = AsyncMock()
+        self.gate_results = AsyncMock()
         self.committed = False
         self.rolled_back = False
 

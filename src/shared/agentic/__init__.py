@@ -18,6 +18,7 @@ the kernel and the contract will fail. Re-think where the abstraction belongs.
 """
 
 from src.shared.agentic.agent_runner import (
+    AgentRunnerError,
     IAgentRunner,
     TokenUsage,
     TurnResult,
@@ -44,6 +45,7 @@ from src.shared.agentic.workspace import (
 )
 
 __all__ = [
+    "AgentRunnerError",
     "AgentTerminalError",
     "AgentTransientStallError",
     "Gate",

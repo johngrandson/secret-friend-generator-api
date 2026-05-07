@@ -5,15 +5,20 @@ import pytest
 from src.contexts.symphony.domain.run.status import RunStatus
 
 
-def test_all_eleven_values_exist():
+def test_all_status_values_exist():
     expected = {
         "received",
         "gen_spec",
         "spec_pending",
+        "spec_approved",
         "gen_plan",
         "plan_pending",
+        "plan_approved",
         "execute",
+        "executed",
         "gates",
+        "gates_passed",
+        "gates_failed",
         "pr_open",
         "done",
         "failed",

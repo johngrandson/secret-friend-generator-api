@@ -26,17 +26,19 @@ import random
 from dataclasses import dataclass
 from typing import Final, Literal
 
+from src.shared.agentic.agent_runner import AgentRunnerError
+
 RetryKind = Literal["continuation", "failure"]
 
 MIN_DELAY_MS: Final[int] = 1_000
 MAX_DOUBLING_EXPONENT: Final[int] = 10
 
 
-class AgentTransientStallError(Exception):
+class AgentTransientStallError(AgentRunnerError):
     """Marker: agent stalled and a fast retry is appropriate (no backoff)."""
 
 
-class AgentTerminalError(Exception):
+class AgentTerminalError(AgentRunnerError):
     """Marker: operator must intervene; retrying just burns budget."""
 
 

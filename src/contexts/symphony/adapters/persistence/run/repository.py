@@ -41,6 +41,22 @@ class SQLAlchemyRunRepository:
         )
         return [to_entity(row) for row in result.scalars().all()]
 
+    async def count_active(self) -> int:
+        result = await self._session.execute(
+            select(func.count()).where(
+                RunModel.status.notin_([RunStatus.DONE, RunStatus.FAILED])
+            )
+        )
+        return int(result.scalar_one())
+
+    async def list_active_identifiers(self) -> list[str]:
+        result = await self._session.execute(
+            select(RunModel.issue_id).where(
+                RunModel.status.notin_([RunStatus.DONE, RunStatus.FAILED])
+            )
+        )
+        return [row for row in result.scalars().all()]
+
     async def list(self, limit: int = 20, offset: int = 0) -> list[Run]:
         result = await self._session.execute(
             select(RunModel)

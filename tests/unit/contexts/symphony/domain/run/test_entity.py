@@ -1,5 +1,7 @@
 """Unit tests for the Run aggregate entity."""
 
+from datetime import datetime, timezone, timedelta
+
 import pytest
 
 from src.contexts.symphony.domain.run.entity import Run
@@ -160,3 +162,44 @@ def test_multiple_status_transitions_each_emit_event():
     assert events[0].to_status == "gen_spec"
     assert isinstance(events[1], RunStatusChanged)
     assert events[1].to_status == "spec_pending"
+
+
+def test_mark_retry_pending_sets_status_and_fields():
+    run = Run.create(issue_id="ENG-013")
+    run.pull_events()
+    next_at = datetime.now(timezone.utc) + timedelta(seconds=30)
+
+    run.mark_retry_pending(error="Transient stall.", next_attempt_at=next_at)
+
+    assert run.status == RunStatus.RETRY_PENDING
+    assert run.error == "Transient stall."
+    assert run.next_attempt_at == next_at
+
+
+def test_mark_retry_pending_emits_status_changed_and_run_failed():
+    run = Run.create(issue_id="ENG-014")
+    run.pull_events()
+    next_at = datetime.now(timezone.utc) + timedelta(seconds=60)
+
+    run.mark_retry_pending(error="Agent stalled.", next_attempt_at=next_at)
+
+    events = run.pull_events()
+    assert len(events) == 2
+    types = [type(e) for e in events]
+    assert RunStatusChanged in types
+    assert RunFailed in types
+
+    status_evt = next(e for e in events if isinstance(e, RunStatusChanged))
+    assert status_evt.to_status == RunStatus.RETRY_PENDING.value
+
+    failed_evt = next(e for e in events if isinstance(e, RunFailed))
+    assert failed_evt.run_id == run.id
+    assert failed_evt.error == "Agent stalled."
+    assert failed_evt.attempt == run.attempt
+
+
+def test_mark_retry_pending_blank_error_raises():
+    run = Run.create(issue_id="ENG-015")
+    next_at = datetime.now(timezone.utc) + timedelta(seconds=10)
+    with pytest.raises(ValueError):
+        run.mark_retry_pending(error="   ", next_attempt_at=next_at)

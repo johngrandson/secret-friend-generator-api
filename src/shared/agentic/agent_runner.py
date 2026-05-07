@@ -14,6 +14,14 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 
+class AgentRunnerError(Exception):
+    """Base error raised by IAgentRunner implementations.
+
+    Adapters subclass this so callers can catch all runner failures narrowly
+    without resorting to a bare ``except Exception``.
+    """
+
+
 @dataclass(frozen=True)
 class TokenUsage:
     """Token counts for a single turn. Defaults to zero if no usage emitted."""

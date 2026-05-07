@@ -12,6 +12,9 @@ if TYPE_CHECKING:
     from src.contexts.symphony.domain.agent_session.repository import (
         IAgentSessionRepository,
     )
+    from src.contexts.symphony.domain.gate_result.repository import (
+        IGateResultRepository,
+    )
     from src.contexts.symphony.domain.plan.repository import IPlanRepository
     from src.contexts.symphony.domain.pull_request.repository import (
         IPullRequestRepository,
@@ -37,6 +40,7 @@ class ISymphonyUnitOfWork(Protocol):
     plans: "IPlanRepository"
     agent_sessions: "IAgentSessionRepository"
     pull_requests: "IPullRequestRepository"
+    gate_results: "IGateResultRepository"
 
     async def __aenter__(self) -> "ISymphonyUnitOfWork": ...
 

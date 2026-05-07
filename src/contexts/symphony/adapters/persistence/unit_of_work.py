@@ -19,6 +19,7 @@ from src.contexts.symphony.adapters.persistence.spec.repository import (
     SQLAlchemySpecRepository,
 )
 from src.contexts.symphony.domain.agent_session.entity import AgentSession
+from src.contexts.symphony.domain.gate_result.value_object import GateResult
 from src.contexts.symphony.domain.pull_request.entity import PullRequest
 
 
@@ -57,6 +58,16 @@ class _NotWiredPullRequestRepository:
         raise NotImplementedError("PullRequest persistence not yet wired.")
 
 
+class _NotWiredGateResultRepository:
+    """Stub IGateResultRepository — replaced by real adapter in a later phase."""
+
+    async def save_batch(self, results: list[GateResult]) -> list[GateResult]:
+        raise NotImplementedError("GateResult persistence not yet wired.")
+
+    async def find_by_run(self, run_id: UUID) -> list[GateResult]:
+        raise NotImplementedError("GateResult persistence not yet wired.")
+
+
 class SQLAlchemySymphonyUnitOfWork:
     """SQLAlchemy-backed unit of work for the symphony bounded context.
 
@@ -76,6 +87,7 @@ class SQLAlchemySymphonyUnitOfWork:
     plans: SQLAlchemyPlanRepository
     agent_sessions: _NotWiredAgentSessionRepository
     pull_requests: _NotWiredPullRequestRepository
+    gate_results: _NotWiredGateResultRepository
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -84,6 +96,7 @@ class SQLAlchemySymphonyUnitOfWork:
         self.plans = SQLAlchemyPlanRepository(session)
         self.agent_sessions = _NotWiredAgentSessionRepository()
         self.pull_requests = _NotWiredPullRequestRepository()
+        self.gate_results = _NotWiredGateResultRepository()
 
     async def __aenter__(self) -> "SQLAlchemySymphonyUnitOfWork":
         return self

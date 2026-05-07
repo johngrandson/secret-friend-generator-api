@@ -67,18 +67,13 @@ ignore_imports =
     src.contexts.identity.adapters.http.user.deps -> src.infrastructure.adapters.events.in_memory_publisher
     src.contexts.identity.adapters.http.user.deps -> src.infrastructure.containers
     src.contexts.identity.adapters.http.user.deps -> src.infrastructure.database
-    src.contexts.symphony.adapters.http.run.deps -> src.contexts.symphony.adapters.persistence.unit_of_work
-    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.symphony.adapters.http.use_case_deps -> src.contexts.symphony.adapters.persistence.unit_of_work
+    src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
-    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.database
-    src.contexts.symphony.adapters.http.spec.deps -> src.contexts.symphony.adapters.persistence.unit_of_work
-    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.adapters.events.in_memory_publisher
     src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.containers
-    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.database
-    src.contexts.symphony.adapters.http.plan.deps -> src.contexts.symphony.adapters.persistence.unit_of_work
-    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.adapters.events.in_memory_publisher
     src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
-    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.database
 unmatched_ignore_imports_alerting = warn
 
 [importlinter:contract:domain-shared-purity]
@@ -124,12 +119,11 @@ modules =
 ignore_imports =
     src.contexts.identity.adapters.http.user.deps -> src.infrastructure.containers
     src.contexts.identity.adapters.http.user.deps -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
-    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.containers
-    src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
-    src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.database
 unmatched_ignore_imports_alerting = warn
 
 # NOTE: The "adapters-not-importing-infra" contract is intentionally omitted.

@@ -196,6 +196,60 @@ Eventos são coletados nos métodos de domínio e publicados pelo use case
 Para regras que envolvem mais de uma entidade mas não pertencem a nenhuma delas.
 Não confundir com Application Service (use case), que orquestra o fluxo.
 
+### Constants e Validators de Domínio
+
+Quando uma constante (filename, magic number, status) ou uma checagem de
+invariante (`if not x.strip(): raise ValueError(...)`) repete em mais de
+um lugar do mesmo contexto, extrair para módulos dedicados na própria
+camada de domínio (puro Python, importáveis por use_cases e adapters):
+
+- `domain/constants.py` — literais de contrato (paths, filenames, ceilings).
+  Exemplo: `src/contexts/symphony/domain/constants.py` com
+  `SYMPHONY_WORKSPACE_DIR = ".symphony"`, `MAX_ORCHESTRATION_ITERATIONS`,
+  `MIN_ARTIFACT_VERSION`.
+- `domain/validators.py` — funções puras que reutilizam invariantes triviais.
+  Exemplo: `ensure_non_blank(value, field_name)` substitui o snippet
+  `if not x.strip(): raise ValueError(...)` em cerca de 17 locais nas
+  entidades do contexto symphony.
+
+Um teste arquitetural anti-regressão (`tests/architecture/test_no_inline_constants.py`)
+falha se um literal proibido voltar a aparecer fora do `constants.py`.
+
+### Base classes para padrões repetidos
+
+Quando dois ou mais aggregates compartilham 100% do ciclo de vida
+(write-once approval, soft-delete, etc.), abstrair uma base
+`@dataclass` que herde de `AggregateRoot` e expõe os comportamentos
+compartilhados — subclasses fornecem apenas os eventos tipados via
+métodos hook.
+
+Referência — `src/contexts/symphony/domain/approval/aggregate.py`:
+```python
+@dataclass
+class ApprovedAggregate(AggregateRoot):
+    """Write-once approval base reused por Spec e Plan."""
+
+    run_id: UUID
+    version: int
+    content: str
+    # ... campos de verdict ...
+
+    def approve(self, by: str) -> None:
+        self._guard_pending()
+        ensure_non_blank(by, "Approver identifier")
+        self.approved_by = by
+        self.approved_at = datetime.now(timezone.utc)
+        self.collect_event(self._make_approved_event(by))
+
+    def _make_approved_event(self, by: str) -> DomainEvent:
+        """Subclass hook — ``raise NotImplementedError`` no base."""
+        raise NotImplementedError(...)
+```
+
+`Spec` e `Plan` herdam, sobrescrevem os 3 hooks `_make_*_event` para
+emitir `SpecApproved` / `PlanApproved` etc, e ficam em ~45 linhas cada
+(vs. 88 quando duplicadas).
+
 ---
 
 ## 2. Camada de Aplicação / Use Cases — `src/contexts/<context>/use_cases/`
@@ -609,6 +663,54 @@ Recebe `event_publisher` via `providers.Dependency` — injetado pelo root conta
 Factories para o contexto symphony:
 - `symphony_uow` — `Factory(SQLAlchemySymphonyUnitOfWork)`
 - Use cases para `run`, `spec`, `plan` — todos `Factory(...)`.
+
+### Constants em adapters de infraestrutura
+
+Cada adapter complexo de infraestrutura mantém um `constants.py` próprio
+para magic numbers, regex patterns e timeouts — `domain/` não importa de
+infra, então literais infra ficam dentro de cada subdiretório:
+
+- `infrastructure/adapters/workflow/constants.py` — defaults de polling, timeouts
+  do agent/turn/stall, deltas do retry config, `ENV_VAR_PATTERN`.
+- `infrastructure/adapters/agent_runner/constants.py` — `MAX_PROMPT_BYTES`,
+  `KILL_TIMEOUT_SECONDS`.
+- `infrastructure/adapters/workspace/constants.py` — hook timeouts, output cap,
+  regex de sanitização de chave, `ABORT_ON_FAILURE_HOOKS`.
+
+### HTTP factory para use cases (eliminar duplicação de `deps.py`)
+
+Quando múltiplos sub-routers (run/spec/plan) precisam do mesmo padrão
+`Provide[Container.<context>.<uc>.provider]` + UoW per-request +
+publisher opcional, extrair um factory genérico em
+`adapters/http/use_case_deps.py`:
+
+```python
+def make_use_case_dep(provider: Any, *, with_publisher: bool) -> Callable[..., Any]:
+    """Factory que monta uma FastAPI dependency com @inject."""
+    if with_publisher:
+        @inject
+        def dep(
+            session: SessionDep,
+            factory: Callable[..., T] = Depends(provider),
+            publisher: InMemoryEventPublisher = Depends(_core_event_publisher),
+        ) -> T:
+            return factory(uow=SQLAlchemySymphonyUnitOfWork(session), event_publisher=publisher)
+        return dep
+    # ... read-only variant
+```
+
+Cada `<entity>/deps.py` vira um thin shim de ~25 linhas declarando
+`get_*_use_case = make_use_case_dep(...)` + os aliases `Annotated[...,
+Depends(...)]`. As exceções correspondentes em `.importlinter`
+ficam centralizadas em `use_case_deps`.
+
+### Dedupe de configs entre infra e shared
+
+Quando uma config Pydantic do operador (YAML config) e uma config dataclass
+runtime convergem, manter o Pydantic como **schema** (sufixo `Schema`) e
+expor um método `to_runtime()` que projeta para o dataclass do
+`shared/`. Exemplo: `RetryConfigSchema.to_runtime() -> shared.agentic.retry.RetryConfig`
+elimina dois `RetryConfig` divergentes preservando os contratos de cada layer.
 
 ### Container raiz (`containers/root.py`)
 

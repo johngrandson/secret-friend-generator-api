@@ -9,7 +9,7 @@ from typing import Any, Self
 
 import httpx
 
-from src.contexts.symphony.adapters.backlog.config import TrackerConfig
+from src.infrastructure.adapters.workflow.schemas import TrackerConfig
 from src.contexts.symphony.adapters.backlog.mapper import normalize_linear_issue
 from src.contexts.symphony.domain.backlog.errors import (
     BacklogAuthError,
@@ -49,6 +49,10 @@ class LinearBacklogAdapter:
         transport: httpx.AsyncBaseTransport | None = None,
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
     ) -> None:
+        if config.kind != "linear":
+            raise BacklogSchemaError(
+                f"LinearBacklogAdapter requires kind='linear', got {config.kind!r}"
+            )
         self._config = config
         self._endpoint = config.endpoint
         self._client = httpx.AsyncClient(

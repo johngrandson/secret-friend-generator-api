@@ -1,74 +1,41 @@
 """Spec entity — versioned design blueprint aggregate with write-once approval."""
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from uuid import UUID, uuid4
+from dataclasses import dataclass
+from uuid import UUID
 
-from src.shared.aggregate_root import AggregateRoot
+from src.contexts.symphony.domain.approval.aggregate import ApprovedAggregate
 from src.contexts.symphony.domain.spec.events import (
     SpecApproved,
     SpecCreated,
     SpecRejected,
 )
+from src.shared.events import DomainEvent
 
 
 @dataclass
-class Spec(AggregateRoot):
+class Spec(ApprovedAggregate):
     """Aggregate root representing a versioned design specification."""
 
-    run_id: UUID
-    version: int
-    content: str
-    id: UUID = field(default_factory=uuid4)
-    approved_at: datetime | None = None
-    approved_by: str | None = None
-    rejection_reason: str | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-
-    def is_pending(self) -> bool:
-        """Return True when no verdict has been recorded yet."""
-        return self.approved_at is None and self.rejection_reason is None
-
-    def approve(self, by: str) -> None:
-        """Approve the spec; raises ValueError if already decided (write-once)."""
-        if not self.is_pending():
-            raise ValueError("Spec already has a verdict (write-once).")
-        if not by.strip():
-            raise ValueError("Approver identifier must not be blank.")
-        self.approved_by = by
-        self.approved_at = datetime.now(timezone.utc)
-        self.collect_event(
-            SpecApproved(
-                spec_id=self.id,
-                run_id=self.run_id,
-                version=self.version,
-                approved_by=by,
-            )
+    def _make_approved_event(self, by: str) -> DomainEvent:
+        return SpecApproved(
+            spec_id=self.id,
+            run_id=self.run_id,
+            version=self.version,
+            approved_by=by,
         )
 
-    def reject(self, reason: str) -> None:
-        """Reject the spec; raises ValueError if already decided (write-once)."""
-        if not self.is_pending():
-            raise ValueError("Spec already has a verdict (write-once).")
-        if not reason.strip():
-            raise ValueError("Rejection reason must not be blank.")
-        self.rejection_reason = reason
-        self.collect_event(
-            SpecRejected(
-                spec_id=self.id,
-                run_id=self.run_id,
-                version=self.version,
-                reason=reason,
-            )
+    def _make_rejected_event(self, reason: str) -> DomainEvent:
+        return SpecRejected(
+            spec_id=self.id,
+            run_id=self.run_id,
+            version=self.version,
+            reason=reason,
         )
+
+    def _make_created_event(self) -> DomainEvent:
+        return SpecCreated(spec_id=self.id, run_id=self.run_id, version=self.version)
 
     @classmethod
     def create(cls, run_id: UUID, version: int, content: str) -> "Spec":
         """Factory — validates version >= 1 and non-empty content."""
-        if version < 1:
-            raise ValueError("Version must be >= 1.")
-        if not content.strip():
-            raise ValueError("Spec content must not be blank.")
-        spec = cls(run_id=run_id, version=version, content=content)
-        spec.collect_event(SpecCreated(spec_id=spec.id, run_id=run_id, version=version))
-        return spec
+        return cls._build(run_id=run_id, version=version, content=content)  # type: ignore[return-value]

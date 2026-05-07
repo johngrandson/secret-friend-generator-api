@@ -14,7 +14,7 @@ from src.infrastructure.adapters.events.in_memory_publisher import (
 from src.contexts.symphony.adapters.persistence.unit_of_work import (
     SQLAlchemySymphonyUnitOfWork,
 )
-from src.contexts.symphony.adapters.backlog.config import TrackerConfig
+from src.infrastructure.adapters.workflow.schemas import TrackerConfig
 from src.contexts.symphony.adapters.backlog.linear import LinearBacklogAdapter
 from src.contexts.symphony.use_cases.run.create import CreateRunUseCase
 from src.contexts.symphony.use_cases.run.get import GetRunUseCase
@@ -49,7 +49,7 @@ def _build_linear_adapter(
         )
         api_key = api_key or "not-configured"
         project_slug = project_slug or "not-configured"
-    config = TrackerConfig(api_key=api_key, project_slug=project_slug)
+    config = TrackerConfig(kind="linear", api_key=api_key, project_slug=project_slug)
     return LinearBacklogAdapter(config)
 
 

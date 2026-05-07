@@ -88,16 +88,20 @@ class GateRunner:
                 return gate.is_blocking
         return False
 
-    async def run_all(
-        self, *, workspace: Path, config: Any
-    ) -> list[GateOutcome]:
+    async def run_all(self, *, workspace: Path, config: Any) -> list[GateOutcome]:
         outcomes: list[GateOutcome] = []
         blocked_by: str | None = None
 
         for gate in self._gates:
             if blocked_by is not None:
                 outcomes.append(
-                    _skipped_outcome(gate.name, reason=blocked_by)
+                    GateOutcome(
+                        name=gate.name,
+                        status=GateStatus.SKIPPED,
+                        output="",
+                        metadata_json={"skipped_due_to": blocked_by},
+                        duration_ms=0,
+                    )
                 )
                 continue
 
@@ -119,13 +123,3 @@ class GateRunner:
                 blocked_by = str(gate.name)
 
         return outcomes
-
-
-def _skipped_outcome(name: GateName, *, reason: str) -> GateOutcome:
-    return GateOutcome(
-        name=name,
-        status=GateStatus.SKIPPED,
-        output="",
-        metadata_json={"skipped_due_to": reason},
-        duration_ms=0,
-    )

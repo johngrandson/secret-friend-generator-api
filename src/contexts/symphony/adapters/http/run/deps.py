@@ -1,68 +1,34 @@
-"""FastAPI dependency helpers for the Run HTTP layer.
+"""FastAPI dependency aliases for the Run HTTP layer.
 
-Each get_*_use_case function is decorated with @inject so that
-dependency-injector resolves the Provide[Container.symphony.<uc>.provider] argument.
-That gives us a Factory callable. We then call it with a fresh
-SQLAlchemySymphonyUnitOfWork built from the per-request session.
-Mutation use cases also receive the event_publisher singleton from CoreContainer.
+All wiring lives in
+:mod:`src.contexts.symphony.adapters.http.use_case_deps`; this module
+just binds the typed ``Annotated[..., Depends(...)]`` aliases the route
+handlers import.
 """
 
 from typing import Annotated
-from collections.abc import Callable
 
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import Provide
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.infrastructure.adapters.events.in_memory_publisher import (
-    InMemoryEventPublisher,
-)
-from src.contexts.symphony.adapters.persistence.unit_of_work import (
-    SQLAlchemySymphonyUnitOfWork,
-)
-from src.infrastructure.containers import Container
-from src.infrastructure.database import get_session
+from src.contexts.symphony.adapters.http.use_case_deps import make_use_case_dep
 from src.contexts.symphony.use_cases.run.create import CreateRunUseCase
 from src.contexts.symphony.use_cases.run.get import GetRunUseCase
 from src.contexts.symphony.use_cases.run.list import ListRunsUseCase
+from src.infrastructure.containers import Container
 
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-
-core_event_publisher = Provide[Container.core.event_publisher]
-
-
-@inject
-def get_create_run_use_case(
-    session: SessionDep,
-    factory: Callable[..., CreateRunUseCase] = Depends(
-        Provide[Container.symphony.create_run_use_case.provider]
-    ),
-    publisher: InMemoryEventPublisher = Depends(core_event_publisher),
-) -> CreateRunUseCase:
-    return factory(
-        uow=SQLAlchemySymphonyUnitOfWork(session),
-        event_publisher=publisher,
-    )
-
-
-@inject
-def get_get_run_use_case(
-    session: SessionDep,
-    factory: Callable[..., GetRunUseCase] = Depends(
-        Provide[Container.symphony.get_run_use_case.provider]
-    ),
-) -> GetRunUseCase:
-    return factory(uow=SQLAlchemySymphonyUnitOfWork(session))
-
-
-@inject
-def get_list_runs_use_case(
-    session: SessionDep,
-    factory: Callable[..., ListRunsUseCase] = Depends(
-        Provide[Container.symphony.list_runs_use_case.provider]
-    ),
-) -> ListRunsUseCase:
-    return factory(uow=SQLAlchemySymphonyUnitOfWork(session))
+get_create_run_use_case = make_use_case_dep(
+    Provide[Container.symphony.create_run_use_case.provider],
+    with_publisher=True,
+)
+get_get_run_use_case = make_use_case_dep(
+    Provide[Container.symphony.get_run_use_case.provider],
+    with_publisher=False,
+)
+get_list_runs_use_case = make_use_case_dep(
+    Provide[Container.symphony.list_runs_use_case.provider],
+    with_publisher=False,
+)
 
 
 CreateRunUseCaseDep = Annotated[CreateRunUseCase, Depends(get_create_run_use_case)]

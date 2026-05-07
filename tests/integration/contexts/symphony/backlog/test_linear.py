@@ -7,7 +7,7 @@ from typing import Any
 import httpx
 import pytest
 
-from src.contexts.symphony.adapters.backlog.config import TrackerConfig
+from src.infrastructure.adapters.workflow.schemas import TrackerConfig
 from src.contexts.symphony.adapters.backlog.linear import LinearBacklogAdapter
 from src.contexts.symphony.adapters.backlog.mapper import normalize_linear_issue
 from src.contexts.symphony.domain.backlog.errors import (
@@ -46,7 +46,9 @@ def _full_issue_node(**overrides: Any) -> dict[str, Any]:
 
 
 def _make_adapter(transport: httpx.MockTransport) -> LinearBacklogAdapter:
-    config = TrackerConfig(api_key="lin_api_test", project_slug="ai-platform")
+    config = TrackerConfig(
+        kind="linear", api_key="lin_api_test", project_slug="ai-platform"
+    )
     return LinearBacklogAdapter(config, transport=transport)
 
 
@@ -409,7 +411,7 @@ class TestSchemaErrors:
 
 class TestIsTerminal:
     def test_matches_configured_terminal_states(self) -> None:
-        config = TrackerConfig(api_key="k", project_slug="p")
+        config = TrackerConfig(kind="linear", api_key="k", project_slug="p")
         adapter = LinearBacklogAdapter(
             config, transport=httpx.MockTransport(lambda r: httpx.Response(200))
         )
@@ -423,9 +425,10 @@ class TestIsTerminal:
 
     def test_custom_terminal_states_override_defaults(self) -> None:
         config = TrackerConfig(
+            kind="linear",
             api_key="k",
             project_slug="p",
-            terminal_states=("Shipped",),
+            terminal_states=["Shipped"],
         )
         adapter = LinearBacklogAdapter(
             config, transport=httpx.MockTransport(lambda r: httpx.Response(200))
@@ -446,7 +449,7 @@ class TestAsyncContextManager:
             return httpx.Response(200, json=_paginated_response([]))
 
         async with LinearBacklogAdapter(
-            TrackerConfig(api_key="k", project_slug="p"),
+            TrackerConfig(kind="linear", api_key="k", project_slug="p"),
             transport=httpx.MockTransport(handler),
         ) as adapter:
             issues = await adapter.fetch_active_issues()

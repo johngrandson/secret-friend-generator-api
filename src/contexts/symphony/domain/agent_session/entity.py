@@ -9,6 +9,7 @@ from src.contexts.symphony.domain.agent_session.events import (
     AgentSessionFailed,
     AgentSessionStarted,
 )
+from src.contexts.symphony.domain.validators import ensure_non_blank
 from src.shared.agentic.agent_runner import TokenUsage
 from src.shared.aggregate_root import AggregateRoot
 
@@ -53,8 +54,7 @@ class AgentSession(AggregateRoot):
         """Mark the session failed; emits AgentSessionFailed."""
         if not self.is_active():
             raise ValueError("AgentSession is already terminal.")
-        if not error.strip():
-            raise ValueError("AgentSession failure error must not be blank.")
+        ensure_non_blank(error, "AgentSession failure error")
         self.error = error
         self.completed_at = datetime.now(timezone.utc)
         self.collect_event(
@@ -66,8 +66,7 @@ class AgentSession(AggregateRoot):
     @classmethod
     def create(cls, *, run_id: UUID, model: str) -> "AgentSession":
         """Factory — validates model and emits AgentSessionStarted."""
-        if not model.strip():
-            raise ValueError("Model identifier must not be blank.")
+        ensure_non_blank(model, "Model identifier")
         session = cls(run_id=run_id, model=model)
         session.collect_event(
             AgentSessionStarted(
