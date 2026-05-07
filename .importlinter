@@ -77,10 +77,11 @@ modules =
     src.contexts.tenancy.adapters.persistence
     src.infrastructure.adapters.events
 ignore_imports =
-    src.contexts.identity.adapters.http.user.deps -> src.contexts.identity.adapters.persistence.unit_of_work
-    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.adapters.events.in_memory_publisher
     src.contexts.identity.adapters.http.user.deps -> src.infrastructure.containers
-    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.database
+    src.contexts.identity.adapters.http.use_case_deps -> src.contexts.identity.adapters.persistence.unit_of_work
+    src.contexts.identity.adapters.http.use_case_deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.identity.adapters.http.use_case_deps -> src.infrastructure.containers
+    src.contexts.identity.adapters.http.use_case_deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.use_case_deps -> src.contexts.symphony.adapters.persistence.unit_of_work
     src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.adapters.events.in_memory_publisher
     src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.containers
@@ -90,18 +91,20 @@ ignore_imports =
     src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.run.orchestration_dep -> src.contexts.symphony.adapters.persistence.unit_of_work
     src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.adapters.events.in_memory_publisher
-    src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.adapters.workflow.schemas
     src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.database
     src.contexts.symphony.adapters.http.run.dispatch_dep -> src.contexts.symphony.adapters.persistence.unit_of_work
     src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.adapters.events.in_memory_publisher
     src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.run.workflow_deps -> src.infrastructure.adapters.workflow.schemas
+    src.contexts.symphony.adapters.http.run.workflow_deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.backlog.deps -> src.infrastructure.containers
-    src.contexts.tenancy.adapters.http.organization.deps -> src.contexts.tenancy.adapters.persistence.unit_of_work
-    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.adapters.events.in_memory_publisher
     src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.containers
-    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.database
+    src.contexts.tenancy.adapters.http.use_case_deps -> src.contexts.tenancy.adapters.persistence.unit_of_work
+    src.contexts.tenancy.adapters.http.use_case_deps -> src.infrastructure.adapters.events.in_memory_publisher
+    src.contexts.tenancy.adapters.http.use_case_deps -> src.infrastructure.containers
+    src.contexts.tenancy.adapters.http.use_case_deps -> src.infrastructure.database
 unmatched_ignore_imports_alerting = warn
 
 [importlinter:contract:domain-shared-purity]
@@ -147,7 +150,8 @@ modules =
 # layer is the intentional integration point. Whitelist these transitive paths.
 ignore_imports =
     src.contexts.identity.adapters.http.user.deps -> src.infrastructure.containers
-    src.contexts.identity.adapters.http.user.deps -> src.infrastructure.database
+    src.contexts.identity.adapters.http.use_case_deps -> src.infrastructure.containers
+    src.contexts.identity.adapters.http.use_case_deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
@@ -157,9 +161,11 @@ ignore_imports =
     src.contexts.symphony.adapters.http.run.orchestration_dep -> src.infrastructure.database
     src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.run.dispatch_dep -> src.infrastructure.database
+    src.contexts.symphony.adapters.http.run.workflow_deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.backlog.deps -> src.infrastructure.containers
     src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.containers
-    src.contexts.tenancy.adapters.http.organization.deps -> src.infrastructure.database
+    src.contexts.tenancy.adapters.http.use_case_deps -> src.infrastructure.containers
+    src.contexts.tenancy.adapters.http.use_case_deps -> src.infrastructure.database
 unmatched_ignore_imports_alerting = warn
 
 # NOTE: The "adapters-not-importing-infra" contract is intentionally omitted.
@@ -168,3 +174,80 @@ unmatched_ignore_imports_alerting = warn
 # That import path is by design. The adapters-isolation contract uses
 # ignore_imports to whitelist these intentional seam crossings (direct + via
 # infrastructure composition root) while still enforcing isolation everywhere else.
+
+# ---------------------------------------------------------------------------
+# Phase 0 (2026-05-07): contracts the codebase already respects but were not
+# yet enforced. Adding them captures regressions automatically. See
+# plans/reports/researcher-260507-1333-linter-clean-arch-enforcement.md.
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:no-httpx-in-domain-or-shared]
+name = Domain and shared layers never use httpx
+type = forbidden
+source_modules =
+    src.shared
+    src.contexts.identity.domain
+    src.contexts.symphony.domain
+    src.contexts.tenancy.domain
+forbidden_modules =
+    httpx
+
+[importlinter:contract:no-celery-in-domain-or-use-cases]
+name = Domain and use_cases layers never use Celery
+type = forbidden
+source_modules =
+    src.shared
+    src.contexts.identity.domain
+    src.contexts.identity.use_cases
+    src.contexts.symphony.domain
+    src.contexts.symphony.use_cases
+    src.contexts.tenancy.domain
+    src.contexts.tenancy.use_cases
+forbidden_modules =
+    celery
+
+[importlinter:contract:infrastructure-only-via-di-seams]
+name = Domain/use_cases never import infrastructure (only HTTP deps + persistence base)
+type = forbidden
+source_modules =
+    src.contexts.identity.domain
+    src.contexts.identity.use_cases
+    src.contexts.symphony.domain
+    src.contexts.symphony.use_cases
+    src.contexts.tenancy.domain
+    src.contexts.tenancy.use_cases
+forbidden_modules =
+    src.infrastructure
+
+# ---------------------------------------------------------------------------
+# Phase 1 (2026-05-07): intra-context aggregate isolation. Aggregates within
+# the same bounded context must not import each other directly — shared
+# behaviour belongs in domain-level helpers (validators.py, constants.py,
+# approval/, harness_config.py, etc.) which are NOT listed here.
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:symphony-aggregate-isolation]
+name = Symphony domain aggregates do not cross-import
+type = independence
+modules =
+    src.contexts.symphony.domain.run
+    src.contexts.symphony.domain.spec
+    src.contexts.symphony.domain.plan
+    src.contexts.symphony.domain.agent_session
+    src.contexts.symphony.domain.pull_request
+    src.contexts.symphony.domain.gate_result
+    src.contexts.symphony.domain.backlog
+
+[importlinter:contract:tenancy-aggregate-isolation]
+name = Tenancy domain aggregates do not cross-import
+type = independence
+modules =
+    src.contexts.tenancy.domain.organization
+    src.contexts.tenancy.domain.role
+ignore_imports =
+    # Organization aggregate uses Role as a value object inside member
+    # relationships. Role is a stable VO in the same bounded context — this
+    # cross-aggregate reference is intentional and reviewed.
+    src.contexts.tenancy.domain.organization.entity -> src.contexts.tenancy.domain.role.value_objects
+    src.contexts.tenancy.domain.organization.events -> src.contexts.tenancy.domain.role.value_objects
+    src.contexts.tenancy.domain.organization.value_objects -> src.contexts.tenancy.domain.role.value_objects
