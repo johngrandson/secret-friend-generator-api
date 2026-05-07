@@ -7,6 +7,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Before changing anything in `src/`, read `docs/architecture.md`. The dependency rule
 and layer boundaries are enforced by `poetry run lint-imports` (CI: job `test-arch`).
 
+### Architecture Enforcement (mandatory before declaring done)
+
+The project enforces Clean Architecture invariants automatically. Read and apply:
+
+- **`.claude/rules/clean-architecture-enforcement.md`** — pre-flight checklist
+  with the 12 invariants every change must respect. Read this before any work
+  under `src/`.
+- **`docs/adr/`** — Architectural Decision Records for non-enforceable
+  decisions. Start at `docs/adr/0001-clean-architecture-stance.md`. Write a new
+  ADR (using `docs/adr/0000-template.md`) before introducing any architectural
+  exception or new pattern.
+- **`.importlinter`** — 14 declarative dependency contracts. Run
+  `poetry run lint-imports` after any import change.
+- **`tests/architecture/`** — pytest fitness functions for semantic rules
+  (frozen events, dataclass responses, layer purity).
+- **`scripts/verify-arch.sh`** — single-command bundle: lint-imports + arch
+  tests + ruff + mypy + full pytest. Run before push via
+  `bash scripts/verify-arch.sh`; also runs automatically as a `pre-push` git
+  hook when `pre-commit install -t pre-push` is set up.
+
+**Required workflow:** before declaring an implementation complete, run
+`bash scripts/verify-arch.sh` and confirm a clean exit. If it fails:
+
+1. Read which check failed (each step is labelled 1/5..5/5).
+2. Map the failure to the matching invariant in
+   `.claude/rules/clean-architecture-enforcement.md`.
+3. Fix the code (preferred) or write an ADR + a narrow `ignore_imports`
+   whitelist with a comment linking to the ADR.
+4. Re-run until clean.
+
+Never bypass with `--no-verify`. If a rule is wrong, fix the rule via an ADR,
+not by silencing it.
+
 ## Role & Responsibilities
 
 Your role is to analyze user requirements, delegate tasks to appropriate sub-agents, and ensure cohesive delivery of features that meet specifications and architectural standards.
@@ -88,7 +121,11 @@ We keep all important docs in `./docs` folder and keep updating them, structure 
 ./docs
 ├── architecture.md              # canonical layer & dependency rules
 ├── how-to-add-aggregate.md      # recipe: add aggregate inside a context
-└── how-to-add-bounded-context.md # recipe: add new bounded context
+├── how-to-add-bounded-context.md # recipe: add new bounded context
+└── adr/                         # architectural decision records
+    ├── README.md
+    ├── 0000-template.md
+    └── 0001-clean-architecture-stance.md
 ```
 
 **IMPORTANT:** *MUST READ* and *MUST COMPLY* all *INSTRUCTIONS* in project `./CLAUDE.md`, especially *WORKFLOWS* section is *CRITICALLY IMPORTANT*, this rule is *MANDATORY. NON-NEGOTIABLE. NO EXCEPTIONS. MUST REMEMBER AT ALL TIMES!!!*

@@ -51,3 +51,15 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+
+  # Pre-push: full architecture verification bundle
+  # See scripts/verify-arch.sh and .claude/rules/clean-architecture-enforcement.md
+  - repo: local
+    hooks:
+      - id: verify-arch
+        name: verify-arch (full architecture bundle)
+        entry: bash scripts/verify-arch.sh
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [push]
