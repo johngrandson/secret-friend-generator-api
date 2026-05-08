@@ -9,7 +9,6 @@ import json
 import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any
 
 from src.infrastructure.adapters.agent_runner.claude_code.errors import (
     ClaudeCodeRunnerError,
@@ -22,7 +21,10 @@ from src.shared.agentic.agent_runner import TokenUsage
 
 log = logging.getLogger(__name__)
 
-EventCallback = Callable[[dict[str, Any]], Awaitable[None] | None]
+# Stream-json event shape — opaque dict from the Claude CLI. Handlers must
+# narrow with isinstance / .get() before accessing fields. Using `object` over
+# `Any` keeps the type honest and prevents accidental attribute access.
+EventCallback = Callable[[dict[str, object]], Awaitable[None] | None]
 
 
 @dataclass
@@ -88,7 +90,7 @@ async def read_stream(
                 await result
 
 
-def _handle_event(event: dict[str, Any], state: TurnState) -> None:
+def _handle_event(event: dict[str, object], state: TurnState) -> None:
     event_type = event.get("type")
 
     if event_type == "result":
@@ -105,21 +107,22 @@ def _handle_event(event: dict[str, Any], state: TurnState) -> None:
     # Unknown / informational events pass through to ``on_event`` only.
 
 
-def _handle_result_event(event: dict[str, Any], state: TurnState) -> None:
-    state.session_id = event.get("session_id") or state.session_id
+def _handle_result_event(event: dict[str, object], state: TurnState) -> None:
+    session_id = event.get("session_id")
+    if isinstance(session_id, str):
+        state.session_id = session_id
 
     if event.get("is_error") or event.get("subtype") == "error_result":
         state.is_error = True
-        state.error_message = (
-            event.get("error") or event.get("message") or "unknown error"
-        )
+        error = event.get("error") or event.get("message") or "unknown error"
+        state.error_message = error if isinstance(error, str) else "unknown error"
 
     usage = event.get("usage")
     if isinstance(usage, dict):
         state.usage = _coerce_usage(usage)
 
 
-def _handle_assistant_event(event: dict[str, Any], state: TurnState) -> None:
+def _handle_assistant_event(event: dict[str, object], state: TurnState) -> None:
     message = event.get("message")
     if not isinstance(message, dict):
         return
@@ -127,12 +130,10 @@ def _handle_assistant_event(event: dict[str, Any], state: TurnState) -> None:
     content = message.get("content")
     if isinstance(content, list):
         for block in content:
-            if (
-                isinstance(block, dict)
-                and block.get("type") == "text"
-                and isinstance(block.get("text"), str)
-            ):
-                state.text_parts.append(block["text"])
+            if isinstance(block, dict) and block.get("type") == "text":
+                text = block.get("text")
+                if isinstance(text, str):
+                    state.text_parts.append(text)
 
     usage = message.get("usage")
     if isinstance(usage, dict):
@@ -140,7 +141,7 @@ def _handle_assistant_event(event: dict[str, Any], state: TurnState) -> None:
 
 
 def _coerce_usage(
-    usage: dict[str, Any], fallback: TokenUsage | None = None
+    usage: dict[str, object], fallback: TokenUsage | None = None
 ) -> TokenUsage:
     base = fallback or TokenUsage()
     input_tokens = _int_or(usage.get("input_tokens"), base.input_tokens)
@@ -160,7 +161,7 @@ def _coerce_usage(
     )
 
 
-def _int_or(value: Any, fallback: int) -> int:
-    if isinstance(value, int) and value >= 0:
+def _int_or(value: object, fallback: int) -> int:
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
         return value
     return fallback

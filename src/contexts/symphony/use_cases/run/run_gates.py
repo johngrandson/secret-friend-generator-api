@@ -18,6 +18,7 @@ from pathlib import Path
 from uuid import UUID
 
 from src.contexts.symphony.domain.gate_result.value_object import GateResult
+from src.contexts.symphony.domain.harness_config import HarnessConfig
 from src.contexts.symphony.domain.run.status import RunStatus
 from src.contexts.symphony.domain.unit_of_work import ISymphonyUnitOfWork
 from src.contexts.symphony.use_cases.run.dto import RunDTO
@@ -35,15 +36,14 @@ from src.shared.events import DomainEvent
 class RunGatesRequest:
     """Inputs for the gate run.
 
-    ``harness_config`` is the operator's parsed harness config, typed as
-    ``object`` to keep the use case free of Pydantic infrastructure
-    imports. Caller (F7 orchestrator) forwards
-    ``workflow.config.harness`` directly; gates declare their own typed
-    config in their ``Gate.run`` signature.
+    ``harness_config`` is the domain-level VO consumed by gate adapters.
+    Caller (F7 orchestrator) projects ``workflow.config.harness`` (the
+    Pydantic schema) onto the domain VO via ``to_runtime()`` before
+    handing it down here.
     """
 
     run_id: UUID
-    harness_config: object
+    harness_config: HarnessConfig
 
 
 @dataclass
@@ -61,7 +61,7 @@ class RunGatesUseCase:
     def __init__(
         self,
         uow: ISymphonyUnitOfWork,
-        gate_runner: GateRunner,
+        gate_runner: GateRunner[HarnessConfig],
         event_publisher: IEventPublisher,
     ) -> None:
         self._uow = uow

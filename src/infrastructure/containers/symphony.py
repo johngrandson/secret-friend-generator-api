@@ -19,6 +19,7 @@ from dependency_injector import containers, providers
 
 from src.contexts.symphony.adapters.code_host.github.adapter import GitHubCodeHost
 from src.contexts.symphony.adapters.gates.ci import CIGate
+from src.contexts.symphony.domain.harness_config import HarnessConfig
 from src.contexts.symphony.adapters.persistence.unit_of_work import (
     SQLAlchemySymphonyUnitOfWork,
 )
@@ -91,8 +92,8 @@ def _build_workspace_manager(
     )
 
 
-def _build_gate_runner(ci_gate: CIGate) -> GateRunner:
-    return GateRunner(gates=[ci_gate])
+def _build_gate_runner(ci_gate: CIGate) -> GateRunner[HarnessConfig]:
+    return GateRunner[HarnessConfig](gates=[ci_gate])
 
 
 def _make_agent_event_hook(bus: RedisRunEventBus) -> AgentEventHook:

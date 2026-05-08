@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, ClassVar, Generic, NewType, TypeVar
+from typing import ClassVar, Generic, NewType, TypeVar
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class GateOutcome:
     name: GateName
     status: GateStatus
     output: str = ""
-    metadata_json: dict[str, Any] = field(default_factory=dict)
+    metadata_json: dict[str, object] = field(default_factory=dict)
     duration_ms: int = 0
 
     def __post_init__(self) -> None:
@@ -68,8 +68,11 @@ class Gate(ABC, Generic[ConfigT]):
     async def run(self, *, workspace: Path, config: ConfigT) -> GateOutcome: ...
 
 
-class GateRunner:
+class GateRunner(Generic[ConfigT]):
     """Runs a list of gates and aggregates outcomes.
+
+    Generic in ``ConfigT`` — the symphony layer parameterises with its own
+    ``HarnessConfig`` while the shared kernel stays domain-free.
 
     Sequential execution; first blocking failure causes subsequent gates
     to emit ``GateStatus.SKIPPED`` outcomes. Non-blocking failures do not
@@ -78,8 +81,8 @@ class GateRunner:
     whole harness.
     """
 
-    def __init__(self, gates: list[Gate[Any]]) -> None:
-        self._gates: list[Gate[Any]] = list(gates)
+    def __init__(self, gates: list[Gate[ConfigT]]) -> None:
+        self._gates: list[Gate[ConfigT]] = list(gates)
 
     def is_blocking(self, name: GateName) -> bool:
         """Return True if a gate by ``name`` is configured as blocking."""
@@ -88,7 +91,9 @@ class GateRunner:
                 return gate.is_blocking
         return False
 
-    async def run_all(self, *, workspace: Path, config: Any) -> list[GateOutcome]:
+    async def run_all(
+        self, *, workspace: Path, config: ConfigT
+    ) -> list[GateOutcome]:
         outcomes: list[GateOutcome] = []
         blocked_by: str | None = None
 
