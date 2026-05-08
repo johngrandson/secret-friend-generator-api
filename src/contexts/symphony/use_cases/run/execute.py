@@ -19,8 +19,6 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-AgentEventHook = Callable[[UUID, dict[str, Any]], Awaitable[None]]
-
 from src.contexts.symphony.domain.agent_session.entity import AgentSession
 from src.contexts.symphony.domain.backlog.issue import Issue
 from src.contexts.symphony.domain.run.entity import Run
@@ -43,6 +41,8 @@ from src.shared.agentic.agent_runner import (
 from src.shared.agentic.retry import RetryConfig, classify_failure, compute_delay
 from src.shared.event_publisher import IEventPublisher
 from src.shared.events import DomainEvent
+
+AgentEventHook = Callable[[UUID, dict[str, Any]], Awaitable[None]]
 
 
 class ExecuteOutcome(StrEnum):

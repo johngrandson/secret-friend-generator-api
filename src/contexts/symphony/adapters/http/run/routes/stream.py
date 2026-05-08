@@ -9,7 +9,6 @@ import json
 from collections.abc import AsyncGenerator
 from uuid import UUID
 
-from fastapi import Depends
 from fastapi.responses import StreamingResponse
 
 from src.contexts.symphony.adapters.http.run.deps import RedisRunEventBusDep

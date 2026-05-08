@@ -35,7 +35,10 @@ from src.contexts.symphony.use_cases.plan.reject import RejectPlanUseCase
 from src.contexts.symphony.use_cases.run.cancel import CancelRunUseCase
 from src.contexts.symphony.use_cases.run.create import CreateRunUseCase
 from src.contexts.symphony.use_cases.run.delete import DeleteRunUseCase
-from src.contexts.symphony.use_cases.run.execute import ExecuteRunUseCase
+from src.contexts.symphony.use_cases.run.execute import (
+    AgentEventHook,
+    ExecuteRunUseCase,
+)
 from src.contexts.symphony.use_cases.run.get import GetRunUseCase
 from src.contexts.symphony.use_cases.run.get_detail import GetRunDetailUseCase
 from src.contexts.symphony.use_cases.run.list import ListRunsUseCase
@@ -49,7 +52,6 @@ from src.contexts.symphony.use_cases.spec.get import GetSpecUseCase
 from src.contexts.symphony.use_cases.spec.list_for_run import ListSpecsForRunUseCase
 from src.contexts.symphony.use_cases.spec.reject import RejectSpecUseCase
 from src.infrastructure.adapters.agent_runner.claude_code.runner import ClaudeCodeRunner
-from src.contexts.symphony.use_cases.run.execute import AgentEventHook
 from src.infrastructure.adapters.events.in_memory_publisher import (
     InMemoryEventPublisher,
 )

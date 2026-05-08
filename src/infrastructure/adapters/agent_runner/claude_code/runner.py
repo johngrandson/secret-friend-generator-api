@@ -29,14 +29,13 @@ from src.infrastructure.adapters.agent_runner.claude_code.parser import (
     TurnState,
     read_stream,
 )
-from src.shared.agentic.agent_runner import AgentEventCallback
 from src.infrastructure.adapters.agent_runner.claude_code.transport import (
     ProcessFactory,
     default_process_factory,
 )
 from src.infrastructure.adapters.agent_runner.constants import KILL_TIMEOUT_SECONDS
 from src.infrastructure.adapters.workflow import ClaudeCodeConfig
-from src.shared.agentic.agent_runner import TurnResult
+from src.shared.agentic.agent_runner import AgentEventCallback, TurnResult
 
 log = logging.getLogger(__name__)
 
