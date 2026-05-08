@@ -17,12 +17,14 @@ from src.contexts.symphony.domain.run.events import RunExecuted
 from src.contexts.symphony.domain.run.status import RunStatus
 from src.contexts.symphony.domain.spec.entity import Spec
 from src.contexts.symphony.use_cases.run.execute import (
+    AgentEventHook,
     ExecuteOutcome,
     ExecuteRunRequest,
     ExecuteRunUseCase,
     InvalidRunStateError,
 )
 from src.shared.agentic.agent_runner import (
+    AgentEventCallback,
     AgentRunnerError,
     TokenUsage,
     TurnResult,
@@ -98,6 +100,7 @@ class _FakeAgentRunner:
         prompt: str,
         workspace: Path,
         session_id: str | None = None,
+        on_event: AgentEventCallback | None = None,
     ) -> TurnResult:
         self.calls.append(
             {"prompt": prompt, "workspace": workspace, "session_id": session_id}
@@ -135,7 +138,9 @@ async def test_execute_run_happy_path(
             text="done",
         )
     )
-    use_case = ExecuteRunUseCase(uow=uow, agent_runner=runner, event_publisher=publisher)
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
+    )
 
     resp = await use_case.execute(
         ExecuteRunRequest(
@@ -166,10 +171,10 @@ async def test_execute_run_retry_on_transient_stall(
     uow.plans.find_latest_for_run.return_value = _approved_plan(run.id)
     uow.agent_sessions.save.side_effect = lambda s: s
 
-    runner = _FakeAgentRunner(
-        raises=AgentTransientStallError("stalled mid-turn")
+    runner = _FakeAgentRunner(raises=AgentTransientStallError("stalled mid-turn"))
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
     )
-    use_case = ExecuteRunUseCase(uow=uow, agent_runner=runner, event_publisher=publisher)
 
     resp = await use_case.execute(
         ExecuteRunRequest(
@@ -198,10 +203,10 @@ async def test_execute_run_terminal_marks_failed(
     uow.plans.find_latest_for_run.return_value = _approved_plan(run.id)
     uow.agent_sessions.save.side_effect = lambda s: s
 
-    runner = _FakeAgentRunner(
-        raises=AgentTerminalError("operator must intervene")
+    runner = _FakeAgentRunner(raises=AgentTerminalError("operator must intervene"))
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
     )
-    use_case = ExecuteRunUseCase(uow=uow, agent_runner=runner, event_publisher=publisher)
 
     resp = await use_case.execute(
         ExecuteRunRequest(
@@ -228,7 +233,9 @@ async def test_execute_run_unknown_runner_error_is_retryable(
     uow.agent_sessions.save.side_effect = lambda s: s
 
     runner = _FakeAgentRunner(raises=AgentRunnerError("boom"))
-    use_case = ExecuteRunUseCase(uow=uow, agent_runner=runner, event_publisher=publisher)
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
+    )
 
     resp = await use_case.execute(
         ExecuteRunRequest(
@@ -248,7 +255,9 @@ async def test_execute_run_run_not_found(
 ) -> None:
     uow.runs.find_by_id.return_value = None
     runner = _FakeAgentRunner(result=TurnResult(session_id="x"))
-    use_case = ExecuteRunUseCase(uow=uow, agent_runner=runner, event_publisher=publisher)
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
+    )
 
     resp = await use_case.execute(
         ExecuteRunRequest(
@@ -271,7 +280,9 @@ async def test_execute_run_wrong_status_raises(
     uow.runs.find_by_id.return_value = run
 
     runner = _FakeAgentRunner(result=TurnResult(session_id="x"))
-    use_case = ExecuteRunUseCase(uow=uow, agent_runner=runner, event_publisher=publisher)
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
+    )
 
     with pytest.raises(InvalidRunStateError):
         await use_case.execute(
@@ -293,7 +304,9 @@ async def test_execute_run_no_approved_spec(
     uow.specs.find_latest_for_run.return_value = pending  # not approved
 
     runner = _FakeAgentRunner(result=TurnResult(session_id="x"))
-    use_case = ExecuteRunUseCase(uow=uow, agent_runner=runner, event_publisher=publisher)
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
+    )
 
     resp = await use_case.execute(
         ExecuteRunRequest(
@@ -305,3 +318,109 @@ async def test_execute_run_no_approved_spec(
     )
     assert resp.outcome == ExecuteOutcome.FAILED
     assert "approved spec" in (resp.error_message or "").lower()
+
+
+async def test_execute_run_publishes_stream_done_sentinel(
+    tmp_path: Path, uow: FakeSymphonyUoW, publisher: FakePublisher
+) -> None:
+    """agent_event_hook receives _stream_done sentinel after successful run."""
+    from uuid import UUID
+
+    run = _make_run(tmp_path)
+    uow.runs.find_by_id.return_value = run
+    uow.runs.update.side_effect = lambda r: r
+    uow.specs.find_latest_for_run.return_value = _approved_spec(run.id)
+    uow.plans.find_latest_for_run.return_value = _approved_plan(run.id)
+    uow.agent_sessions.save.side_effect = lambda s: s
+
+    runner = _FakeAgentRunner(result=TurnResult(session_id="s"))
+    hook_calls: list[tuple[UUID, dict]] = []
+
+    async def hook(run_id: UUID, event: dict) -> None:
+        hook_calls.append((run_id, event))
+
+    use_case = ExecuteRunUseCase(
+        uow=uow,
+        agent_runner=runner,
+        event_publisher=publisher,
+        agent_event_hook=hook,
+    )
+    await use_case.execute(
+        ExecuteRunRequest(
+            run_id=run.id,
+            issue=_issue(),
+            prompt_template=PROMPT_TEMPLATE,
+            model_name="claude-sonnet-4-6",
+        )
+    )
+
+    assert hook_calls, "hook was never called"
+    last_run_id, last_event = hook_calls[-1]
+    assert last_run_id == run.id
+    assert last_event == {"type": "_stream_done"}
+
+
+async def test_execute_run_sentinel_published_on_failure(
+    tmp_path: Path, uow: FakeSymphonyUoW, publisher: FakePublisher
+) -> None:
+    """_stream_done sentinel is also sent when the agent errors."""
+    from uuid import UUID
+
+    run = _make_run(tmp_path)
+    uow.runs.find_by_id.return_value = run
+    uow.runs.update.side_effect = lambda r: r
+    uow.specs.find_latest_for_run.return_value = _approved_spec(run.id)
+    uow.plans.find_latest_for_run.return_value = _approved_plan(run.id)
+    uow.agent_sessions.save.side_effect = lambda s: s
+
+    from src.shared.agentic.retry import AgentTerminalError
+
+    runner = _FakeAgentRunner(raises=AgentTerminalError("fatal"))
+    hook_calls: list[tuple[UUID, dict]] = []
+
+    async def hook(run_id: UUID, event: dict) -> None:
+        hook_calls.append((run_id, event))
+
+    use_case = ExecuteRunUseCase(
+        uow=uow,
+        agent_runner=runner,
+        event_publisher=publisher,
+        agent_event_hook=hook,
+    )
+    await use_case.execute(
+        ExecuteRunRequest(
+            run_id=run.id,
+            issue=_issue(),
+            prompt_template=PROMPT_TEMPLATE,
+            model_name="claude-sonnet-4-6",
+        )
+    )
+
+    sentinels = [e for _, e in hook_calls if e.get("type") == "_stream_done"]
+    assert len(sentinels) == 1
+
+
+async def test_execute_run_no_hook_still_succeeds(
+    tmp_path: Path, uow: FakeSymphonyUoW, publisher: FakePublisher
+) -> None:
+    """Without agent_event_hook, execute still completes normally."""
+    run = _make_run(tmp_path)
+    uow.runs.find_by_id.return_value = run
+    uow.runs.update.side_effect = lambda r: r
+    uow.specs.find_latest_for_run.return_value = _approved_spec(run.id)
+    uow.plans.find_latest_for_run.return_value = _approved_plan(run.id)
+    uow.agent_sessions.save.side_effect = lambda s: s
+
+    runner = _FakeAgentRunner(result=TurnResult(session_id="s"))
+    use_case = ExecuteRunUseCase(
+        uow=uow, agent_runner=runner, event_publisher=publisher
+    )
+    resp = await use_case.execute(
+        ExecuteRunRequest(
+            run_id=run.id,
+            issue=_issue(),
+            prompt_template=PROMPT_TEMPLATE,
+            model_name="claude-sonnet-4-6",
+        )
+    )
+    assert resp.outcome == ExecuteOutcome.SUCCESS

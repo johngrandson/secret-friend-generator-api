@@ -11,16 +11,19 @@ runner is wired with its own config at composition time (F8); the use
 case knows nothing about claude_code internals.
 """
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 from uuid import UUID
+
+AgentEventHook = Callable[[UUID, dict[str, Any]], Awaitable[None]]
 
 from src.contexts.symphony.domain.agent_session.entity import AgentSession
 from src.contexts.symphony.domain.backlog.issue import Issue
 from src.contexts.symphony.domain.run.entity import Run
-from src.contexts.symphony.domain.run.events import RunExecuted
 from src.contexts.symphony.domain.run.status import RunStatus
 from src.contexts.symphony.domain.unit_of_work import ISymphonyUnitOfWork
 from src.contexts.symphony.use_cases.run.dto import RunDTO
@@ -31,6 +34,7 @@ from src.contexts.symphony.use_cases.run.status_guards import (
     ensure_workspace_set,
 )
 from src.shared.agentic.agent_runner import (
+    AgentEventCallback,
     AgentRunnerError,
     IAgentRunner,
     TokenUsage,
@@ -84,82 +88,97 @@ class ExecuteRunUseCase:
         uow: ISymphonyUnitOfWork,
         agent_runner: IAgentRunner,
         event_publisher: IEventPublisher,
+        agent_event_hook: AgentEventHook | None = None,
     ) -> None:
         self._uow = uow
         self._agent_runner = agent_runner
         self._publisher = event_publisher
+        self._agent_event_hook = agent_event_hook
 
     async def execute(self, request: ExecuteRunRequest) -> ExecuteRunResponse:
         response: ExecuteRunResponse
         events: list[DomainEvent] = []
+        agent_started = False
 
-        async with self._uow:
-            run = await self._uow.runs.find_by_id(request.run_id)
-            if run is None:
-                return ExecuteRunResponse(
-                    None, ExecuteOutcome.FAILED, error_message="Run not found."
+        try:
+            async with self._uow:
+                run = await self._uow.runs.find_by_id(request.run_id)
+                if run is None:
+                    return ExecuteRunResponse(
+                        None, ExecuteOutcome.FAILED, error_message="Run not found."
+                    )
+                ensure_run_status(
+                    run,
+                    RunStatus.PLAN_APPROVED,
+                    action="ExecuteRun",
+                    error_class=InvalidRunStateError,
                 )
-            ensure_run_status(
-                run,
-                RunStatus.PLAN_APPROVED,
-                action="ExecuteRun",
-                error_class=InvalidRunStateError,
-            )
-            workspace_path = ensure_workspace_set(
-                run, error_class=InvalidRunStateError
-            )
-
-            spec = await self._uow.specs.find_latest_for_run(run.id)
-            if spec is None or spec.approved_at is None:
-                return ExecuteRunResponse(
-                    None,
-                    ExecuteOutcome.FAILED,
-                    error_message="No approved spec for run.",
-                )
-            plan = await self._uow.plans.find_latest_for_run(run.id)
-            if plan is None or plan.approved_at is None:
-                return ExecuteRunResponse(
-                    None,
-                    ExecuteOutcome.FAILED,
-                    error_message="No approved plan for run.",
+                workspace_path = ensure_workspace_set(
+                    run, error_class=InvalidRunStateError
                 )
 
-            prompt = render_run_prompt(
-                template=request.prompt_template,
-                issue=request.issue,
-                spec_content=spec.content,
-                plan_content=plan.content,
-                attempt=run.attempt,
-            )
+                spec = await self._uow.specs.find_latest_for_run(run.id)
+                if spec is None or spec.approved_at is None:
+                    return ExecuteRunResponse(
+                        None,
+                        ExecuteOutcome.FAILED,
+                        error_message="No approved spec for run.",
+                    )
+                plan = await self._uow.plans.find_latest_for_run(run.id)
+                if plan is None or plan.approved_at is None:
+                    return ExecuteRunResponse(
+                        None,
+                        ExecuteOutcome.FAILED,
+                        error_message="No approved plan for run.",
+                    )
 
-            session = AgentSession.create(
-                run_id=run.id, model=request.model_name
-            )
-            run.set_status(RunStatus.EXECUTE)
-
-            try:
-                turn = await self._agent_runner.run_turn(
-                    prompt=prompt,
-                    workspace=Path(workspace_path),
-                    session_id=session.session_id,
-                )
-            except AgentRunnerError as exc:
-                response, events = await self._build_failure_response(
-                    exc=exc,
-                    run=run,
-                    session=session,
-                    retry_config=request.retry_config,
-                )
-            else:
-                response, events = await self._build_success_response(
-                    turn=turn, run=run, session=session
+                prompt = render_run_prompt(
+                    template=request.prompt_template,
+                    issue=request.issue,
+                    spec_content=spec.content,
+                    plan_content=plan.content,
+                    attempt=run.attempt,
                 )
 
-            await self._uow.commit()
+                session = AgentSession.create(run_id=run.id, model=request.model_name)
+                run.set_status(RunStatus.EXECUTE)
 
-        if events:
-            await self._publisher.publish(events)
-        return response
+                run_id = run.id
+                on_event: AgentEventCallback | None = None
+                if self._agent_event_hook:
+                    hook = self._agent_event_hook
+
+                    async def on_event(event: dict[str, Any]) -> None:
+                        await hook(run_id, event)
+
+                agent_started = True
+                try:
+                    turn = await self._agent_runner.run_turn(
+                        prompt=prompt,
+                        workspace=Path(workspace_path),
+                        session_id=session.session_id,
+                        on_event=on_event,
+                    )
+                except AgentRunnerError as exc:
+                    response, events = await self._build_failure_response(
+                        exc=exc,
+                        run=run,
+                        session=session,
+                        retry_config=request.retry_config,
+                    )
+                else:
+                    response, events = await self._build_success_response(
+                        turn=turn, run=run, session=session
+                    )
+
+                await self._uow.commit()
+
+            if events:
+                await self._publisher.publish(events)
+            return response
+        finally:
+            if agent_started and self._agent_event_hook:
+                await self._agent_event_hook(request.run_id, {"type": "_stream_done"})
 
     async def _build_success_response(
         self,
@@ -173,13 +192,8 @@ class ExecuteRunUseCase:
         session.complete(usage=turn.usage)
         await self._uow.agent_sessions.save(session)
 
-        run.set_status(RunStatus.EXECUTED)
+        run.mark_executed(session_id=session.id, usage=turn.usage)
         saved_run = await self._uow.runs.update(run)
-        run.collect_event(
-            RunExecuted(
-                run_id=run.id, session_id=session.id, usage=turn.usage
-            )
-        )
 
         events = run.pull_events() + session.pull_events()
         return (
@@ -210,9 +224,7 @@ class ExecuteRunUseCase:
             outcome = ExecuteOutcome.FAILED
         else:
             cfg = retry_config or RetryConfig()
-            delay_ms = compute_delay(
-                attempt=run.attempt + 1, kind=kind, config=cfg
-            )
+            delay_ms = compute_delay(attempt=run.attempt + 1, kind=kind, config=cfg)
             next_at = datetime.now(timezone.utc) + timedelta(milliseconds=delay_ms)
             run.mark_retry_pending(error=str(exc), next_attempt_at=next_at)
             outcome = ExecuteOutcome.RETRY_PENDING
