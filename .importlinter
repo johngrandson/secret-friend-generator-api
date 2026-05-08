@@ -87,6 +87,8 @@ ignore_imports =
     src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.use_case_deps -> src.infrastructure.database
     src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.containers
+    src.contexts.symphony.adapters.http.run.deps -> src.infrastructure.adapters.events.redis_run_event_bus
+    src.contexts.symphony.adapters.http.run.routes.stream -> src.infrastructure.adapters.events.redis_run_event_bus
     src.contexts.symphony.adapters.http.spec.deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.plan.deps -> src.infrastructure.containers
     src.contexts.symphony.adapters.http.run.orchestration_dep -> src.contexts.symphony.adapters.persistence.unit_of_work
