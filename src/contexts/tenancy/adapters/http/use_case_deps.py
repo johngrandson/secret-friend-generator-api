@@ -1,20 +1,12 @@
-"""Generic FastAPI dependency factory for symphony use cases.
+"""Generic FastAPI dependency factory for tenancy use cases.
 
-Three sub-routers (run, spec, plan) used to declare 11 nearly identical
-``get_*_use_case`` functions — same UoW build, same publisher injection,
-same factory call. This module collapses them into one factory used
-across all three routers.
-
-Each generated dependency:
+Mirrors the symphony equivalent: collapses repeated ``get_*_use_case``
+declarations into a single factory. Each generated dependency:
 
 1. Resolves the per-use-case ``Factory`` provider from the container.
-2. Builds a fresh ``SQLAlchemySymphonyUnitOfWork`` from the request session.
+2. Builds a fresh ``SQLAlchemyTenancyUnitOfWork`` from the request session.
 3. Injects the singleton ``InMemoryEventPublisher`` for mutating use cases.
 4. Calls the factory with these wired dependencies.
-
-The single-line wrappers in ``run/deps.py``, ``spec/deps.py`` and
-``plan/deps.py`` keep the public ``Annotated[..., Depends(...)]`` aliases
-the route handlers already import.
 """
 
 from collections.abc import Callable
@@ -23,8 +15,8 @@ from typing import TypeVar
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends
 
-from src.contexts.symphony.adapters.persistence.unit_of_work import (
-    SQLAlchemySymphonyUnitOfWork,
+from src.contexts.tenancy.adapters.persistence.unit_of_work import (
+    SQLAlchemyTenancyUnitOfWork,
 )
 from src.infrastructure.adapters.events.in_memory_publisher import (
     InMemoryEventPublisher,
@@ -44,11 +36,11 @@ def make_use_case_dep(
 ) -> Callable[..., T]:
     """Return a FastAPI dependency that builds a use case from ``provider``.
 
-    ``provider`` is a ``Provide[Container.symphony.<uc>.provider]`` marker;
+    ``provider`` is a ``Provide[Container.tenancy.<uc>.provider]`` marker;
     at runtime dependency-injector resolves it to a factory callable, so
     typing it as ``Callable[..., T]`` matches the resolved shape.
     ``with_publisher`` toggles event-publisher injection — mutating use
-    cases (create/approve/reject) need it; read-only ones don't.
+    cases need it; read-only ones don't.
     """
     if with_publisher:
 
@@ -59,7 +51,7 @@ def make_use_case_dep(
             publisher: InMemoryEventPublisher = Depends(_core_event_publisher),
         ) -> T:
             return factory(
-                uow=SQLAlchemySymphonyUnitOfWork(session),
+                uow=SQLAlchemyTenancyUnitOfWork(session),
                 event_publisher=publisher,
             )
 
@@ -70,6 +62,6 @@ def make_use_case_dep(
         session: SessionDep,
         factory: Callable[..., T] = Depends(provider),
     ) -> T:
-        return factory(uow=SQLAlchemySymphonyUnitOfWork(session))
+        return factory(uow=SQLAlchemyTenancyUnitOfWork(session))
 
     return read_only_dep

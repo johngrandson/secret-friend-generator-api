@@ -6,7 +6,6 @@ the dict shape here means new prompt fields land in one place.
 """
 
 from collections.abc import Mapping
-from typing import Any
 
 from src.contexts.symphony.domain.backlog.issue import Issue
 
@@ -15,14 +14,14 @@ def build_issue_template_context(
     issue: Issue,
     *,
     extra: Mapping[str, str] | None = None,
-) -> dict[str, Any]:
+) -> dict[str, str]:
     """Return the canonical issue-template context dict.
 
     ``extra`` keys are merged on top — pass ``approved_spec_content`` for
     the plan prompt, or ``spec_content`` / ``plan_content`` / ``attempt``
     for the run prompt.
     """
-    context: dict[str, Any] = {
+    context: dict[str, str] = {
         "issue_identifier": issue.identifier,
         "issue_title": issue.title,
         "issue_state": issue.state,

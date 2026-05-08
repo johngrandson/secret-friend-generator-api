@@ -12,9 +12,11 @@ parsing translate to these types at the boundary.
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-AgentEventCallback = Callable[[dict[str, Any]], Awaitable[None] | None]
+# Event payload from agent runners (Claude CLI, etc.) — opaque to consumers
+# until they narrow with isinstance / TypedDict at the boundary.
+AgentEventCallback = Callable[[dict[str, object]], Awaitable[None] | None]
 
 
 class AgentRunnerError(Exception):

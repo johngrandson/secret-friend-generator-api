@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
 from uuid import UUID
 
 from src.contexts.symphony.domain.agent_session.entity import AgentSession
@@ -42,7 +41,7 @@ from src.shared.agentic.retry import RetryConfig, classify_failure, compute_dela
 from src.shared.event_publisher import IEventPublisher
 from src.shared.events import DomainEvent
 
-AgentEventHook = Callable[[UUID, dict[str, Any]], Awaitable[None]]
+AgentEventHook = Callable[[UUID, dict[str, object]], Awaitable[None]]
 
 
 class ExecuteOutcome(StrEnum):
@@ -148,7 +147,7 @@ class ExecuteRunUseCase:
                 if self._agent_event_hook:
                     hook = self._agent_event_hook
 
-                    async def on_event(event: dict[str, Any]) -> None:
+                    async def on_event(event: dict[str, object]) -> None:
                         await hook(run_id, event)
 
                 agent_started = True

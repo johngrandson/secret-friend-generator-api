@@ -12,7 +12,6 @@ Variables exposed:
 """
 
 from string import Template
-from typing import Any
 
 from src.contexts.symphony.domain.backlog.issue import Issue
 
@@ -28,7 +27,7 @@ def render_run_prompt(
     """Substitute issue + spec/plan content + attempt into ``template``."""
     if attempt < 1:
         raise ValueError("attempt must be >= 1")
-    context: dict[str, Any] = {
+    context: dict[str, str] = {
         "issue_identifier": issue.identifier,
         "issue_title": issue.title,
         "issue_description": issue.description or "(no description provided)",
