@@ -15,7 +15,6 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
-from src.infrastructure.adapters.agent_runner.constants import KILL_TIMEOUT_SECONDS
 from src.infrastructure.adapters.agent_runner.claude_code.args import (
     build_args,
     validate_prompt,
@@ -27,14 +26,15 @@ from src.infrastructure.adapters.agent_runner.claude_code.errors import (
     ClaudeCodeTimeoutError,
 )
 from src.infrastructure.adapters.agent_runner.claude_code.parser import (
-    EventCallback,
     TurnState,
     read_stream,
 )
+from src.shared.agentic.agent_runner import AgentEventCallback
 from src.infrastructure.adapters.agent_runner.claude_code.transport import (
     ProcessFactory,
     default_process_factory,
 )
+from src.infrastructure.adapters.agent_runner.constants import KILL_TIMEOUT_SECONDS
 from src.infrastructure.adapters.workflow import ClaudeCodeConfig
 from src.shared.agentic.agent_runner import TurnResult
 
@@ -49,7 +49,7 @@ class ClaudeCodeRunner:
         *,
         config: ClaudeCodeConfig,
         process_factory: ProcessFactory | None = None,
-        on_event: EventCallback | None = None,
+        on_event: AgentEventCallback | None = None,
     ) -> None:
         self._config = config
         self._factory = process_factory or default_process_factory
@@ -61,6 +61,7 @@ class ClaudeCodeRunner:
         prompt: str,
         workspace: Path,
         session_id: str | None = None,
+        on_event: AgentEventCallback | None = None,
     ) -> TurnResult:
         """Run one ``claude`` CLI turn and return the aggregated result.
 
@@ -74,10 +75,11 @@ class ClaudeCodeRunner:
         """
         validate_prompt(prompt)
         args = build_args(prompt=prompt, config=self._config, session_id=session_id)
+        effective_on_event = on_event or self._on_event
         turn_seconds = self._config.turn_timeout_ms / 1000.0
         try:
             return await asyncio.wait_for(
-                self._run_turn_inner(args, workspace),
+                self._run_turn_inner(args, workspace, effective_on_event),
                 timeout=turn_seconds,
             )
         except TimeoutError as err:
@@ -87,13 +89,16 @@ class ClaudeCodeRunner:
             ) from err
 
     async def _run_turn_inner(
-        self, args: Sequence[str], cwd: Path
+        self,
+        args: Sequence[str],
+        cwd: Path,
+        on_event: AgentEventCallback | None = None,
     ) -> TurnResult:
         proc = await self._factory(args, cwd)
         state = TurnState()
         try:
             await read_stream(
-                proc, state, self._config.stall_timeout_ms, self._on_event
+                proc, state, self._config.stall_timeout_ms, on_event
             )
             exit_code = await proc.wait()
         finally:

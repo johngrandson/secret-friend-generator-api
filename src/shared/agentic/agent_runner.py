@@ -9,9 +9,12 @@ stays Pydantic-free; adapters that prefer Pydantic for their internal
 parsing translate to these types at the boundary.
 """
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
+
+AgentEventCallback = Callable[[dict[str, Any]], Awaitable[None] | None]
 
 
 class AgentRunnerError(Exception):
@@ -57,4 +60,5 @@ class IAgentRunner(Protocol):
         prompt: str,
         workspace: Path,
         session_id: str | None = None,
+        on_event: AgentEventCallback | None = None,
     ) -> TurnResult: ...

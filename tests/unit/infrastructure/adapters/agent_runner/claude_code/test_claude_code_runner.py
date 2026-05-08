@@ -269,6 +269,57 @@ async def test_run_turn_turn_timeout(tmp_path: Path) -> None:
     assert exc.value.kind == "turn"
 
 
+@pytest.mark.asyncio
+async def test_run_turn_per_call_on_event_receives_events(tmp_path: Path) -> None:
+    """on_event passed to run_turn is called for each streamed event."""
+    lines = [
+        _assistant_line("hi"),
+        _result_line(session_id="s1"),
+    ]
+    proc = _FakeProcess(lines=lines, exit_code=0)
+    received: list[dict] = []
+
+    async def hook(event: dict) -> None:
+        received.append(event)
+
+    runner = ClaudeCodeRunner(
+        config=_config(stall_timeout_ms=0), process_factory=_factory_from(proc)
+    )
+    await runner.run_turn(prompt="go", workspace=tmp_path, on_event=hook)
+
+    assert any(e.get("type") == "assistant" for e in received)
+
+
+@pytest.mark.asyncio
+async def test_run_turn_per_call_on_event_takes_priority_over_constructor(
+    tmp_path: Path,
+) -> None:
+    """Per-call on_event overrides the constructor's on_event."""
+    lines = [
+        _assistant_line("data"),
+        _result_line(session_id="s2"),
+    ]
+    proc = _FakeProcess(lines=lines, exit_code=0)
+    constructor_calls: list[dict] = []
+    call_calls: list[dict] = []
+
+    async def constructor_hook(event: dict) -> None:
+        constructor_calls.append(event)
+
+    async def call_hook(event: dict) -> None:
+        call_calls.append(event)
+
+    runner = ClaudeCodeRunner(
+        config=_config(stall_timeout_ms=0),
+        process_factory=_factory_from(proc),
+        on_event=constructor_hook,
+    )
+    await runner.run_turn(prompt="go", workspace=tmp_path, on_event=call_hook)
+
+    assert len(call_calls) > 0
+    assert len(constructor_calls) == 0
+
+
 def test_validate_prompt_rejects_oversized() -> None:
     big = "a" * 200_000
     with pytest.raises(ClaudeCodePromptTooLargeError):
