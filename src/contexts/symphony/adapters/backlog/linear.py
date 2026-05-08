@@ -5,11 +5,10 @@ from datetime import datetime
 from json import JSONDecodeError
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Self
+from typing import Self, TypeAlias
 
 import httpx
 
-from src.infrastructure.adapters.workflow.schemas import TrackerConfig
 from src.contexts.symphony.adapters.backlog.mapper import normalize_linear_issue
 from src.contexts.symphony.domain.backlog.errors import (
     BacklogAuthError,
@@ -18,6 +17,12 @@ from src.contexts.symphony.domain.backlog.errors import (
     BacklogTransportError,
 )
 from src.contexts.symphony.domain.backlog.issue import Issue
+from src.contexts.symphony.domain.backlog.tracker_config import TrackerConfig
+
+# Opaque GraphQL payload — structure varies by query, validated via isinstance
+# guards before consumption. Using `object` instead of `Any` forces explicit
+# narrowing and prevents accidental attribute access.
+_GraphQLPayload: TypeAlias = dict[str, object]
 
 log = logging.getLogger(__name__)
 
@@ -85,9 +90,9 @@ class LinearBacklogAdapter:
 
     async def fetch_active_issues(self) -> list[Issue]:
         """Fetch all active issues for the configured project."""
-        filt: dict[str, Any] = {
+        filt: _GraphQLPayload = {
             "state": {"name": {"in": list(self._config.active_states)}},
-            "project": {"slug": {"eq": self._config.project_slug}},
+            "project": {"slugId": {"eq": self._config.project_slug}},
         }
         return await self._fetch_paginated("ActiveIssues", filt)
 
@@ -118,45 +123,41 @@ class LinearBacklogAdapter:
                 success=false.
         """
         # Step 1: resolve human identifier → Linear UUID
-        lookup_data = await self._post(
-            "IssueByIdentifier", {"identifier": identifier}
-        )
+        lookup_data = await self._post("IssueByIdentifier", {"identifier": identifier})
         issue_node = lookup_data.get("issue")
         if not isinstance(issue_node, dict):
             raise BacklogSchemaError(f"Linear issue not found: {identifier}")
         issue_id = issue_node.get("id")
         if not isinstance(issue_id, str):
-            raise BacklogSchemaError(
-                f"Linear issue node missing 'id' for {identifier}"
-            )
+            raise BacklogSchemaError(f"Linear issue node missing 'id' for {identifier}")
 
         # Step 2: post the comment using the UUID
         data = await self._post(
             "CommentCreate",
             {"issueId": issue_id, "body": body},
         )
-        result = data.get("commentCreate") or {}
-        if not result.get("success"):
+        result = data.get("commentCreate")
+        if not isinstance(result, dict) or not result.get("success"):
             raise BacklogSchemaError(
                 f"Linear commentCreate did not succeed for {identifier}: {data!r}"
             )
 
     async def fetch_terminal_issues_since(self, since: datetime) -> list[Issue]:
         """Fetch issues in terminal states that were updated after `since`."""
-        filt: dict[str, Any] = {
+        filt: _GraphQLPayload = {
             "state": {"name": {"in": list(self._config.terminal_states)}},
             "updatedAt": {"gt": since.isoformat()},
-            "project": {"slug": {"eq": self._config.project_slug}},
+            "project": {"slugId": {"eq": self._config.project_slug}},
         }
         return await self._fetch_paginated("TerminalIssuesSince", filt)
 
     async def _fetch_paginated(
-        self, query_name: str, filt: dict[str, Any]
+        self, query_name: str, filt: _GraphQLPayload
     ) -> list[Issue]:
         issues: list[Issue] = []
         cursor: str | None = None
         while True:
-            variables: dict[str, Any] = {
+            variables: _GraphQLPayload = {
                 "filter": filt,
                 "first": PAGE_SIZE,
                 "after": cursor,
@@ -179,9 +180,7 @@ class LinearBacklogAdapter:
             cursor = next_cursor
         return issues
 
-    async def _post(
-        self, query_name: str, variables: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _post(self, query_name: str, variables: _GraphQLPayload) -> _GraphQLPayload:
         body = {"query": _QUERIES[query_name], "variables": variables}
         try:
             response = await self._client.post(self._endpoint, json=body)
@@ -212,7 +211,7 @@ class LinearBacklogAdapter:
         status = response.status_code
         if status in (401, 403):
             raise BacklogAuthError(
-                f"Linear auth failed ({status}): {response.text[:200]}"
+                f"Linear auth failed ({status}): {response.text[:1000]}"
             )
         if status == 429:
             retry_after_raw = response.headers.get("Retry-After")
@@ -223,14 +222,14 @@ class LinearBacklogAdapter:
                 except ValueError:
                     retry_after = None
             raise BacklogRateLimitError(
-                f"Linear rate limited: {response.text[:200]}",
+                f"Linear rate limited: {response.text[:1000]}",
                 retry_after_seconds=retry_after,
             )
         if status >= 500:
             raise BacklogTransportError(
-                f"Linear server error ({status}): {response.text[:200]}"
+                f"Linear server error ({status}): {response.text[:1000]}"
             )
         if status != 200:
             raise BacklogTransportError(
-                f"Linear unexpected status {status}: {response.text[:200]}"
+                f"Linear unexpected status {status}: {response.text[:1000]}"
             )

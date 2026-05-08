@@ -19,10 +19,18 @@ Resolution order:
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import TypeAlias
 
 import yaml
 from pydantic import ValidationError
+
+# Recursive value type for raw YAML data — what yaml.safe_load produces, plus
+# Path (after _expand_paths replaces path-shaped strings with resolved Paths).
+# Used by env-var resolution + path expansion before Pydantic validation.
+_YamlValue: TypeAlias = (
+    "dict[str, _YamlValue] | list[_YamlValue]"
+    " | str | int | float | bool | Path | None"
+)
 
 from src.infrastructure.adapters.workflow.constants import (
     ENV_VAR_PATTERN,
@@ -75,9 +83,12 @@ def load_workflow(path: Path | str) -> WorkflowDefinition:
         ) from err
 
     raw_config, prompt_template = split_frontmatter(content)
-    config_dict = _parse_yaml(raw_config, source_path) if raw_config else {}
-    config_dict = resolve_env_vars(config_dict)
-    config_dict = _expand_paths(config_dict, base_dir=source_path.parent)
+    config_dict: dict[str, _YamlValue] = (
+        _parse_yaml(raw_config, source_path) if raw_config else {}
+    )
+    resolved = resolve_env_vars(config_dict)
+    assert isinstance(resolved, dict)  # noqa: S101 — resolve_env_vars preserves shape
+    config_dict = _expand_paths(resolved, base_dir=source_path.parent)
 
     try:
         config = WorkflowConfig.model_validate(config_dict)
@@ -112,27 +123,45 @@ def split_frontmatter(content: str) -> tuple[str | None, str]:
     return None, content
 
 
-def resolve_env_vars(value: Any) -> Any:
+def resolve_env_vars(value: _YamlValue) -> _YamlValue:
     """Recursively replace ``$VAR_NAME`` strings with ``os.environ[VAR_NAME]``.
 
     A string matching ``^\\$[A-Z_][A-Z0-9_]*$`` is treated as a reference.
-    Unset / empty env vars become ``None`` so missing-required-field
-    validation surfaces a precise schema error.
+
+    Raises:
+        WorkflowSchemaError: if any referenced env vars are unset or empty,
+            listing all missing names so the operator knows exactly what to set.
     """
+    missing: list[str] = []
+    resolved = _resolve_env_vars_inner(value, missing)
+    if missing:
+        names = ", ".join(missing)
+        raise WorkflowSchemaError(
+            f"Missing required environment variables: {names}"
+            " — set them in your .env file"
+        )
+    return resolved
+
+
+def _resolve_env_vars_inner(value: _YamlValue, missing: list[str]) -> _YamlValue:
     if isinstance(value, dict):
-        return {k: resolve_env_vars(v) for k, v in value.items()}
+        return {k: _resolve_env_vars_inner(v, missing) for k, v in value.items()}
     if isinstance(value, list):
-        return [resolve_env_vars(item) for item in value]
+        return [_resolve_env_vars_inner(item, missing) for item in value]
     if isinstance(value, str):
         match = ENV_VAR_PATTERN.match(value)
         if not match:
             return value
-        resolved = os.environ.get(match.group(1), "")
-        return resolved or None
+        var_name = match.group(1)
+        resolved = os.environ.get(var_name, "")
+        if not resolved:
+            missing.append(f"${var_name}")
+            return None
+        return resolved
     return value
 
 
-def _parse_yaml(raw: str, source_path: Path) -> dict[str, Any]:
+def _parse_yaml(raw: str, source_path: Path) -> dict[str, _YamlValue]:
     try:
         loaded = yaml.safe_load(raw)
     except yaml.YAMLError as err:
@@ -150,18 +179,22 @@ def _parse_yaml(raw: str, source_path: Path) -> dict[str, Any]:
     return loaded
 
 
-def _expand_paths(config: dict[str, Any], base_dir: Path) -> dict[str, Any]:
+def _expand_paths(
+    config: dict[str, _YamlValue], base_dir: Path
+) -> dict[str, _YamlValue]:
     """Expand ``~`` and resolve relative path-shaped fields against ``base_dir``."""
     for dotted_path in PATH_FIELDS:
         keys = dotted_path.split(".")
-        cursor: Any = config
+        cursor: _YamlValue = config
         for key in keys[:-1]:
             if not isinstance(cursor, dict) or key not in cursor:
                 cursor = None
                 break
             cursor = cursor[key]
-        if isinstance(cursor, dict) and isinstance(cursor.get(keys[-1]), str):
-            cursor[keys[-1]] = _expand_path(cursor[keys[-1]], base_dir)
+        if isinstance(cursor, dict):
+            leaf = cursor.get(keys[-1])
+            if isinstance(leaf, str):
+                cursor[keys[-1]] = _expand_path(leaf, base_dir)
     return config
 
 
