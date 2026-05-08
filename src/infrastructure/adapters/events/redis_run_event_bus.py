@@ -19,7 +19,7 @@ import redis.asyncio as aioredis
 class RedisRunEventBus:
     def __init__(self, redis_url: str | None = None) -> None:
         self._client: aioredis.Redis | None = None
-        if redis_url and redis_url.startswith("redis"):
+        if redis_url and redis_url.startswith(("redis://", "rediss://", "redis+sentinel://")):
             self._client = aioredis.from_url(redis_url, decode_responses=True)
 
     def _channel(self, run_id: UUID) -> str:
