@@ -7,3 +7,10 @@ docs/superpowers*
 *_cache*
 .remember
 .venv
+.worktrees
+
+# frontend (apps/web)
+apps/web/node_modules
+apps/web/dist
+apps/web/openapi.json
+apps/web/.vite
