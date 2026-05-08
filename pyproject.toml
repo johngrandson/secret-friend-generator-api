@@ -75,8 +75,29 @@ types-pyyaml = "^6.0.12.20260408"
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
+warn_unused_ignores = true
+no_implicit_optional = true
+strict_equality = true
 disallow_untyped_defs = false
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "celery.*"
+ignore_missing_imports = true
+
+# Domain layer is framework-free and already Any-free — enforce strictly.
+# See docs/adr/0001-clean-architecture-stance.md and
+# .claude/rules/clean-architecture-enforcement.md.
+[[tool.mypy.overrides]]
+module = "src.contexts.*.domain.*"
+disallow_any_explicit = true
+disallow_untyped_defs = true
+
+# Use cases must be type-safe; Any is only allowed via Coroutine triplet
+# (idiomatic in async TypeAlias dispatch tables — see orchestrate_run.py).
+[[tool.mypy.overrides]]
+module = "src.contexts.*.use_cases.*"
+disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
