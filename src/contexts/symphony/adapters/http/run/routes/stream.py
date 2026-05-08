@@ -20,7 +20,13 @@ async def _build_sse_generator(
     run_id: UUID,
     bus: RedisRunEventBus,
 ) -> AsyncGenerator[str, None]:
-    """Yield SSE-formatted lines from the run event channel."""
+    """Yield SSE-formatted lines from the run event channel.
+
+    Emits a leading SSE comment so dev proxies (Vite, nginx) flush response
+    headers immediately — without it EventSource.onopen never fires until
+    the first real event arrives.
+    """
+    yield ": ready\n\n"
     async for event in bus.subscribe(run_id):
         yield f"data: {json.dumps(event)}\n\n"
         if event.get("type") == "_stream_done":

@@ -73,7 +73,11 @@ export const RunLive = () => {
           <p className="mt-1 font-mono text-xs text-zinc-500">{runId}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-sm font-medium ${statusColors[status]}`}>
+          <span
+            className={`text-sm font-medium ${statusColors[status]}`}
+            data-testid="stream-status"
+            data-status={status}
+          >
             {status === "connecting" && <Spinner className="mr-1 inline-block" />}
             {statusLabels[status]}
           </span>
@@ -107,13 +111,18 @@ export const RunLive = () => {
 
       <Card className="h-[70vh] overflow-y-auto p-4 font-mono text-xs">
         {events.length === 0 && status === "connecting" && (
-          <div className="flex h-full items-center justify-center text-zinc-400">
+          <div
+            className="flex h-full items-center justify-center text-zinc-400"
+            data-testid="stream-waiting"
+          >
             Waiting for events…
           </div>
         )}
         {events.map((event, i) => (
           <div
             key={i}
+            data-testid="stream-event"
+            data-event-type={event.type}
             className={`mb-1 leading-relaxed ${
               event.type === "_stream_done"
                 ? "text-zinc-400"

@@ -14,3 +14,6 @@ apps/web/node_modules
 apps/web/dist
 apps/web/openapi.json
 apps/web/.vite
+apps/web/test-results
+apps/web/playwright-report
+apps/web/.playwright

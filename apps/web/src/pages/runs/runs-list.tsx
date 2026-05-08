@@ -153,10 +153,15 @@ export const RunsList = () => {
               </tr>
             )}
             {(runsQuery.data ?? []).map((run) => (
-              <tr key={run.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900">
+              <tr
+                key={run.id}
+                data-testid={`run-row-${run.issue_id}`}
+                className="hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              >
                 <Td className="font-mono">
                   <Link
                     to={`/runs/${run.id}`}
+                    data-testid={`run-link-${run.issue_id}`}
                     className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
                   >
                     {run.issue_id}
@@ -174,6 +179,7 @@ export const RunsList = () => {
                   <div className="flex items-center gap-2">
                     <Link
                       to={`/runs/${run.id}/live`}
+                      data-testid={`run-live-link-${run.issue_id}`}
                       className="text-xs text-green-600 underline-offset-4 hover:underline dark:text-green-400"
                     >
                       Live

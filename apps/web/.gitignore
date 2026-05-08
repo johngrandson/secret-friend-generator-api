@@ -1,0 +1,10 @@
+node_modules
+dist
+openapi.json
+*.local
+.vite
+
+# Playwright
+test-results
+playwright-report
+.playwright

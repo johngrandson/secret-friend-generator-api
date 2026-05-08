@@ -145,6 +145,29 @@ poetry run mypy src
 poetry run lint-imports
 ```
 
+## Frontend E2E tests
+
+The harness frontend in `apps/web/` ships a Playwright suite that runs against
+the real API + Redis (no mocks). See [`apps/web/e2e/README.md`](apps/web/e2e/README.md)
+for the full guide.
+
+```bash
+# 1. Postgres + Redis (one-time)
+docker compose -f docker/docker-compose.yml up -d
+
+# 2. Backend + Celery + Vite (separate terminal)
+./dev.sh
+
+# 3. Run the suite
+cd apps/web
+npx playwright install chromium   # one-time
+npm run test:e2e                  # headless
+npm run test:e2e:ui               # interactive
+```
+
+Specs cover the runs list, run detail, and the SSE live-stream page. Suite
+runs serially; each test creates a unique run via the API and tears it down.
+
 ## How to extend
 
 - **Add an aggregate inside an existing context** → [`docs/how-to-add-aggregate.md`](docs/how-to-add-aggregate.md)
